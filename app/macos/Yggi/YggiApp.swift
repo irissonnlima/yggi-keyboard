@@ -13,7 +13,17 @@ struct YggiApp: App {
     }
 
     var body: some Scene {
-        // O app vive na barra de menus (LSUIElement); as janelas são abertas pelo AppDelegate.
+        // As janelas são abertas pelo AppDelegate; daqui vêm só os menus do app.
         Settings { EmptyView() }
+            .commands {
+                CommandGroup(replacing: .appSettings) {
+                    Button("Ajustes…") { AppWindows.settings() }
+                        .keyboardShortcut(",")
+                }
+                CommandGroup(replacing: .newItem) {
+                    Button("Janela do Yggi") { AppWindows.main() }
+                        .keyboardShortcut("0")
+                }
+            }
     }
 }

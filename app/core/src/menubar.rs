@@ -55,16 +55,18 @@ pub enum WidgetSize {
     OneByOne,
     TwoByOne,
     ThreeByOne,
+    /// Em pé: uma coluna, duas linhas.
+    OneByTwo,
     TwoByTwo,
     ThreeByTwo,
 }
 
 impl WidgetSize {
-    pub const ALL: [WidgetSize; 5] = [Self::OneByOne, Self::TwoByOne, Self::ThreeByOne, Self::TwoByTwo, Self::ThreeByTwo];
+    pub const ALL: [WidgetSize; 6] = [Self::OneByOne, Self::TwoByOne, Self::ThreeByOne, Self::OneByTwo, Self::TwoByTwo, Self::ThreeByTwo];
 
     pub fn columns(self) -> u8 {
         match self {
-            Self::OneByOne => 1,
+            Self::OneByOne | Self::OneByTwo => 1,
             Self::TwoByOne | Self::TwoByTwo => 2,
             Self::ThreeByOne | Self::ThreeByTwo => 3,
         }
@@ -73,8 +75,12 @@ impl WidgetSize {
     pub fn rows(self) -> u8 {
         match self {
             Self::OneByOne | Self::TwoByOne | Self::ThreeByOne => 1,
-            Self::TwoByTwo | Self::ThreeByTwo => 2,
+            Self::OneByTwo | Self::TwoByTwo | Self::ThreeByTwo => 2,
         }
+    }
+
+    fn area(self) -> u8 {
+        self.columns() * self.rows()
     }
 
     fn code(self) -> String {
@@ -165,24 +171,34 @@ pub fn widget_info(kind: WidgetKind) -> WidgetInfo {
     use WidgetKind as K;
     use WidgetSize as S;
     let (name, category, summary, sizes): (&str, &str, &str, &[WidgetSize]) = match kind {
-        K::Stagger => ("Stagger", "Teclado", "Colunas ao vivo, abrir e fechar, posições salvas", &[S::ThreeByOne, S::TwoByOne, S::TwoByTwo, S::ThreeByTwo]),
-        K::StaggerQuick => ("Stagger rápido", "Teclado", "Só o botão de abrir e fechar", &[S::OneByOne, S::TwoByOne]),
-        K::ActiveHost => ("Computador ativo", "Teclado", "Qual computador recebe as teclas; toque para o próximo", &[S::OneByOne, S::TwoByOne]),
-        K::Hosts => ("Computadores", "Teclado", "Os computadores pareados, para trocar", &[S::ThreeByTwo, S::TwoByTwo]),
-        K::Layer => ("Camada ativa", "Teclado", "Camada e perfil em uso", &[S::OneByOne, S::TwoByOne]),
-        K::Battery => ("Bateria", "Energia", "As duas metades, e o e-reader quando encaixado", &[S::OneByOne, S::TwoByOne, S::ThreeByOne]),
-        K::Halves => ("Metades e e-reader", "Energia", "Juntas ou separadas, e-reader encaixado ou solto", &[S::OneByOne, S::TwoByOne]),
-        K::Brightness => ("Brilho e efeito", "Luz", "Intensidade e efeito das luzes", &[S::ThreeByOne, S::TwoByOne]),
-        K::LightColor => ("Cor da luz", "Luz", "Cor do efeito", &[S::TwoByOne, S::OneByOne, S::ThreeByOne]),
-        K::Today => ("Hoje", "Escrita", "Palavras, ritmo e tempo digitando", &[S::ThreeByOne, S::TwoByOne, S::TwoByTwo]),
-        K::DailyGoal => ("Meta do dia", "Escrita", "Quanto falta para a meta de palavras", &[S::OneByOne, S::TwoByTwo]),
-        K::Heatmap => ("Mapa de calor", "Escrita", "Teclas mais usadas, sem guardar o texto", &[S::ThreeByOne, S::ThreeByTwo]),
-        K::Break => ("Pausa", "Saúde", "Tempo até a próxima pausa", &[S::OneByOne, S::TwoByOne]),
-        K::QuickActions => ("Ações rápidas", "Atalhos", "Captura, Mission Control, ajustes do teclado", &[S::ThreeByOne, S::TwoByOne]),
-        K::CustomButton => ("Botão personalizado", "Atalhos", "Uma tecla, macro ou camada à sua escolha", &[S::OneByOne]),
-        K::Firmware => ("Firmware", "Sistema", "Versão e atualização", &[S::OneByOne, S::TwoByOne]),
+        K::Stagger => ("Stagger", "Teclado", "Colunas ao vivo, abrir e fechar e quanto abrir", &[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo, S::ThreeByTwo]),
+        K::StaggerQuick => ("Stagger rápido", "Teclado", "Só o botão de abrir e fechar", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo]),
+        K::ActiveHost => ("Computador ativo", "Teclado", "Qual computador recebe as teclas; toque para o próximo", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo]),
+        K::Hosts => ("Computadores", "Teclado", "Os computadores pareados, para trocar", &[S::ThreeByTwo, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
+        K::Layer => ("Camada ativa", "Teclado", "Camada e perfil em uso", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo]),
+        K::Battery => ("Bateria", "Energia", "As duas metades, e o e-reader quando encaixado", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
+        K::Halves => ("Metades e e-reader", "Energia", "Juntas ou separadas, e-reader encaixado ou solto", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo]),
+        K::Brightness => ("Brilho e efeito", "Luz", "Intensidade e efeito das luzes", &[S::ThreeByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo]),
+        K::LightColor => ("Cor da luz", "Luz", "Cor do efeito", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
+        K::Today => ("Hoje", "Escrita", "Palavras, ritmo e tempo digitando", &[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo]),
+        K::DailyGoal => ("Meta do dia", "Escrita", "Quanto falta para a meta de palavras", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
+        K::Heatmap => ("Mapa de calor", "Escrita", "Teclas mais usadas, sem guardar o texto", &[S::ThreeByTwo, S::TwoByOne, S::ThreeByOne, S::TwoByTwo]),
+        K::Break => ("Pausa", "Saúde", "Tempo até a próxima pausa", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo]),
+        K::QuickActions => ("Ações rápidas", "Atalhos", "Abrir o Yggi, apagar a luz, estatísticas", &[S::ThreeByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo]),
+        K::CustomButton => ("Botão personalizado", "Atalhos", "Uma tecla, macro ou camada à sua escolha", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo]),
+        K::Firmware => ("Firmware", "Sistema", "Versão e atualização", &[S::OneByOne, S::TwoByOne, S::ThreeByOne]),
     };
     WidgetInfo { kind, name: name.into(), category: category.into(), summary: summary.into(), sizes: sizes.to_vec() }
+}
+
+/// O maior tamanho que o widget aceita (o da biblioteca). Empate: o mais largo.
+#[uniffi::export]
+pub fn widget_largest_size(kind: WidgetKind) -> WidgetSize {
+    largest(&widget_info(kind).sizes)
+}
+
+fn largest(sizes: &[WidgetSize]) -> WidgetSize {
+    *sizes.iter().max_by_key(|s| (s.area(), s.columns())).expect("todo widget tem tamanho")
 }
 
 /// Todos os widgets, na ordem da biblioteca.
@@ -286,6 +302,23 @@ pub fn menu_can_place(tab: MenuTab, size: WidgetSize, column: u8, row: u32, igno
     fits(&tab, size, column, row, ignoring)
 }
 
+/// O tamanho com que o widget entra na célula: o preferido se couber; senão o maior que ele
+/// aceita e que cabe ali (o widget se ajusta ao espaço). `None` se nenhum couber.
+#[uniffi::export]
+pub fn widget_fit_size(tab: MenuTab, kind: WidgetKind, preferred: WidgetSize, column: u8, row: u32, ignoring: Option<u32>) -> Option<WidgetSize> {
+    fit_size(&tab, kind, preferred, column, row, ignoring)
+}
+
+fn fit_size(tab: &MenuTab, kind: WidgetKind, preferred: WidgetSize, column: u8, row: u32, ignoring: Option<u32>) -> Option<WidgetSize> {
+    let sizes = widget_info(kind).sizes;
+    if sizes.contains(&preferred) && fits(tab, preferred, column, row, ignoring) {
+        return Some(preferred);
+    }
+    let mut candidates: Vec<_> = sizes.into_iter().filter(|&s| fits(tab, s, column, row, ignoring)).collect();
+    candidates.sort_by_key(|s| std::cmp::Reverse((s.area(), s.columns())));
+    candidates.first().copied()
+}
+
 /// As quatro abas de fábrica.
 #[uniffi::export]
 pub fn default_menu_bar() -> MenuBarConfig {
@@ -372,17 +405,19 @@ pub fn menu_move_tab(mut config: MenuBarConfig, tab_id: u32, to_index: u32) -> M
     config
 }
 
-/// Adiciona um widget do tipo `kind`, no tamanho padrão dele, na célula `at` se couber ali;
-/// senão (ou sem `at`), no primeiro lugar livre.
+/// Adiciona um widget do tipo `kind`. Com `at`, entra na célula no tamanho `size` (ou no maior
+/// que couber ali); sem `at`, ou se nada couber, vai no tamanho padrão para o primeiro lugar livre.
 #[uniffi::export]
-pub fn menu_add_widget(mut config: MenuBarConfig, tab_id: u32, kind: WidgetKind, at: Option<GridCell>) -> MenuBarConfig {
+pub fn menu_add_widget(mut config: MenuBarConfig, tab_id: u32, kind: WidgetKind, at: Option<GridCell>, size: Option<WidgetSize>) -> MenuBarConfig {
     let Some(t) = tab_index(&config, tab_id) else { return config };
-    let size = widget_info(kind).sizes[0];
+    let info = widget_info(kind);
     let tab = &config.tabs[t];
-    let (column, row) = match at {
-        Some(cell) if fits(tab, size, cell.column, cell.row, None) => (cell.column, cell.row),
-        _ => first_free(tab, size, None),
-    };
+    let wanted = size.filter(|s| info.sizes.contains(s)).unwrap_or(info.sizes[0]);
+    let placed = at.and_then(|cell| fit_size(tab, kind, wanted, cell.column, cell.row, None).map(|s| (s, cell.column, cell.row)));
+    let (size, column, row) = placed.unwrap_or_else(|| {
+        let (c, r) = first_free(tab, info.sizes[0], None);
+        (info.sizes[0], c, r)
+    });
     let id = take_id(&mut config);
     config.tabs[t].widgets.push(WidgetSlot { id, kind, size, show_title: true, column, row });
     config
@@ -396,17 +431,15 @@ pub fn menu_remove_widget(mut config: MenuBarConfig, widget_id: u32) -> MenuBarC
     config
 }
 
-/// Arrastar: põe o widget na célula da aba `to_tab_id`. Se não couber ali, nada muda.
+/// Arrastar: põe o widget na célula da aba `to_tab_id`, no tamanho dele se couber; senão no
+/// maior tamanho que ele aceita e que cabe ali. Se nenhum couber, nada muda.
 #[uniffi::export]
 pub fn menu_place_widget(mut config: MenuBarConfig, widget_id: u32, to_tab_id: u32, column: u8, row: u32) -> MenuBarConfig {
     let (Some((t, i)), Some(to_t)) = (find_widget(&config, widget_id), tab_index(&config, to_tab_id)) else { return config };
-    let size = config.tabs[t].widgets[i].size;
-    if !fits(&config.tabs[to_t], size, column, row, Some(widget_id)) {
-        return config;
-    }
+    let current = config.tabs[t].widgets[i];
+    let Some(size) = fit_size(&config.tabs[to_t], current.kind, current.size, column, row, Some(widget_id)) else { return config };
     let mut slot = config.tabs[t].widgets.remove(i);
-    slot.column = column;
-    slot.row = row;
+    (slot.column, slot.row, slot.size) = (column, row, size);
     config.tabs[to_t].widgets.push(slot);
     config
 }
@@ -576,7 +609,7 @@ mod tests {
     #[test]
     fn tamanhos_tem_colunas_e_linhas_certas() {
         let dims: Vec<_> = WidgetSize::ALL.iter().map(|s| (s.columns(), s.rows())).collect();
-        assert_eq!(dims, vec![(1, 1), (2, 1), (3, 1), (2, 2), (3, 2)]);
+        assert_eq!(dims, vec![(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2)]);
     }
 
     #[test]
@@ -637,7 +670,7 @@ mod tests {
         assert_eq!(pos(&c, bateria), (2, 5));
         // Em cima do stagger: não pode, fica onde estava.
         let c = menu_place_widget(c, bateria, inicio, 1, 0);
-        assert_eq!(pos(&c, bateria), (2, 5));
+        assert_eq!(pos(&c, bateria), (2, 5), "nenhum tamanho da bateria cabe dentro do stagger");
         // Para outra aba, numa célula livre.
         let luz = c.tabs[2].id;
         let c = menu_place_widget(c, bateria, luz, 0, 3);
@@ -660,8 +693,9 @@ mod tests {
     fn tamanho_novo_fica_no_lugar_ou_procura_outro() {
         let c = default_menu_bar();
         let stagger = c.tabs[0].widgets[0];
-        let c = menu_set_widget_size(c, stagger.id, S::OneByOne);
-        assert_eq!(c.tabs[0].widgets[0].size, S::ThreeByOne, "tamanho que o widget não aceita");
+        let bateria = c.tabs[0].widgets[1].id;
+        let c = menu_set_widget_size(c, bateria, S::ThreeByTwo);
+        assert_eq!(c.tabs[0].widgets[1].size, S::OneByOne, "tamanho que o widget não aceita");
         // 2x2 no lugar do 3x1 cobriria a bateria (linha 1): vai para o primeiro lugar livre.
         let c = menu_set_widget_size(c, stagger.id, S::TwoByTwo);
         assert_eq!(c.tabs[0].widgets[0].size, S::TwoByTwo);
@@ -680,13 +714,57 @@ mod tests {
     fn adicionar_na_celula_ou_no_primeiro_livre() {
         let c = default_menu_bar();
         let tab = c.tabs[1].id;
-        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 2, row: 6 }));
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 2, row: 6 }), None);
         assert_eq!(c.tabs[1].widgets.last().map(|w| (w.column, w.row)), Some((2, 6)));
         // Célula ocupada: primeiro lugar livre.
-        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 0, row: 0 }));
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 0, row: 0 }), None);
         let w = *c.tabs[1].widgets.last().unwrap();
         assert!(fits(&c.tabs[1], w.size, w.column, w.row, Some(w.id)));
         assert_ne!((w.column, w.row), (0, 0));
+    }
+
+    #[test]
+    fn todo_widget_tem_2x1_ou_3x1_e_quase_todos_ficam_em_pe() {
+        for info in widget_catalog() {
+            assert!(info.sizes.contains(&S::TwoByOne) || info.sizes.contains(&S::ThreeByOne), "{} deitado", info.name);
+        }
+        let em_pe = widget_catalog().iter().filter(|i| i.sizes.contains(&S::OneByTwo)).count();
+        assert!(em_pe >= 13, "{em_pe}");
+        assert_eq!(widget_largest_size(WidgetKind::Stagger), S::ThreeByTwo);
+        assert_eq!(widget_largest_size(WidgetKind::Firmware), S::ThreeByOne);
+    }
+
+    #[test]
+    fn soltar_ajusta_o_tamanho_ao_espaco() {
+        // Uma linha com um 1x1 na coluna 2: sobram 2 colunas em cima e a linha de baixo livre.
+        let tab = tab_of(vec![slot(1, S::OneByOne, 2, 0)]);
+        // Preferido 3x2 não cabe; o maior que cabe na coluna 0 é 2x2.
+        assert_eq!(widget_fit_size(tab.clone(), WidgetKind::Stagger, S::ThreeByTwo, 0, 0, None), Some(S::TwoByTwo));
+        // Preferido cabe: fica ele.
+        assert_eq!(widget_fit_size(tab.clone(), WidgetKind::Stagger, S::TwoByOne, 0, 0, None), Some(S::TwoByOne));
+        // Em cima do 1x1: nada cabe.
+        assert_eq!(widget_fit_size(tab, WidgetKind::Stagger, S::OneByOne, 2, 0, None), None);
+
+        // Arrastar o stagger 3x1 para a linha da bateria (coluna 1): encolhe para caber.
+        let c = default_menu_bar();
+        let inicio = c.tabs[0].id;
+        let stagger = c.tabs[0].widgets[0].id;
+        let hoje = c.tabs[0].widgets[3].id;
+        let c = menu_remove_widget(c, hoje);
+        let c = menu_place_widget(c, stagger, inicio, 1, 2);
+        let (t, i) = find_widget(&c, stagger).unwrap();
+        assert_eq!((c.tabs[t].widgets[i].column, c.tabs[t].widgets[i].row, c.tabs[t].widgets[i].size), (1, 2, S::TwoByTwo));
+    }
+
+    #[test]
+    fn da_biblioteca_entra_no_maior_que_cabe() {
+        let c = default_menu_bar();
+        let tab = c.tabs[0].id;
+        let c = menu_add_widget(c, tab, WidgetKind::Heatmap, Some(GridCell { column: 0, row: 3 }), Some(S::ThreeByTwo));
+        assert_eq!(c.tabs[0].widgets.last().map(|w| (w.size, w.column, w.row)), Some((S::ThreeByTwo, 0, 3)));
+        // Na coluna 1 não cabe 3 de largura: vira 2x2.
+        let c = menu_add_widget(c, tab, WidgetKind::Heatmap, Some(GridCell { column: 1, row: 5 }), Some(S::ThreeByTwo));
+        assert_eq!(c.tabs[0].widgets.last().map(|w| (w.size, w.column, w.row)), Some((S::TwoByTwo, 1, 5)));
     }
 
     #[test]
@@ -734,12 +812,12 @@ mod tests {
 
     #[test]
     fn le_a_versao_1_encaixando_e_tolera_widget_novo() {
-        let text = format!("{HEADER_V1}\nopen_first_tab 1\ntab 1 A\nwidget 2 widget_do_futuro 1x1 1\nwidget 3 stagger 1x1 1\nwidget 4 battery 1x1 1\n");
+        let text = format!("{HEADER_V1}\nopen_first_tab 1\ntab 1 A\nwidget 2 widget_do_futuro 1x1 1\nwidget 3 firmware 2x2 1\nwidget 4 battery 1x1 1\n");
         let c = menu_bar_decode(text).unwrap();
         let w = &c.tabs[0].widgets;
         assert_eq!(w.len(), 2);
-        assert_eq!((w[0].size, w[0].column, w[0].row), (S::ThreeByOne, 0, 0));
-        assert_eq!((w[1].column, w[1].row), (0, 1));
+        assert_eq!((w[0].size, w[0].column, w[0].row), (S::OneByOne, 0, 0), "2x2 não é do firmware: volta ao padrão");
+        assert_eq!((w[1].column, w[1].row), (1, 0));
         assert_eq!(c.next_id, 5);
         assert!(menu_bar_decode("outra coisa".into()).is_none());
         assert!(menu_bar_decode(format!("{HEADER}\n")).is_none());

@@ -32,20 +32,20 @@ struct MenuBarEditorScreen: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            TabsPanel(editingTab: $editingTab)
-                .frame(width: 200)
+            WidgetLibrary(tab: tab, dragging: $dragging, removeDragged: removeDragged)
+                .frame(width: 340)
             Divider()
             ScrollView {
-                VStack(spacing: 28) {
-                    preview
-                    WidgetLibrary(tab: tab, dragging: $dragging, removeDragged: removeDragged)
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity)
+                preview
+                    .padding(24)
+                    .frame(maxWidth: .infinity)
             }
             .background(Color(nsColor: .underPageBackgroundColor))
             Divider()
-            Group {
+            VStack(spacing: 0) {
+                TabsPanel(editingTab: $editingTab)
+                    .frame(height: 300)
+                Divider()
                 if let slot = selectedSlot {
                     WidgetInspector(slot: slot, deselect: { selected = nil })
                 } else {
@@ -56,9 +56,9 @@ struct MenuBarEditorScreen: View {
                     }
                     .padding(14)
                 }
+                Spacer(minLength: 0)
             }
-            .frame(width: 260)
-            .frame(maxHeight: .infinity, alignment: .top)
+            .frame(width: 270)
         }
         .navigationTitle("Barra de menus")
         .onAppear { if editingTab == nil { editingTab = store.menuBar.tabs.first?.id } }
@@ -85,7 +85,7 @@ struct MenuBarEditorScreen: View {
     private var preview: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Solte cada widget na célula que quiser; pode deixar espaços. Sobre uma aba, ele muda de aba.")
+                Text("Solte cada widget na célula que quiser; pode deixar espaços. Se não couber inteiro, ele se ajusta ao espaço. Sobre uma aba, muda de aba.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -119,7 +119,7 @@ struct MenuBarEditorScreen: View {
                 .frame(width: metrics.width, height: metrics.height(rows: shownRows), alignment: .topLeading)
                 .animation(.easeInOut(duration: 0.15), value: shownRows)
                 .onDrop(of: [.text], delegate: GridDrop(
-                    tab: tab, metrics: metrics, catalog: store.catalog, allSlots: store.menuBar.tabs.flatMap(\.widgets),
+                    tab: tab, metrics: metrics, allSlots: store.menuBar.tabs.flatMap(\.widgets),
                     dragging: $dragging, target: $target, drop: dropOnCell))
             }
             .padding(12)
@@ -202,7 +202,7 @@ struct MenuBarEditorScreen: View {
             store.editMenuBar { menuPlaceWidget(config: $0, widgetId: id, toTabId: tab.id, column: target.column, row: target.row) }
         case .kind(let kind):
             let newId = store.menuBar.nextId
-            store.editMenuBar { menuAddWidget(config: $0, tabId: tab.id, kind: kind, at: GridCell(column: target.column, row: target.row)) }
+            store.editMenuBar { menuAddWidget(config: $0, tabId: tab.id, kind: kind, at: GridCell(column: target.column, row: target.row), size: target.size) }
             selected = newId
         case nil: break
         }
@@ -215,7 +215,7 @@ struct MenuBarEditorScreen: View {
             store.editMenuBar { menuMoveWidgetToTab(config: $0, widgetId: id, toTabId: tabId) }
         case .kind(let kind):
             let newId = store.menuBar.nextId
-            store.editMenuBar { menuAddWidget(config: $0, tabId: tabId, kind: kind, at: nil) }
+            store.editMenuBar { menuAddWidget(config: $0, tabId: tabId, kind: kind, at: nil, size: nil) }
             selected = newId
         case nil: break
         }
@@ -243,7 +243,6 @@ struct MenuBarEditorScreen: View {
 private struct GridDrop: DropDelegate {
     let tab: MenuTab
     let metrics: GridMetrics
-    let catalog: [WidgetInfo]
     let allSlots: [WidgetSlot]
     @Binding var dragging: MenuDragItem?
     @Binding var target: DropTarget?
@@ -270,27 +269,30 @@ private struct GridDrop: DropDelegate {
     }
 
     private func targetAt(_ point: CGPoint) -> DropTarget? {
-        let size: WidgetSize
+        let kind: WidgetKind
+        let preferred: WidgetSize
         let ignoring: UInt32?
         switch dragging {
         case .widget(let id):
             // Pode vir de outra aba (depois de parar sobre a aba): procura na config inteira.
             guard let slot = allSlots.first(where: { $0.id == id }) else { return nil }
-            size = slot.size
-            ignoring = id
-        case .kind(let kind):
-            size = catalog.first { $0.kind == kind }?.sizes.first ?? .oneByOne
-            ignoring = nil
+            (kind, preferred, ignoring) = (slot.kind, slot.size, id)
+        case .kind(let k):
+            // Da biblioteca: o maior tamanho, como aparece lá.
+            (kind, preferred, ignoring) = (k, widgetLargestSize(kind: k), nil)
         case nil:
             return nil
         }
         let colW = metrics.cell + metrics.gap, rowH = metrics.row + metrics.gap
-        let col = Int((point.x / colW - CGFloat(size.columns) / 2).rounded())
-        let row = Int((point.y / rowH - CGFloat(size.rows) / 2).rounded())
-        let column = UInt8(min(max(col, 0), 3 - size.columns))
+        let col = Int((point.x / colW - CGFloat(preferred.columns) / 2).rounded())
+        let row = Int((point.y / rowH - CGFloat(preferred.rows) / 2).rounded())
+        let column = UInt8(min(max(col, 0), 3 - preferred.columns))
         let r = UInt32(max(row, 0))
-        let fits = menuCanPlace(tab: tab, size: size, column: column, row: r, ignoring: ignoring)
-        return DropTarget(column: column, row: r, size: size, fits: fits)
+        // O núcleo diz com que tamanho ele entra ali (o preferido, ou o maior que couber).
+        if let size = widgetFitSize(tab: tab, kind: kind, preferred: preferred, column: column, row: r, ignoring: ignoring) {
+            return DropTarget(column: column, row: r, size: size, fits: true)
+        }
+        return DropTarget(column: column, row: r, size: preferred, fits: false)
     }
 }
 
@@ -438,40 +440,37 @@ private struct WidgetLibrary: View {
 
     var body: some View {
         let categories = ["Todos"] + store.catalog.map(\.category).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Text("Biblioteca").font(.headline)
-                Spacer()
-                TextField("Buscar widget", text: $search)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 180)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Biblioteca").font(.headline)
+            HStack(spacing: 8) {
+                TextField("Buscar widget", text: $search).textFieldStyle(.roundedBorder)
                 Picker("Categoria", selection: $category) {
                     ForEach(categories, id: \.self) { Text($0).tag($0) }
                 }
                 .labelsHidden()
                 .fixedSize()
             }
-            Text(removeTargeted ? "Solte para tirar o widget da aba" : "Arraste para a prévia, na célula que quiser, ou toque em +. Arraste um widget da prévia para cá para tirar da aba.")
+            Text(removeTargeted ? "Solte para tirar o widget da aba" : "Arraste para a célula que quiser. Arraste um widget da prévia para cá para tirar da aba.")
                 .font(.caption)
                 .foregroundStyle(removeTargeted ? Color.red : .secondary)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 10)], spacing: 10) {
-                ForEach(items, id: \.kind) { info in
-                    LibraryRow(info: info) {
-                        store.editMenuBar { menuAddWidget(config: $0, tabId: tab.id, kind: info.kind, at: nil) }
-                    }
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
-                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color(nsColor: .separatorColor), lineWidth: 0.5))
-                    .onDrag {
-                        dragging = .kind(info.kind)
-                        return NSItemProvider(object: "yggi-widget" as NSString)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(items, id: \.kind) { info in
+                        LibraryItem(info: info) {
+                            store.editMenuBar { menuAddWidget(config: $0, tabId: tab.id, kind: info.kind, at: nil, size: nil) }
+                        }
+                        .onDrag {
+                            dragging = .kind(info.kind)
+                            return NSItemProvider(object: "yggi-widget" as NSString)
+                        }
                     }
                 }
+                .padding(.bottom, 12)
             }
         }
-        .padding(16)
-        .background(RoundedRectangle(cornerRadius: 12)
-            .strokeBorder(removeTargeted ? Color.red : .clear, style: StrokeStyle(lineWidth: 1.5, dash: [6])))
-        .frame(maxWidth: 860)
+        .padding(14)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(removeTargeted ? Color.red.opacity(0.06) : .clear)
         .onDrop(of: [.text], isTargeted: Binding(
             get: { removeTargeted },
             set: { removeTargeted = $0 && isDraggingWidget })) { _ in removeDragged() }
@@ -490,39 +489,40 @@ private struct WidgetLibrary: View {
     }
 }
 
-private struct LibraryRow: View {
+/// Um widget da biblioteca, desenhado de verdade no maior tamanho dele (reduzido para caber).
+private struct LibraryItem: View {
     let info: WidgetInfo
     let add: () -> Void
     @State private var hover = false
 
+    /// Largura útil da coluna da biblioteca.
+    private let width: CGFloat = 312
+
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: info.kind.symbol)
-                .font(.system(size: 14))
-                .foregroundStyle(.yggiText)
-                .frame(width: 26, height: 26)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(0.06)))
-            VStack(alignment: .leading, spacing: 3) {
+        let size = widgetLargestSize(kind: info.kind)
+        let metrics = GridMetrics.popover
+        let rect = metrics.rect(WidgetPlacement(widgetId: 0, column: 0, row: 0, columns: UInt8(size.columns), rows: UInt8(size.rows)))
+        let scale = min(1, width / metrics.width)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
                 Text(info.name).font(.callout.weight(.medium))
-                Text(info.summary).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 3) {
-                    ForEach(info.sizes, id: \.self) { size in
-                        Text(size.label).font(.system(size: 9, weight: .medium)).monospacedDigit()
-                            .padding(.horizontal, 4).padding(.vertical, 1)
-                            .overlay(Capsule().strokeBorder(.separator))
-                    }
-                }
+                Spacer(minLength: 0)
+                Text(info.sizes.map(\.label).joined(separator: " · "))
+                    .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                Button(action: add) { Image(systemName: "plus.circle.fill") }
+                    .buttonStyle(.borderless)
+                    .help("Adicionar à aba")
             }
-            Spacer(minLength: 0)
-            Button(action: add) { Image(systemName: "plus.circle.fill").font(.title3) }
-                .buttonStyle(.borderless)
-                .help("Adicionar à aba")
-                .opacity(hover ? 1 : 0.5)
+            WidgetView(slot: WidgetSlot(id: 0, kind: info.kind, size: size, showTitle: true, column: 0, row: 0))
+                .frame(width: rect.width, height: rect.height)
+                .allowsHitTesting(false)
+                .scaleEffect(scale, anchor: .topLeading)
+                .frame(width: rect.width * scale, height: rect.height * scale, alignment: .topLeading)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.accentColor, lineWidth: hover ? 2 : 0))
+                .onHover { hover = $0 }
+                .help(info.summary)
         }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(hover ? Color.primary.opacity(0.05) : .clear))
         .contentShape(Rectangle())
-        .onHover { hover = $0 }
     }
 }
 
@@ -653,7 +653,7 @@ private struct WidgetMoveItems: View {
 }
 
 extension WidgetSize: @retroactive CaseIterable {
-    public static var allCases: [WidgetSize] { [.oneByOne, .twoByOne, .threeByOne, .twoByTwo, .threeByTwo] }
+    public static var allCases: [WidgetSize] { [.oneByOne, .twoByOne, .threeByOne, .oneByTwo, .twoByTwo, .threeByTwo] }
 }
 
 extension WidgetKind {

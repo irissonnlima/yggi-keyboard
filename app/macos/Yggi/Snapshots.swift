@@ -74,6 +74,36 @@ enum Snapshots {
         .environment(\.colorScheme, .light)
         save(icons, to: dir.appending(path: "icone-barra.png"))
 
+        // Cada widget em cada tamanho que ele aceita (deitado, em pé, pequeno e grande).
+        for scheme in [ColorScheme.dark, .light] {
+            let g = KeyboardStore.simulated(.normal, animated: false)
+            g.simulator?.setStagger(percent: 60)
+            let metrics = GridMetrics.popover
+            let gallery = VStack(alignment: .leading, spacing: 18) {
+                ForEach(g.catalog, id: \.kind) { info in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(info.name).font(.headline)
+                        HStack(alignment: .top, spacing: 10) {
+                            ForEach(info.sizes, id: \.self) { size in
+                                let r = metrics.rect(WidgetPlacement(widgetId: 0, column: 0, row: 0,
+                                                                     columns: UInt8(size.columns), rows: UInt8(size.rows)))
+                                VStack(spacing: 3) {
+                                    WidgetView(slot: WidgetSlot(id: 0, kind: info.kind, size: size, showTitle: true, column: 0, row: 0))
+                                        .frame(width: r.width, height: r.height)
+                                    Text(size.label).font(.caption2).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(20)
+            .environment(g)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .environment(\.colorScheme, scheme)
+            save(gallery, to: dir.appending(path: "widgets-tamanhos\(scheme == .dark ? "-escuro" : "").png"))
+        }
+
         // Mapa de calor do widget na forma do teclado, nos quatro estados.
         let counts = store.statistics(.today)?.keyCounts ?? []
         let top = counts.map(\.count).max() ?? 0
@@ -107,7 +137,7 @@ enum Snapshots {
             let todos = config.tabs.last!.id
             for info in s.catalog {
                 let id = config.nextId
-                config = menuAddWidget(config: config, tabId: todos, kind: info.kind, at: nil)
+                config = menuAddWidget(config: config, tabId: todos, kind: info.kind, at: nil, size: nil)
                 let biggest = info.sizes.max { $0.columns * $0.rows < $1.columns * $1.rows } ?? info.sizes[0]
                 config = menuSetWidgetSize(config: config, widgetId: id, size: biggest)
             }

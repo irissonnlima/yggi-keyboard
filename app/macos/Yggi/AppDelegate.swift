@@ -5,6 +5,7 @@ import YggiCore
 
 /// Ícone na barra de menus, balão com os widgets e janelas do app.
 ///
+/// O Yggi é um app normal (Dock, Cmd+Tab, janela comum) que também tem o ícone na barra.
 /// Feito em AppKit: o `NSStatusItem` com `NSPopover` dá o balão com a setinha apontando para
 /// o ícone, e as janelas abrem sem depender de nenhuma cena do SwiftUI estar viva.
 @MainActor
@@ -27,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Appearance.applySaved()
+        NSApp.setActivationPolicy(.regular)
 
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.target = self
@@ -181,12 +183,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             let window = NSWindow(contentViewController: host)
             window.title = "Yggi"
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
-            window.setContentSize(NSSize(width: 1280, height: 820))
+            window.setContentSize(NSSize(width: 1400, height: 860))
             window.isReleasedWhenClosed = false
-            window.setFrameAutosaveName("YggiMainWindow")
+            window.setFrameAutosaveName("YggiWindow")
             window.center()
-            // Abre na mesa (Space) em que a pessoa está, mesmo com outro app em tela cheia.
-            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             mainWindow = window
         }
         mainWindow?.makeKeyAndOrderFront(nil)
@@ -200,7 +200,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             window.title = "Ajustes do Yggi"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
-            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             window.center()
             settingsWindow = window
         }
