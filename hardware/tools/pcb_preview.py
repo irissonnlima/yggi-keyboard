@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Desenha uma prévia SVG das placas (.kicad_pcb do Ergogen + contorno .dxf), sem dependências.
 
-Uso: python3 tools/pcb_preview.py saida.svg placa1.kicad_pcb [placa2.kicad_pcb ...]
+Uso: python3 hardware/tools/pcb_preview.py saida.svg placa1.kicad_pcb [placa2.kicad_pcb ...]
 O contorno é lido do .dxf de mesmo nome em hardware/pcb/outlines/.
 """
 import math

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Junta PNGs (saída do OpenSCAD) num GIF animado, sem dependências externas.
 
-Uso: python3 tools/make_gif.py saida.gif quadro1.png quadro2.png ... [--delay 12] [--pingpong]
+Uso: python3 hardware/tools/make_gif.py saida.gif quadro1.png quadro2.png ... [--delay 12] [--pingpong]
 """
 import struct
 import sys

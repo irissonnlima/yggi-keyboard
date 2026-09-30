@@ -20,7 +20,7 @@ Os arquivos são gerados com o [Ergogen](https://ergogen.xyz) a partir de [`ergo
 |---|---|
 | [`kicad/*.kicad_pcb`](kicad/) | placas para o KiCad (footprints e redes posicionados, trilhas ainda não traçadas) |
 | [`outlines/*.dxf`](outlines/) | contornos de corte, os mesmos usados no CAD |
-| [`preview.svg`](preview.svg) | a prévia acima (`python3 tools/pcb_preview.py`) |
+| [`preview.svg`](preview.svg) | a prévia acima (`python3 hardware/tools/pcb_preview.py`) |
 
 ## A ligação em cadeia
 
@@ -83,6 +83,8 @@ Diodos no sentido **COL2ROW**, o padrão do ZMK: coluna → switch → diodo →
 
 ## Como regenerar
 
+A partir da raiz do repositório:
+
 ```bash
 python3 hardware/pcb/ergogen/generate.py
 ```
@@ -92,5 +94,5 @@ cd hardware/pcb/ergogen && for d in coluna_1u coluna_2u placa_L; do npx ergogen@
 ```
 
 ```bash
-python3 tools/pcb_preview.py hardware/pcb/preview.svg hardware/pcb/kicad/placa_L.kicad_pcb hardware/pcb/kicad/coluna_1u.kicad_pcb hardware/pcb/kicad/coluna_2u.kicad_pcb
+python3 hardware/tools/pcb_preview.py hardware/pcb/preview.svg hardware/pcb/kicad/placa_L.kicad_pcb hardware/pcb/kicad/coluna_1u.kicad_pcb hardware/pcb/kicad/coluna_2u.kicad_pcb
 ```
