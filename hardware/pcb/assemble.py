@@ -3,6 +3,8 @@
 
     python3 hardware/pcb/assemble.py [stagger_pct]      # 0 (ortho, padrão) … 150
 
+As placas ficam separadas por GAP mm (a mais do que no teclado) para ver onde cada uma acaba.
+
 Lê as placas roteadas em hardware/pcb/kicad/ e grava hardware/pcb/kicad/metade_esquerda.kicad_pcb
 (com stagger diferente de 0: metade_esquerda_<pct>.kicad_pcb).
 
@@ -33,6 +35,7 @@ BOARDS = [
     ("IN", "coluna_2u", 99, 3),     # indicador (S1 = coluna externa da placa dupla)
 ]
 S1_Y = 25.5                          # centro da fileira de baixo (r4) no CAD
+GAP = 8.0                            # espaço extra entre placas vizinhas (em x), para ver onde cada uma acaba
 
 
 def tokenize(text):
@@ -108,14 +111,14 @@ def s1_position(root):
 def main():
     pct = float(sys.argv[1]) if len(sys.argv) > 1 else 0
     header, items = None, []
-    for prefix, fname, cad_x, k in BOARDS:
+    for i, (prefix, fname, cad_x, k) in enumerate(BOARDS):
         root = parse(tokenize((HERE / f"{fname}.kicad_pcb").read_text()))
         if header is None:
             header = [c for c in root[1:] if isinstance(c, list) and c[0] in
                       ("version", "generator", "generator_version", "general", "paper", "layers", "setup")]
         sx, sy = s1_position(root)
         cad_y = S1_Y + STAGGER.get(prefix, 0) * pct / 150
-        dx, dy = OX + cad_x - sx, OY - cad_y - sy
+        dx, dy = OX + cad_x + i * GAP - sx, OY - cad_y - (GAP / 2 if i else 0) - sy   # colunas sobem, longe da barra
         rename = net_map(prefix, k)
 
         def fix(n):
