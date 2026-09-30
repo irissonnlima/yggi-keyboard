@@ -74,6 +74,25 @@ enum Snapshots {
         .environment(\.colorScheme, .light)
         save(icons, to: dir.appending(path: "icone-barra.png"))
 
+        // Mapa de calor do widget na forma do teclado, nos quatro estados.
+        let counts = store.statistics(.today)?.keyCounts ?? []
+        let top = counts.map(\.count).max() ?? 0
+        let levels = Dictionary(counts.map { ($0.keyId, Int(heatLevel(count: $0.count, max: top))) }, uniquingKeysWith: { a, _ in a })
+        let heat = VStack(alignment: .leading, spacing: 14) {
+            ForEach([(0.0, 0.0, "Ortho, juntas"), (100, 0, "Aberto, juntas"), (0, 1, "Ortho, separadas"), (100, 1, "Aberto, separadas")], id: \.2) { st, sep, name in
+                HStack(spacing: 16) {
+                    Text(name).font(.system(size: 13)).frame(width: 130, alignment: .leading)
+                    HeatKeyboard(layout: store.layout, levels: levels, stagger: st, separation: sep)
+                        .frame(width: 330, height: 150)
+                        .background(Color(white: 0.17))
+                }
+            }
+        }
+        .padding(20)
+        .background(Color(white: 0.12))
+        .environment(\.colorScheme, .dark)
+        save(heat, to: dir.appending(path: "mapa-de-calor.png"))
+
         // Telas (sem a barra de ferramentas, que é da janela).
         for scheme in [ColorScheme.light, .dark] {
             let suffix = scheme == .dark ? "-escuro" : ""

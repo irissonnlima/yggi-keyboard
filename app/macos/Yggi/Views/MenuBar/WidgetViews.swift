@@ -294,26 +294,13 @@ struct WidgetView: View {
     }
 
     private var heatmap: some View {
-        // As duas barras de espaço (uma por metade) somam numa só.
-        var byLabel: [String: UInt64] = [:]
-        for key in store.statistics(.today)?.keyCounts ?? [] { byLabel[keyLabel(key.keyId), default: 0] += key.count }
-        let top = Array(byLabel.sorted { $0.value > $1.value }.prefix(tall ? 24 : 12))
-        let maxCount = Double(top.first?.value ?? 1)
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 6), spacing: 4) {
-            ForEach(top, id: \.key) { label, count in
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, minHeight: 20)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.orange.opacity(0.15 + 0.7 * Double(count) / maxCount)))
-                    .help("\(count) toques")
-            }
-        }
-    }
-
-    private func keyLabel(_ id: String) -> String {
-        guard let key = store.layout.keys.first(where: { $0.id == id }) else { return id }
-        return key.label.isEmpty ? key.name : key.label
+        let counts = store.statistics(.today)?.keyCounts ?? []
+        let max = counts.map(\.count).max() ?? 0
+        var levels: [String: Int] = [:]
+        for k in counts { levels[k.keyId] = Int(heatLevel(count: k.count, max: max)) }
+        return HeatKeyboard(layout: store.layout, levels: levels,
+                            stagger: Double(state.staggerPercent), separation: state.halvesJoined ? 0 : 1)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// Pausa a cada 50 minutos digitando.
@@ -377,6 +364,54 @@ struct WidgetView: View {
             Text("ZMK").font(.callout.weight(.semibold))
             Text(store.simulator != nil ? "simulado" : "atualizado").font(.caption2).foregroundStyle(.secondary)
         }
+    }
+}
+
+/// O teclado inteiro em quadradinhos, sem legenda, pintado pelo uso de cada tecla.
+/// Segue a forma de agora: colunas sobem com o stagger e as metades se afastam; anima entre os estados.
+struct HeatKeyboard: View, @MainActor Animatable {
+    let layout: KeyboardLayout
+    /// Nível de calor (0 a 4, de `heatLevel`) por id de tecla.
+    let levels: [String: Int]
+    var stagger: Double
+    var separation: Double
+
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(stagger, separation) }
+        set { (stagger, separation) = (newValue.first, newValue.second) }
+    }
+
+    /// Espaço entre as metades separadas, em u.
+    private let splitGap = 1.0
+    private let keyGap = 0.14
+
+    var body: some View {
+        Canvas { context, size in
+            let keys = layout.keys
+            guard let minX = keys.map({ Double($0.x) }).min(),
+                  let maxX = keys.map({ Double($0.x + $0.w) }).max(),
+                  let maxY = keys.map({ Double($0.y + $0.h) }).max() else { return }
+            let maxLift = layout.columns.map { Double($0.liftAtMax) }.max() ?? 0
+            // No layout a metade direita começa em x 12 e a esquerda termina em 11: juntas, encostam.
+            let gap = splitGap * separation - 1
+            let widthU = maxX - minX + gap
+            let heightU = maxY + maxLift
+            let scale = min(size.width / widthU, size.height / heightU)
+            let ox = (size.width - widthU * scale) / 2
+            let oy = (size.height - heightU * scale) / 2
+            for key in keys {
+                let lift = key.column.map { Double(layout.columns[Int($0)].liftAtMax) * stagger / 100 } ?? 0
+                let shift = key.half == .right ? gap : 0
+                let rect = CGRect(x: ox + (Double(key.x) - minX + shift + keyGap / 2) * scale,
+                                  y: oy + (maxLift + Double(key.y) - lift + keyGap / 2) * scale,
+                                  width: (Double(key.w) - keyGap) * scale,
+                                  height: (Double(key.h) - keyGap) * scale)
+                let level = levels[key.id]
+                let color = level.map { StatsScreen.ramp[$0].0 } ?? Color.secondary.opacity(0.15)
+                context.fill(Path(roundedRect: rect, cornerRadius: scale * 0.12), with: .color(color))
+            }
+        }
+        .accessibilityLabel("Mapa de calor do teclado")
     }
 }
 

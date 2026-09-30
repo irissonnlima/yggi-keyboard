@@ -91,7 +91,7 @@ struct StatsScreen: View {
 
     // MARK: mapa de calor
 
-    private static let ramp: [(Color, Color)] = [
+    static let ramp: [(Color, Color)] = [
         (Color(red: 0.863, green: 0.910, blue: 0.973), Hardware.legend),
         (Color(red: 0.702, green: 0.804, blue: 0.945), Hardware.legend),
         (Color(red: 0.494, green: 0.667, blue: 0.902), Color(white: 0.09)),
