@@ -201,12 +201,12 @@ $('#sl3').oninput=e=>{u3=e.target.value/150;drawXray()};
 group('[data-j]','j',v=>{joined3=+v;drawXray()});
 
 /* ---------- 4. mola (corte lateral) ---------- */
-let pos=0,stop=.667,press=0,tooth=0,phase='travado',flash=0,timer=null;
+let pos=0,stop=.667,press=0,tooth=0,phase='travado em ortho',flash=0,timer=null;
 function drawSpr(){const S=4.6,s=pos*stop*15,t=pos*stop*24,pd=press*1.6,dz=tooth*1.4;
 const L={tray:[0,1.2],cam:[2,3.2],ch:[3.4,5],sled:[5,7.8],pcb:[7.8,9],sw:[9,12],cap:[12.8,15.2]};
 let g=`<text x="20" y="22" font-size="13" fill="var(--t1)" font-weight="600">${phase}</text>`;
 if(flash>0)g+=`<text x="660" y="22" font-size="14" fill="var(--ok)" font-weight="600" text-anchor="end">clique!</text>`;
-g+=`<g transform="translate(90,175) rotate(-5) scale(${S})">`;
+g+=`<g transform="translate(90,185) rotate(-5) scale(${S})">`;
 g+=`<polygon points="0,0 106.5,0 106.5,9.3" fill="var(--s1)" stroke="var(--b3)" stroke-width="0.25"/>`;
 g+=R(54,100,-4.6,-0.4,'var(--green-bg)','var(--green)','rx="0.6"');
 const ang=t/24*720;g+=`<g transform="translate(102.95,1.4) rotate(${ang})"><circle r="4" fill="var(--s2)" stroke="var(--t2)" stroke-width="0.3"/><line x1="0" y1="0" x2="0" y2="-3.6" stroke="var(--t2)" stroke-width="0.4"/><circle r="1.2" fill="none" stroke="var(--t2)" stroke-width="0.25"/></g>`;
@@ -222,12 +222,12 @@ g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)')+R(17+
 [34,68].forEach(p=>{g+=R(p-1.5+s,p+1.5+s,L.cam[0]-.6,L.sled[0],'var(--t2)')});
 g+=R(86.05,88.45,3.45-pd,9.6-pd,'var(--bad)','none')+R(85.25,89.25,9.6-pd,10.4-pd,'var(--bad)','none','rx="0.4"');
 g+='</g>';
-g+=`<line x1="60" y1="175" x2="650" y2="175" stroke="var(--b3)" stroke-width="0.6"/>`;
+g+=`<line x1="60" y1="185" x2="650" y2="185" stroke="var(--b3)" stroke-width="0.6"/>`;
 const lab=(x,y,txt,c)=>`<text x="${x}" y="${y}" font-size="11" fill="${c||'var(--t2)'}">${txt}</text>`;
-g+=lab(470,58,'● botão + dente da trava','var(--bad)')+lab(470,74,'● gaveta (coluna do médio)','var(--blue)')+lab(470,90,'● placa-came','var(--amber)')+lab(470,106,'● batente','var(--blue)');
-g+=lab(90,196,'frente')+lab(560,196,'trás · tambor da mola');
+g+=lab(20,44,'● botão + dente da trava','var(--bad)')+lab(170,44,'● gaveta (coluna do médio)','var(--blue)')+lab(330,44,'● placa-came','var(--amber)')+lab(420,44,'● batente','var(--blue)')+lab(490,44,'● bateria','var(--green)');
+g+=lab(90,204,'frente')+lab(560,204,'trás · tambor da mola');
 /* inset de cima */
-const X0=70,SC=4.3,Y0=225;g+=`<text x="20" y="${Y0-6}" font-size="12" fill="var(--t2)">placa-came vista de cima</text>`;
+const X0=70,SC=4.3,Y0=235;g+=`<text x="20" y="${Y0-6}" font-size="12" fill="var(--t2)">placa-came vista de cima</text>`;
 g+=`<rect x="${X0}" y="${Y0}" width="${126*SC}" height="100" rx="6" fill="none" stroke="var(--b3)" stroke-dasharray="4 3"/>`;
 const px0=X0+(12.8+t)*SC,pw=(97.2-12.8)*SC;
 g+=`<rect x="${px0}" y="${Y0+10}" width="${pw}" height="62" rx="3" fill="var(--amber-bg)" stroke="var(--amber)"/>`;
@@ -241,7 +241,7 @@ const sx=X0+(97.2+stop*24+1.75)*SC;if(stop<.99)g+=`<circle cx="${sx}" cy="${Y0+4
 g+=`<text x="${X0+(97.2+t)*SC+8}" y="${Y0+26}" font-size="11" fill="var(--t2)">mola puxa →</text>`;
 $('#spr').innerHTML=g;
 stats($('#st4'),[['Estado',phase,''],['Stagger',`${Math.round(pos*stop*150)}%`,`batente ${Math.round(stop*150)}%`],['Trava',tooth?'solta':'fechada',tooth?'dente embaixo da placa':'dente no furo'],['Mola','força constante','fita de aço, tipo trena']])}
-function animate(steps){if(timer)clearInterval(timer);let i=0;timer=setInterval(()=>{const st=steps[0];if(!st){clearInterval(timer);timer=null;return}st.f(Math.min(1,++i/st.n));if(flash>0)flash--;drawSpr();if(i>=st.n){steps.shift();i=0;if(st.end)st.end()}},30)}
+function animate(steps){if(timer)clearInterval(timer);let i=0;timer=setInterval(()=>{const st=steps[0];if(!st){clearInterval(timer);timer=null;return}st.f(Math.min(1,++i/st.n));if(flash>0)flash--;drawSpr();if(i>=st.n){steps.shift();i=0;if(st.end)st.end();drawSpr()}},30)}
 $('#rel').onclick=()=>{if(pos>0||timer)return;phase='botão apertado';
 animate([{n:10,f:k=>press=k,end:()=>{tooth=1;phase='mola puxando…'}},{n:22,f:k=>{pos=1-Math.pow(1-k,3);press=1-k},end:()=>{phase='stagger (parado no batente)'}}])};
 $('#push').onclick=()=>{if(pos==0||timer)return;phase='empurrando as colunas…';const p0=pos;
