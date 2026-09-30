@@ -119,7 +119,8 @@ struct OverviewToolbar: ToolbarContent {
             .help("Colunas em ortho ou soltas pela mola")
 
             PercentSlider(value: state.staggerPercent, label: "Abertura do stagger") { store.setStaggerLevel($0) }
-                .frame(width: 170)
+                .padding(.horizontal, 10)
+                .frame(width: 230)
                 .help("Quanto as colunas abrem, de 0 (ortho) a 100%")
 
             Picker("Metades", selection: Binding(
