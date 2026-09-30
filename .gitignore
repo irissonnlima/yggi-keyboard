@@ -22,6 +22,7 @@ Thumbs.db
 # --- KiCad: backups, caches e arquivos locais ---
 *-backups/
 *.kicad_prl
+.history/
 fp-info-cache
 *.bak
 *-bak

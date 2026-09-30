@@ -30,11 +30,11 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 
 ![lateral](docs/media/v3-lateral.png)
 
-**Metade esquerda explodida** (cunha com bateria, bandeja, placa-came, chassi, colunas com as suas placas, bloco fixo, placa L e barra do polegar):
+**Metade esquerda explodida** (cunha com bateria, bandeja, placa-came, chassi, colunas com as suas placas, bloco fixo, placa L e barra do polegar; na rev1, a placa MCU fica na cunha, ao lado da bateria: veja [`pcb/rev1.md`](pcb/rev1.md)):
 
 ![explodida](docs/media/v3-explodida.png)
 
-**Placas de circuito** ([detalhes](pcb/README.md)): a placa L (bloco fixo + barra do polegar, com o MCU) e as placas das colunas, geradas com Ergogen para o KiCad:
+**Placas de circuito** ([detalhes](pcb/README.md)): as 6 placas das duas mãos (placa L com o bloco fixo e a barra do polegar, coluna 1u e coluna 2u), geradas com Ergogen e roteadas no KiCad, com LED RGB por tecla:
 
 ![placas](pcb/preview.svg)
 
@@ -70,7 +70,7 @@ Cada metade, de baixo para cima:
 - O **botão** ao lado dos LEDs empurra o dente para baixo, e a mola leva as colunas até o **pino de batente** (50, 100 ou 150%, trocável por baixo).
 - Para voltar, é só empurrar as colunas. Os rasgos são inclinados o bastante (~32°) para o movimento voltar pela came, e o dente estala de volta no furo.
 
-**Módulos:** as faces de encaixe são retas, com ímãs de 4 × 2 mm e 4 contatos pogo (energia + dados). As bordas externas são arredondadas. Com as metades juntas, um único USB-C carrega tudo. Separadas, cada metade funciona sozinha por Bluetooth.
+**Módulos:** as faces de encaixe são retas, com ímãs de 4 × 2 mm e um **conector pogo magnético de 5 pinos** (VBUS, GND, 2 de dados e detecção) na face da bandeja. As bordas externas são arredondadas. Com as metades juntas, um único USB-C carrega tudo. Separadas, cada metade funciona sozinha por Bluetooth.
 
 ---
 
@@ -79,12 +79,13 @@ Cada metade, de baixo para cima:
 | | |
 |---|---|
 | **Placas por metade** | **5, em cadeia**: placa L (bloco fixo + barra do polegar) → coluna 1u → coluna 1u → coluna 1u → coluna 2u. As 3 de 1u são **idênticas**, graças a um barramento rotativo. |
-| **Microcontrolador** | um **nRF52840** por metade, **na placa L** (parte fixa), embaixo dela, ao lado das teclas de 2u. Junto ficam o carregador e o **USB-C, na frente da barra, no canto externo**. Na rev0 das placas, o MCU é externo (nice!nano ligado por fios a um cabeçalho de 18 pads). |
+| **Microcontrolador** | um **nRF52840** (módulo Raytac MDBT50Q) por metade, numa **placa MCU própria na cunha**, sob o bloco fixo, com a antena na borda externa. Junto ficam o carregador, a chave dos LEDs e o **USB-C, na face de trás da cunha**. Um flex de 20 vias liga a placa MCU à placa L. Na rev0 das placas, o MCU é externo (nice!nano ligado por fios). Plano: [`pcb/rev1.md`](pcb/rev1.md). |
 | **Por que nRF52840** | é o chip mais bem suportado pelo ZMK. Tem 21 GPIO, o suficiente para a matriz 6 × 7 mais os 3 LEDs. |
 | **Firmware** | [ZMK](https://zmk.dev) (Zephyr, MIT): Bluetooth, split sem fio, 5 perfis de computador, bateria. Funções do Yggi (tecla de troca, LEDs, conversa com o e-reader) entram como **módulos ZMK** próprios. |
 | **Bateria** | LiPo de 4 mm na cunha, ~1800 mAh por metade (76 × 46 mm). A cunha comporta células maiores se a inclinação aumentar. |
-| **Ligação das colunas** | **jumper de 10 vias** (5 linhas + 5 colunas) entre placas vizinhas. Colunas vizinhas andam no máximo 9 mm uma em relação à outra no perfil padrão; o projeto aceita até 15 mm. Protótipo: fios de silicone. Produto: jumper flexível (FPC). |
-| **Switches** | Choc V1 com **furos passantes** (soldados ou em soquetes Mill-Max). O soquete hot-swap Kailh não cabe numa coluna de 17,4 mm. |
+| **Ligação das colunas** | **jumper de 13 vias** (5 linhas, 5 colunas, VLED, GND e dados dos LEDs) entre placas vizinhas. Colunas vizinhas andam no máximo 9 mm uma em relação à outra no perfil padrão; o projeto aceita até 15 mm. Protótipo: fios de silicone. Produto: jumper flexível (FPC). |
+| **Switches** | Choc V1 com **furos passantes** (soldados ou em soquetes Mill-Max). O soquete hot-swap Kailh não cabe numa coluna de 17,4 mm. As 4 setas de meia altura (mão direita) usam chave tátil SMD (TS-1187A). |
+| **Iluminação** | **LED RGB por tecla** (SK6812MINI-E, montado por baixo, brilhando pela janela do Choc): 38 na mão esquerda e 35 na direita, em cadeia de uma placa para a seguinte. Mais os 3 LEDs de aparelho da tecla Yggi. |
 
 O **e-reader** (fase 2) tem cérebro próprio. A base sugerida é o firmware open source [CrossPoint](https://github.com/crosspoint-reader/crosspoint-reader) (ESP32). Encaixado, ele mostra o estado do teclado. Solto, é um leitor.
 
@@ -98,7 +99,9 @@ docs/
   media/                  GIF e imagens do README
 pcb/
   ergogen/generate.py     gera as placas (Ergogen)
-  kicad/                  placas para o KiCad (placa L, coluna 1u, coluna 2u)
+  route.py                termina as placas no KiCad (LEDs, diodos, trilhas pelo Freerouting, DRC)
+  assemble.py             junta as 10 placas num arquivo só, para ver o teclado inteiro
+  kicad/                  as 6 placas (placa L, coluna 1u, coluna 2u; esquerda e _dir) e teclado_*.kicad_pcb
   outlines/               contornos de corte (.dxf)
 stagger-mechanism/
   yggi_v3.scad            CAD atual (mecanismo fino, inclinado, com mola)
@@ -153,8 +156,9 @@ python3 tools/make_gif.py docs/media/yggi-stagger.gif /tmp/f0.png /tmp/f25.png /
 3. **Fase 3 · hub:** mouse, trackpad e áudio passando pelo Yggi.
 
 **Pendências conhecidas:**
-- Switch das setas de 0,5u (o Choc não cabe em meia altura).
-- Traçar as trilhas das placas no KiCad e colocar os LEDs; rev1 com MCU, carregador e USB-C na placa L.
+- Rev1 da placa L: módulo nRF52840, carregador, USB-C nas duas mãos, chave dos LEDs RGB e **conector pogo magnético de 5 pinos** (VBUS, GND, 2 de dados e detecção), no lugar dos 4 pogo + ímãs soltos.
+- Fixação das placas: 1 parafuso M2 por coluna na faixa entre F e números + presilhas no trenó; M2 na placa L.
+- Keycap de 0,5u para as setas táteis.
 - Estabilizadores das teclas de 2u.
 - Escolher a mola de força constante e a bateria reais.
 - Testar folgas e a força da trava na prática.

@@ -1,0 +1,6 @@
+(version 1)
+(rule "borda: 0,5 mm"
+  (constraint edge_clearance (min 0.5mm)))
+(rule "borda: LED RGB junto do próprio recorte"
+  (constraint edge_clearance (min 0.2mm))
+  (condition "A.memberOfFootprint('L*') || B.memberOfFootprint('L*')"))

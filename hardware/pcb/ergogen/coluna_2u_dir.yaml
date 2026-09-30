@@ -1,6 +1,6 @@
 meta:
   engine: 4.1.0
-  name: yggi_coluna_1u
+  name: yggi_coluna_2u_dir
   author: Yggi Keyboard
   version: rev0
 units:
@@ -16,6 +16,10 @@ points:
         c1:
           key:
             column_net: C1
+        c2:
+          key:
+            column_net: C2
+            spread: -18
       rows:
         r4:
           row_net: R4
@@ -33,14 +37,14 @@ outlines:
     - what: rectangle
       where: matrix_c1_r4
       adjust:
-        shift: [0, 36.25]
-      size: [17.4, 89.5]
+        shift: [-9.0, 36.25]
+      size: [35.4, 89.5]
   keys:
     - what: rectangle
       where: true
       size: [kx-0.5, ky-0.5]
 pcbs:
-  coluna_1u:
+  coluna_2u_dir:
     outlines:
       main:
         outline: board
@@ -66,7 +70,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-7.4, 63.985]
+          shift: [7.4, 63.985]
         params:
           front: false
           back: true
@@ -78,7 +82,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-6.13, 63.985]
+          shift: [6.13, 63.985]
         params:
           front: false
           back: true
@@ -90,7 +94,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-4.86, 63.985]
+          shift: [4.86, 63.985]
         params:
           front: false
           back: true
@@ -102,7 +106,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-3.59, 63.985]
+          shift: [3.59, 63.985]
         params:
           front: false
           back: true
@@ -114,7 +118,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-2.32, 63.985]
+          shift: [2.32, 63.985]
         params:
           front: false
           back: true
@@ -126,7 +130,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-1.05, 63.985]
+          shift: [1.05, 63.985]
         params:
           front: false
           back: true
@@ -138,7 +142,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [0.22, 63.985]
+          shift: [-0.22, 63.985]
         params:
           front: false
           back: true
@@ -150,7 +154,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-7.4, 62.715]
+          shift: [7.4, 62.715]
         params:
           front: false
           back: true
@@ -162,7 +166,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-6.13, 62.715]
+          shift: [6.13, 62.715]
         params:
           front: false
           back: true
@@ -174,7 +178,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-4.86, 62.715]
+          shift: [4.86, 62.715]
         params:
           front: false
           back: true
@@ -186,7 +190,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-3.59, 62.715]
+          shift: [3.59, 62.715]
         params:
           front: false
           back: true
@@ -198,7 +202,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-2.32, 62.715]
+          shift: [2.32, 62.715]
         params:
           front: false
           back: true
@@ -210,7 +214,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-1.05, 62.715]
+          shift: [1.05, 62.715]
         params:
           front: false
           back: true
@@ -218,147 +222,3 @@ pcbs:
           height: 0.9
           text: ''
           net: DIN
-      jout_0:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [-0.22, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: R0
-      jout_1:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [1.05, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: R1
-      jout_2:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [2.32, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: R2
-      jout_3:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [3.59, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: R3
-      jout_4:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [4.86, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: R4
-      jout_5:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [6.13, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: VLED
-      jout_6:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [7.4, 60.785]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: GND
-      jout_7:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [-0.22, 59.515]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: C2
-      jout_8:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [1.05, 59.515]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: C3
-      jout_9:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [2.32, 59.515]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: C4
-      jout_10:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [3.59, 59.515]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: C5
-      jout_12:
-        what: pad
-        where: matrix_c1_r4
-        adjust:
-          shift: [6.13, 59.515]
-        params:
-          front: false
-          back: true
-          width: 1
-          height: 0.9
-          text: ''
-          net: DOUT

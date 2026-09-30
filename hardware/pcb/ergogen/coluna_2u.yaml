@@ -19,6 +19,7 @@ points:
         c2:
           key:
             column_net: C2
+            spread: 18
       rows:
         r4:
           row_net: R4
@@ -69,7 +70,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-7.0, 62.385]
+          shift: [-7.4, 63.985]
         params:
           front: false
           back: true
@@ -81,7 +82,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-5.73, 62.385]
+          shift: [-6.13, 63.985]
         params:
           front: false
           back: true
@@ -93,7 +94,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-4.46, 62.385]
+          shift: [-4.86, 63.985]
         params:
           front: false
           back: true
@@ -105,7 +106,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-3.19, 62.385]
+          shift: [-3.59, 63.985]
         params:
           front: false
           back: true
@@ -117,7 +118,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-1.92, 62.385]
+          shift: [-2.32, 63.985]
         params:
           front: false
           back: true
@@ -129,7 +130,31 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-7.0, 61.115]
+          shift: [-1.05, 63.985]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: VLED
+      jin_6:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [0.22, 63.985]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: GND
+      jin_7:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-7.4, 62.715]
         params:
           front: false
           back: true
@@ -137,11 +162,11 @@ pcbs:
           height: 0.9
           text: ''
           net: C1
-      jin_6:
+      jin_8:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-5.73, 61.115]
+          shift: [-6.13, 62.715]
         params:
           front: false
           back: true
@@ -149,11 +174,11 @@ pcbs:
           height: 0.9
           text: ''
           net: C2
-      jin_7:
+      jin_9:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-4.46, 61.115]
+          shift: [-4.86, 62.715]
         params:
           front: false
           back: true
@@ -161,11 +186,11 @@ pcbs:
           height: 0.9
           text: ''
           net: C3
-      jin_8:
+      jin_10:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-3.19, 61.115]
+          shift: [-3.59, 62.715]
         params:
           front: false
           back: true
@@ -173,11 +198,11 @@ pcbs:
           height: 0.9
           text: ''
           net: C4
-      jin_9:
+      jin_11:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-1.92, 61.115]
+          shift: [-2.32, 62.715]
         params:
           front: false
           back: true
@@ -185,3 +210,15 @@ pcbs:
           height: 0.9
           text: ''
           net: C5
+      jin_12:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-1.05, 62.715]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: DIN

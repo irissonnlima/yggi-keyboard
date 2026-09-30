@@ -1,6 +1,6 @@
 meta:
   engine: 4.1.0
-  name: yggi_placa_L
+  name: yggi_placa_L_dir
   author: Yggi Keyboard
   version: rev0
 units:
@@ -10,9 +10,8 @@ points:
   zones:
     big:
       anchor:
-        shift: [kx/2, 0]
+        shift: [-kx/2, 0]
       key:
-        padding: ky
         width: 2*kx
         column_net: COL0
       columns:
@@ -20,16 +19,12 @@ points:
       rows:
         r4:
           row_net: R4
-        r3:
-          row_net: R3
-        r2:
-          row_net: R2
     fixed:
       anchor:
-        shift: [0, 3*ky]
+        shift: [0, ky]
       key:
-        spread: kx
-        padding: ky + 4.5
+        spread: -kx
+        padding: ky
       columns:
         c0:
           key:
@@ -38,42 +33,35 @@ points:
           key:
             column_net: COL1
       rows:
+        r3:
+          row_net: R3
+        r2:
+          row_net: R2
         r1:
           row_net: R1
+          padding: ky + 4.5
         r0:
           row_net: R0
     bar:
       anchor:
-        shift: [0, -ky]
+        shift: [-54, -ky]
       key:
         padding: ky
         row_net: R5
       columns:
-        fn:
-          key:
-            column_net: COL0
-        ctl:
-          key:
-            spread: kx
-            column_net: COL1
-        opt:
-          key:
-            spread: kx
-            column_net: COL2
         cmd:
           key:
-            spread: kx
-            column_net: COL3
-        del:
-          key:
-            spread: 22.5
-            width: 1.5*kx
             column_net: COL4
-        spc:
+        ret:
           key:
-            spread: 27
+            spread: -22.5
             width: 1.5*kx
             column_net: COL5
+        spc:
+          key:
+            spread: -27
+            width: 1.5*kx
+            column_net: COL6
       rows:
         r5:
 outlines:
@@ -86,17 +74,17 @@ outlines:
     - what: rectangle
       where: big_c0_r4
       adjust:
-        shift: [45.0, -17.15]
+        shift: [-45.0, -17.15]
       size: [124, 14.7]
     - what: rectangle
       where: big_c0_r4
       adjust:
-        shift: [0.34999999999999964, -9.1]
+        shift: [-0.34999999999999964, -9.1]
       size: [34.7, 1.6]
     - what: circle
       where: big_c0_r4
       adjust:
-        shift: [4.0, 61.75]
+        shift: [-4.0, 61.75]
       radius: 1.4
       operation: subtract
   keys:
@@ -104,7 +92,7 @@ outlines:
       where: true
       size: [kx-0.5, ky-0.5]
 pcbs:
-  placa_L:
+  placa_L_dir:
     outlines:
       main:
         outline: board
@@ -149,7 +137,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [8.78, 60.785]
+          shift: [-8.78, 60.785]
         params:
           front: false
           back: true
@@ -161,7 +149,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [10.05, 60.785]
+          shift: [-10.05, 60.785]
         params:
           front: false
           back: true
@@ -173,7 +161,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [11.32, 60.785]
+          shift: [-11.32, 60.785]
         params:
           front: false
           back: true
@@ -185,7 +173,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [12.59, 60.785]
+          shift: [-12.59, 60.785]
         params:
           front: false
           back: true
@@ -197,7 +185,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [13.86, 60.785]
+          shift: [-13.86, 60.785]
         params:
           front: false
           back: true
@@ -209,7 +197,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [15.13, 60.785]
+          shift: [-15.13, 60.785]
         params:
           front: false
           back: true
@@ -221,7 +209,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [16.4, 60.785]
+          shift: [-16.4, 60.785]
         params:
           front: false
           back: true
@@ -233,7 +221,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [8.78, 59.515]
+          shift: [-8.78, 59.515]
         params:
           front: false
           back: true
@@ -245,7 +233,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [10.05, 59.515]
+          shift: [-10.05, 59.515]
         params:
           front: false
           back: true
@@ -257,7 +245,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [11.32, 59.515]
+          shift: [-11.32, 59.515]
         params:
           front: false
           back: true
@@ -269,7 +257,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [12.59, 59.515]
+          shift: [-12.59, 59.515]
         params:
           front: false
           back: true
@@ -281,7 +269,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [13.86, 59.515]
+          shift: [-13.86, 59.515]
         params:
           front: false
           back: true
@@ -293,7 +281,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [15.13, 59.515]
+          shift: [-15.13, 59.515]
         params:
           front: false
           back: true
@@ -305,7 +293,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, -6.0]
+          shift: [15.8, -6.0]
         params:
           front: false
           back: true
@@ -317,7 +305,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, -4.73]
+          shift: [15.8, -4.73]
         params:
           front: false
           back: true
@@ -329,7 +317,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, -3.46]
+          shift: [15.8, -3.46]
         params:
           front: false
           back: true
@@ -341,7 +329,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, -2.19]
+          shift: [15.8, -2.19]
         params:
           front: false
           back: true
@@ -353,7 +341,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, -0.92]
+          shift: [15.8, -0.92]
         params:
           front: false
           back: true
@@ -365,7 +353,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 0.35]
+          shift: [15.8, 0.35]
         params:
           front: false
           back: true
@@ -377,7 +365,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 1.62]
+          shift: [15.8, 1.62]
         params:
           front: false
           back: true
@@ -389,7 +377,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 2.89]
+          shift: [15.8, 2.89]
         params:
           front: false
           back: true
@@ -401,7 +389,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 4.16]
+          shift: [15.8, 4.16]
         params:
           front: false
           back: true
@@ -413,7 +401,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 5.43]
+          shift: [15.8, 5.43]
         params:
           front: false
           back: true
@@ -425,7 +413,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 6.7]
+          shift: [15.8, 6.7]
         params:
           front: false
           back: true
@@ -437,7 +425,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 7.97]
+          shift: [15.8, 7.97]
         params:
           front: false
           back: true
@@ -449,7 +437,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 9.24]
+          shift: [15.8, 9.24]
         params:
           front: false
           back: true
@@ -461,7 +449,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 10.51]
+          shift: [15.8, 10.51]
         params:
           front: false
           back: true
@@ -473,7 +461,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 11.78]
+          shift: [15.8, 11.78]
         params:
           front: false
           back: true
@@ -485,7 +473,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 13.05]
+          shift: [15.8, 13.05]
         params:
           front: false
           back: true
@@ -497,43 +485,7 @@ pcbs:
         what: pad
         where: big_c0_r4
         adjust:
-          shift: [-15.8, 14.32]
-        params:
-          front: false
-          back: true
-          width: 1.0
-          height: 0.9
-          text: ''
-          net: LED1
-      mcu_17:
-        what: pad
-        where: big_c0_r4
-        adjust:
-          shift: [-15.8, 15.59]
-        params:
-          front: false
-          back: true
-          width: 1.0
-          height: 0.9
-          text: ''
-          net: LED2
-      mcu_18:
-        what: pad
-        where: big_c0_r4
-        adjust:
-          shift: [-15.8, 16.86]
-        params:
-          front: false
-          back: true
-          width: 1.0
-          height: 0.9
-          text: ''
-          net: LED3
-      mcu_19:
-        what: pad
-        where: big_c0_r4
-        adjust:
-          shift: [-15.8, 18.13]
+          shift: [15.8, 14.32]
         params:
           front: false
           back: true
