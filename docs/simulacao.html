@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yggi — Simulação</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#fafaf8;--s1:#f1f0ec;--s2:#ffffff;--t1:#1f1e1c;--t2:#5f5d58;--t3:#8d8a84;--b:#d9d6cf;--b2:#b9b5ac;--b3:#8f8a80;
+--acc:#2f6fd6;--acc-bg:#e3ecfb;--ok:#2e8b57;--ok-bg:#e2f3e8;--warn:#b7791f;--warn-bg:#fbefd9;--bad:#c0392b;--bad-bg:#f8e1de;
+--blue:#3b7dd8;--blue-bg:#d6e5fa;--amber:#e39a2d;--amber-bg:#fbe7c6;--teal:#2a9d8f;--teal-bg:#d3efeb;--gray:#8a877f;--gray-bg:#e7e5df;--green:#3aa76d;--green-bg:#d8f0e2;
+--r:8px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--serif:Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1a18;--s1:#252421;--s2:#2d2c29;--t1:#f1efe9;--t2:#b9b5ac;--t3:#8d8a84;--b:#3b3935;--b2:#55524c;--b3:#76726a;
+--acc:#7aa7f0;--acc-bg:#1f3052;--ok:#6fcf97;--ok-bg:#1d3a2a;--warn:#f0b35a;--warn-bg:#3d2e14;--bad:#f08a7e;--bad-bg:#44201b;
+--blue:#6fa3ec;--blue-bg:#1e3150;--amber:#f0b35a;--amber-bg:#44331a;--teal:#5ccfc0;--teal-bg:#173a36;--gray:#a19d94;--gray-bg:#34322e;--green:#6fcf97;--green-bg:#1d3a2a}}
+:root[data-theme="dark"]{--bg:#1b1a18;--s1:#252421;--s2:#2d2c29;--t1:#f1efe9;--t2:#b9b5ac;--t3:#8d8a84;--b:#3b3935;--b2:#55524c;--b3:#76726a;
+--acc:#7aa7f0;--acc-bg:#1f3052;--ok:#6fcf97;--ok-bg:#1d3a2a;--warn:#f0b35a;--warn-bg:#3d2e14;--bad:#f08a7e;--bad-bg:#44201b;
+--blue:#6fa3ec;--blue-bg:#1e3150;--amber:#f0b35a;--amber-bg:#44331a;--teal:#5ccfc0;--teal-bg:#173a36;--gray:#a19d94;--gray-bg:#34322e;--green:#6fcf97;--green-bg:#1d3a2a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t1);font-family:var(--font);line-height:1.6}
+main{max-width:1040px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:28px;font-weight:600;margin:0 0 4px}h2{font-size:19px;font-weight:600;margin:40px 0 4px}
+p.lead{color:var(--t2);margin:0 0 8px}p.note{color:var(--t2);font-size:14px;margin:4px 0 12px}
+.card{background:var(--s2);border:1px solid var(--b);border-radius:14px;padding:16px}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:10px 0;font-size:14px;color:var(--t2)}
+.ctrl input[type=range]{flex:1;min-width:160px;accent-color:var(--acc)}
+button{font:inherit;font-size:13px;padding:5px 12px;border-radius:var(--r);border:1px solid var(--b2);background:transparent;color:var(--t1);cursor:pointer}
+button:hover{background:var(--s1)}button.on{border:2px solid var(--acc);padding:4px 11px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.stat{background:var(--s1);border-radius:var(--r);padding:8px 12px}.stat .l{font-size:12px;color:var(--t2)}.stat .v{font-size:18px;font-weight:600}.stat .x{font-size:12px;color:var(--t2)}
+.kb{position:relative;width:100%}
+.k{position:absolute;border:0.5px solid var(--b2);border-radius:4px;background:var(--s2);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;font-size:11px;text-align:center;color:var(--t1);transition:top .08s linear}
+.k small{font-size:10px;color:var(--t2)}.k.m{background:var(--s1)}.k.y{background:var(--acc-bg);color:var(--acc);border-color:var(--acc)}
+.k.bar{border:1px solid var(--acc)}.sk{position:absolute;background:var(--s1);border:0.5px dashed var(--b3);border-top:none}
+.fx{position:absolute;border-radius:6px;background:var(--acc-bg);opacity:.5}
+.bay{position:absolute;border-radius:12px 0 0 12px;background:var(--s1);border:0.5px dashed var(--b3)}
+.dev{position:absolute;border-radius:9px;background:var(--s2);border:1px solid var(--b3)}
+.ink{position:absolute;border-radius:2px;background:var(--s1);border:0.5px solid var(--b2);padding:4px 6px;font-family:var(--serif);font-size:10px;line-height:1.35;overflow:hidden;color:var(--t1)}
+.ink .sb{font-family:var(--font);display:flex;gap:4px;border-bottom:0.5px solid var(--b2);margin-bottom:3px;color:var(--t2);white-space:nowrap}
+.leds{position:absolute;display:flex;gap:4px}.leds i{width:5px;height:5px;border-radius:50%;background:var(--b2);display:block}.leds i.on{background:var(--ok)}
+svg text{font-family:var(--font)}
+footer{margin-top:48px;color:var(--t3);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>Yggi Keyboard · simulação</h1>
+<p class="lead">Split ortholinear que vira column stagger. Mecanismo v3: gavetas deslizantes sobre um chassi imutável, placa-came com mola, cunha traseira com bateria e baia para o e-reader.</p>
+
+<h2>1 · Vista de cima: antes e depois</h2>
+<p class="note">Arraste o stagger. As 2 colunas externas de cada lado e a barra do polegar não se movem; as outras colunas deslizam inteiras e a saia (tracejada) tampa o vão.</p>
+<div class="card">
+<div class="kb" id="kb"></div>
+<div class="ctrl"><span>Stagger</span><input type="range" id="sl" min="0" max="150" value="0"><b id="pc" style="min-width:48px;text-align:right">0%</b>
+<button id="anim"><i class="ti ti-player-play"></i> animar</button></div>
+<div class="ctrl"><span>Encaixe do e-reader</span><button data-d="0" class="on">à esquerda</button><button data-d="1">no centro</button><span style="margin-left:12px">Aparelho</span><button data-pc="0" class="on">1</button><button data-pc="1">2</button><button data-pc="2">3</button></div>
+<div class="stats" id="st1"></div>
+</div>
+
+<h2>2 · Corte lateral: v2 × v3</h2>
+<p class="note">A v3 fica fina porque a placa de circuito de cada gaveta é o próprio plate, e placa-came e chassi viram chapa. A bateria vai numa cunha atrás e dá a inclinação.</p>
+<div class="card">
+<svg viewBox="0 0 680 200" width="100%" id="sec"></svg>
+<div class="ctrl"><span>Versão</span><button data-v="2">v2</button><button data-v="3" class="on">v3</button><span style="margin-left:12px">Stagger</span><input type="range" id="sl2" min="0" max="150" value="0"></div>
+<div class="stats" id="st2"></div>
+</div>
+
+<h2>3 · Vista de frente</h2>
+<p class="note">Três módulos: baia, metade esquerda e metade direita. Faces de encaixe retas (ímãs + pogo), bordas externas arredondadas. Linha contínua = frente; tracejada = silhueta de trás, mais alta por causa da inclinação.</p>
+<div class="card">
+<svg viewBox="0 0 680 190" width="100%" id="front"></svg>
+<div class="ctrl"><span>Módulos</span><button data-j="1" class="on">encaixados</button><button data-j="0">separados</button></div>
+</div>
+
+<h2>4 · Mola: soltar e travar</h2>
+<p class="note">Em ortho a trava segura a placa-came. O botão (ao lado dos LEDs) solta a trava e a mola de força constante leva as colunas até o batente. Para voltar, empurre as colunas até o clique.</p>
+<div class="card">
+<svg viewBox="0 0 680 210" width="100%" id="spr"></svg>
+<div class="ctrl"><button id="rel"><i class="ti ti-hand-finger"></i> apertar o botão</button><button id="push"><i class="ti ti-arrow-back-up"></i> empurrar as colunas de volta</button>
+<span style="margin-left:12px">Batente</span><button data-s="0.333">50%</button><button data-s="0.667" class="on">100%</button><button data-s="1">150%</button></div>
+</div>
+
+<footer>Yggi Keyboard · open hardware (CERN-OHL-S sugerida) · CAD em <code>hardware/stagger-mechanism/yggi_v3.scad</code></footer>
+</main>
+<script>
+const $=q=>document.querySelector(q),$$=q=>document.querySelectorAll(q);
+function stats(el,rows){el.innerHTML=rows.map(([l,v,x])=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}</div><div class="x">${x||''}</div></div>`).join('')}
+function group(sel,attr,fn){$$(sel).forEach(b=>b.onclick=()=>{$$(sel).forEach(o=>o.classList.remove('on'));b.classList.add('on');fn(b.dataset[attr])})}
+
+/* ---------- 1. vista de cima ---------- */
+const lb=(a,b)=>b?`<small>${b}</small>${a}`:a,md=(s,t)=>`${s}<small>${t}</small>`;
+const FK=['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'];
+const SH={'`':'~','1':'!','2':'@','3':'#','4':'$','5':'%','6':'^','7':'&','8':'*','9':'(','0':')','-':'_','=':'+','[':'{',']':'}','\\':'|',';':':',"'":'"',',':'<','.':'>','/':'?'};
+const T=s=>s.length==1&&SH[s]?lb(s,SH[s]):s;
+const MOD={esc:md('esc',''),tab:md('⇥','tab'),caps:md('⇪','caps'),sh:md('⇧','shift'),bs:md('⌫','delete'),ret:md('↩','return'),lock:md('<i class="ti ti-fingerprint"></i>','lock'),fn:md('<i class="ti ti-world"></i>','fn'),ctl:md('⌃','control'),opt:md('⌥','option'),cmd:md('⌘','command'),sp:md('␣','space'),yggi:md('<i class="ti ti-arrows-exchange"></i>','yggi')};
+function seq(r,arr){let c=0;return arr.map(a=>{const o=typeof a=='string'?{k:a}:a;const res={r,c,sp:o.sp||1,k:o.k};c+=res.sp;return res})}
+const arrows=x=>[{x,w:1,k:'←',h:.5,yo:.5},{x:x+1,w:1,k:'↑',h:.5},{x:x+1,w:1,k:'↓',h:.5,yo:.5},{x:x+2,w:1,k:'→',h:.5,yo:.5}];
+const LAY={PL:[0,0,0,9,15,9,9],PR:[9,9,15,9,0,0,0],FL:[0,1],FR:[5,6],
+L:[seq(0,['esc',...FK.slice(0,6)]),seq(1,['yggi','`','1','2','3','4','5']),seq(2,[{k:'tab',sp:2},'Q','W','E','R','T']),seq(3,[{k:'caps',sp:2},'A','S','D','F','G']),seq(4,[{k:'sh',sp:2},'Z','X','C','V','B'])].flat(),
+R:[seq(0,[...FK.slice(6),'lock']),seq(1,['6','7','8','9','0','-','=']),seq(2,['Y','U','I','O','P','[',']']),seq(3,['H','J','K','L',';',"'",'\\']),seq(4,['N','M',',','.','/',{k:'sh',sp:2}])].flat(),
+BL:[{x:0,w:1,k:'fn'},{x:1,w:1,k:'ctl'},{x:2,w:1,k:'opt'},{x:3,w:1,k:'cmd'},{x:4,w:1.5,k:'bs'},{x:5.5,w:1.5,k:'sp'}],
+BR:[{x:0,w:1.5,k:'sp'},{x:1.5,w:1.5,k:'ret'},{x:3,w:1,k:'cmd'},...arrows(4)]};
+let u1=0,dock=0,dev=0,an=null;const U=18,RY=r=>r==0?0:r*17+4.5,BW=72,BH=117,KH=RY(5)+17,HW=126;
+function half(keys,P,F,B,x0,S,yk,yb){let h='';
+F.forEach(c=>{h+=`<div class="fx" style="left:${(x0+c*U)*S}px;top:${(yk-3)*S}px;width:${U*S}px;height:${(RY(4)+20)*S}px"></div>`});
+for(let c=0;c<7;c++){const sv=P[c]*u1;if(sv>.3)h+=`<div class="sk" style="left:${(x0+c*U+1.8)*S}px;top:${(yb-sv)*S}px;width:${(U-3.6)*S}px;height:${sv*S}px"></div>`}
+keys.forEach(k=>{const sv=P[k.c]*u1,x=x0+k.c*U+.25,y=yk+RY(k.r)+.25-sv,w=k.sp*U-.5,m=MOD[k.k];
+h+=`<div class="k ${k.k=='yggi'?'y':m?'m':''}" style="left:${x*S}px;top:${y*S}px;width:${w*S}px;height:${16.5*S}px">${m||T(k.k)}</div>`});
+B.forEach(b=>{h+=`<div class="k m bar" style="left:${(x0+b.x*U+.25)*S}px;top:${(yb+(b.yo||0)*17+.25)*S}px;width:${(b.w*U-.5)*S}px;height:${((b.h||1)*17-.5)*S}px">${MOD[b.k]||b.k}</div>`});return h}
+function bayHtml(bx,by,S,left){let h=`<div class="bay" style="left:${bx*S}px;top:${by*S}px;width:${BW*S}px;height:${BH*S}px;border-radius:${left?'12px 0 0 12px':'0'}"></div>`;
+const dx=bx+(BW-69)/2,dy=by+(BH-114)/2;h+=`<div class="dev" style="left:${dx*S}px;top:${dy*S}px;width:${69*S}px;height:${114*S}px"></div>`;
+h+=`<div class="ink" style="left:${(dx+6.5)*S}px;top:${(dy+6)*S}px;width:${56*S}px;height:${94*S}px"><div class="sb"><i class="ti ti-device-laptop"></i>PC ${dev+1}<span style="margin-left:auto">82%</span></div>Yggdrasil ergue-se no centro dos nove mundos, e suas raízes bebem de três fontes.</div>`;return h}
+function drawTop(){const kb=$('#kb'),W=kb.clientWidth||900,total=dock==0?BW+HW+U+HW:HW+BW+HW,S=W/(total+4),yk=(BH-KH)/2,yb=yk+RY(5);
+kb.style.height=(BH+4)*S+'px';let h='';let lx;
+if(dock==0){h+=bayHtml(2,0,S,true);lx=2+BW;h+=half(LAY.L,LAY.PL,LAY.FL,LAY.BL,lx,S,yk,yb)+half(LAY.R,LAY.PR,LAY.FR,LAY.BR,lx+HW+U,S,yk,yb)}
+else{lx=2;h+=half(LAY.L,LAY.PL,LAY.FL,LAY.BL,lx,S,yk,yb);h+=bayHtml(2+HW,0,S,false);h+=half(LAY.R,LAY.PR,LAY.FR,LAY.BR,2+HW+BW,S,yk,yb)}
+h+=`<div class="leds" style="left:${(lx+4)*S}px;top:${(yk+86.3)*S}px">${[0,1,2].map(i=>`<i class="${i==dev?'on':''}"></i>`).join('')}</div>`;
+kb.innerHTML=h;$('#pc').textContent=Math.round(u1*100)+'%';
+stats($('#st1'),[['Teclas','79','38 + 41'],['Stagger do médio',`${(15*u1).toFixed(1)} mm`,'máx. 15 mm (150%)'],['Aparelho',`PC ${dev+1}`,'tecla Yggi + 3 LEDs'],['Baia','72 × 117 mm','e-reader 69 × 114 mm']])}
+$('#sl').oninput=e=>{u1=e.target.value/150;drawTop()};
+$('#anim').onclick=()=>{if(an){clearInterval(an);an=null;return}let d=u1>=1?-1:1;an=setInterval(()=>{u1=Math.min(1,Math.max(0,u1+d*.02));$('#sl').value=Math.round(u1*150);drawTop();if(u1<=0||u1>=1){clearInterval(an);an=null}},30)};
+group('[data-d]','d',v=>{dock=+v;drawTop()});group('[data-pc]','pc',v=>{dev=+v;drawTop()});
+
+/* ---------- 2. corte lateral ---------- */
+let ver=3,u2=0;
+function R(y0,y1,z0,z1,f,st,extra){return `<rect x="${y0}" y="${-z1}" width="${y1-y0}" height="${z1-z0}" fill="${f}" stroke="${st||'none'}" stroke-width="0.25" ${extra||''}/>`}
+function drawSec(){const v3=ver==3,tilt=v3?5:0,s=u2*15,S=4.2;
+const L=v3?{tray:[0,1.2],cam:[2,3.2],ch:[3.4,5],sled:[5,7.8],pcb:[7.8,9],sw:[9,12],cap:[12.8,15.2]}:{tray:[0,5.6],cam:[2.8,5.3],ch:[5.6,8.1],sled:[8.1,16.3],pcb:[16.3,17.6],sw:[17.6,20.6],cap:[20.6,23.2]};
+let g=`<g transform="translate(100,150) rotate(${-tilt}) scale(${S})">`;
+if(v3){g+=`<polygon points="0,0 106.5,0 106.5,9.3" fill="var(--s1)" stroke="var(--b3)" stroke-width="0.25"/>`;g+=R(54,100,-4.6,-0.4,'var(--green-bg)','var(--green)','rx="0.6"');g+=R(66,100,-4.6,-0.4,'none','none')}
+g+=R(0,106.5,...L.tray,'var(--gray-bg)','var(--b3)');g+=R(29,100,...L.cam,'var(--amber-bg)','var(--amber)');g+=R(0,106.5,...L.ch,'var(--gray-bg)','var(--b3)');
+g+=R(.5,16.7,L.sled[0]+(v3?1:1.2),L.pcb[1],'var(--teal-bg)','var(--teal)','rx="0.5"');g+=R(1,16,...L.cap,'var(--s2)','var(--b3)','rx="1"');
+g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)');g+=R(17+s,106.5+s,L.sled[0],L.pcb[1],'var(--blue-bg)','var(--blue)','rx="0.6"');
+[89.5,68,51,34,17].forEach(y=>{g+=R(y+2+s,y+15+s,L.pcb[1],L.sw[1],'var(--b2)','none','opacity="0.6"');g+=R(y+.5+s,y+16.5+s,...L.cap,'var(--s2)','var(--b3)','rx="1"')});
+[34,68].forEach(p=>{g+=R(p-1.5+s,p+1.5+s,L.cam[0]-.6,L.sled[0],'var(--t2)')});g+='</g>';
+g+=`<line x1="60" y1="150" x2="660" y2="150" stroke="var(--b3)" stroke-width="0.6"/>`;
+g+=`<text x="100" y="172" font-size="12" fill="var(--t2)">frente</text><text x="${100+106.5*S}" y="172" font-size="12" fill="var(--t2)" text-anchor="end">trás</text>`;
+if(v3)g+=`<text x="${100+78*S}" y="188" font-size="12" fill="var(--t2)" text-anchor="middle">bateria na cunha (~1800 mAh)</text>`;
+$('#sec').innerHTML=g;
+stats($('#st2'),v3?[['Frente','≈ 16 mm','até o topo da tecla'],['Trás','≈ 25 mm','cunha com bateria'],['Inclinação','5°',''],['Stagger',`${Math.round(u2*150)}%`,'']]:[['Frente','≈ 23 mm',''],['Trás','≈ 23 mm','reto'],['Inclinação','0°',''],['Stagger',`${Math.round(u2*150)}%`,'']])}
+group('[data-v]','v',v=>{ver=+v;drawSec()});$('#sl2').oninput=e=>{u2=e.target.value/150;drawSec()};
+
+/* ---------- 3. vista de frente ---------- */
+let joined=1;
+function drawFront(){const S=1.85,x0=16,base=150,gap=joined?0:14;let g='';
+const mods=[{n:'baia',w:72,top:9.9,roundL:true,roundR:false},{n:'metade esquerda',w:126,top:15.7,roundL:false,roundR:false},{n:'metade direita',w:126,top:15.7,roundL:false,roundR:true}];
+let x=x0;const back=9.3;
+mods.forEach((m,i)=>{const w=m.w*S,hf=m.top*S,hb=(m.top+back)*S,r=6*S;
+const path=(h)=>{const tl=m.roundL?r:0,tr=m.roundR?r:0;return `M${x+tl} ${base} L${x+w-tr} ${base} ${tr?`Q${x+w} ${base} ${x+w} ${base-tr}`:''} L${x+w} ${base-h} L${x} ${base-h} L${x} ${base-tl} ${tl?`Q${x} ${base} ${x+tl} ${base}`:''} Z`};
+g+=`<path d="${path(hb)}" fill="none" stroke="var(--b3)" stroke-width="1" stroke-dasharray="4 3"/>`;
+g+=`<path d="${path(hf)}" fill="var(--s1)" stroke="var(--t2)" stroke-width="1"/>`;
+if(i>0){const kc=Math.floor(m.w/18);for(let c=0;c<kc;c++)g+=`<rect x="${x+(c*18+1)*S}" y="${base-hf}" width="${16*S}" height="${2.4*S}" rx="2" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`}
+else g+=`<rect x="${x+1.5*S}" y="${base-hf-0.5*S}" width="${69*S}" height="${5.9*S}" rx="3" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`;
+g+=`<text x="${x+w/2}" y="${base+18}" font-size="12" fill="var(--t2)" text-anchor="middle">${m.n}</text>`;
+if(i<2&&joined)g+=`<g><circle cx="${x+w}" cy="${base-6}" r="3" fill="var(--acc)"/><circle cx="${x+w}" cy="${base-12}" r="1.6" fill="var(--amber)"/></g>`;
+x+=w+gap});
+g+=`<line x1="10" y1="${base}" x2="670" y2="${base}" stroke="var(--b3)" stroke-width="0.6"/>`;
+g+=`<text x="16" y="24" font-size="12" fill="var(--t2)"><tspan fill="var(--acc)">●</tspan> ímã  <tspan fill="var(--amber)">●</tspan> contatos pogo (energia + dados)  ·  frente ≈ 16 mm, trás ≈ 25 mm</text>`;
+$('#front').innerHTML=g}
+group('[data-j]','j',v=>{joined=+v;drawFront()});
+
+/* ---------- 4. mola ---------- */
+let pos=0,stop=.667,sa=null;
+function drawSpr(){const TT=24,t=pos*stop*TT,X0=70,SC=4.3,Y=30;let g='';
+g+=`<rect x="${X0}" y="${Y}" width="${126*SC}" height="130" rx="6" fill="none" stroke="var(--b3)" stroke-dasharray="4 3"/>`;
+const px0=X0+(12.8+t)*SC,pw=(97.2-12.8)*SC;
+g+=`<rect x="${px0}" y="${Y+20}" width="${pw}" height="${(99.95-30.3)*1.25}" rx="3" fill="var(--amber-bg)" stroke="var(--amber)"/>`;
+[[40,34,0],[68,34,9],[86,34,15],[94,68,9]].forEach(([x,y,s])=>{g+=`<line x1="${px0+(x-12.8)*SC}" y1="${Y+20+(y-30.3)*1.25}" x2="${px0+(x-24-12.8)*SC}" y2="${Y+20+(y+s-30.3)*1.25}" stroke="var(--amber)" stroke-width="5" stroke-linecap="round" opacity=".7"/>`});
+const dx=X0+118*SC,dy=Y+122;g+=`<circle cx="${dx}" cy="${dy}" r="14" fill="var(--s2)" stroke="var(--t2)"/><circle cx="${dx}" cy="${dy}" r="6" fill="none" stroke="var(--t2)"/>`;
+g+=`<line x1="${px0+5*SC}" y1="${dy-14}" x2="${dx}" y2="${dy-14}" stroke="var(--t2)" stroke-width="2"/>`;
+g+=`<text x="${dx}" y="${dy+30}" font-size="12" fill="var(--t2)" text-anchor="middle">mola de força constante</text>`;
+const locked=pos==0,lx=X0+30*SC;
+g+=`<rect x="${lx-6}" y="${Y+88}" width="12" height="12" rx="2" fill="${locked?'var(--bad-bg)':'var(--gray-bg)'}" stroke="${locked?'var(--bad)':'var(--b3)'}"/>`;
+g+=`<text x="${lx}" y="${Y+114}" font-size="12" fill="${locked?'var(--bad)':'var(--t2)'}" text-anchor="middle">${locked?'trava fechada':'trava aberta'}</text>`;
+const sx=X0+(97.2+stop*TT+1.5)*SC;g+=`<rect x="${sx}" y="${Y+30}" width="8" height="30" rx="2" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="${sx+12}" y="${Y+50}" font-size="12" fill="var(--t2)">batente ${Math.round(stop*150)}%</text>`;
+g+=`<text x="${X0}" y="${Y+156}" font-size="13" fill="var(--t1)">stagger atual: <tspan font-weight="600">${Math.round(pos*stop*150)}%</tspan></text>`;
+$('#spr').innerHTML=g}
+function go(target){if(sa)clearInterval(sa);sa=setInterval(()=>{const d=target-pos;if(Math.abs(d)<.03){pos=target;clearInterval(sa);sa=null}else pos+=Math.sign(d)*(target>pos?.09:.03);drawSpr()},30)}
+$('#rel').onclick=()=>{if(pos==0)go(1)};$('#push').onclick=()=>{if(pos>0)go(0)};
+group('[data-s]','s',v=>{stop=+v;drawSpr()});
+
+addEventListener('resize',drawTop);drawTop();drawSec();drawFront();drawSpr();
+</script>
+</body>
+</html>
