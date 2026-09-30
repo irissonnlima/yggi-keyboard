@@ -94,7 +94,6 @@ struct WidgetView: View {
                         Text("toque para o próximo").font(.caption2).foregroundStyle(.secondary)
                     }
                 }
-                Spacer(minLength: 0)
             }
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -191,7 +190,6 @@ struct WidgetView: View {
                     Text("e-reader \(readerText)").font(.caption2).foregroundStyle(.secondary)
                 }
             }
-            Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity)
     }
@@ -243,6 +241,7 @@ struct WidgetView: View {
                 .buttonStyle(.plain)
             }
         }
+        .fixedSize()
         .disabled(!state.isConnected)
     }
 
@@ -313,7 +312,6 @@ struct WidgetView: View {
                 Text("\(left) min").font(.callout.weight(.semibold)).monospacedDigit()
                 if cols >= 2 { Text("até a próxima pausa").font(.caption2).foregroundStyle(.secondary) }
             }
-            Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity)
     }

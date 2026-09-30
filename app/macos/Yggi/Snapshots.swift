@@ -102,12 +102,16 @@ enum Snapshots {
             save(screen(LightsScreen(), s, scheme), to: dir.appending(path: "luzes\(suffix).png"))
             save(screen(StatsScreen(scrolls: false), s, scheme), to: dir.appending(path: "estatisticas\(suffix).png"))
             // Cada aba de fábrica e uma aba com todos os widgets, no maior tamanho de cada um.
-            var all = s.menuBar.tabs
-            let every = s.catalog.enumerated().map { i, info in
-                WidgetSlot(id: UInt32(1000 + i), kind: info.kind,
-                           size: info.sizes.max { $0.columns * $0.rows < $1.columns * $1.rows } ?? info.sizes[0], showTitle: true)
+            // Montada pelo núcleo, como o editor faria: adiciona cada widget e aumenta até o maior tamanho.
+            var config = menuAddTab(config: defaultMenuBar(), name: "Todos")
+            let todos = config.tabs.last!.id
+            for info in s.catalog {
+                let id = config.nextId
+                config = menuAddWidget(config: config, tabId: todos, kind: info.kind, at: nil)
+                let biggest = info.sizes.max { $0.columns * $0.rows < $1.columns * $1.rows } ?? info.sizes[0]
+                config = menuSetWidgetSize(config: config, widgetId: id, size: biggest)
             }
-            all.append(MenuTab(id: 999, name: "Todos", widgets: every))
+            let all = config.tabs
             let tabs = HStack(alignment: .top, spacing: 20) {
                 ForEach(all, id: \.id) { tab in
                     VStack(alignment: .leading) {

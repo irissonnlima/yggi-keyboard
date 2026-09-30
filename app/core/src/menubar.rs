@@ -14,7 +14,9 @@ pub const MAX_TABS: usize = 6;
 /// Máximo de caracteres no nome de uma aba.
 pub const MAX_TAB_NAME: usize = 20;
 
-const HEADER: &str = "yggi-menubar 1";
+const HEADER: &str = "yggi-menubar 2";
+/// Versão sem posições: os widgets eram encaixados na ordem.
+const HEADER_V1: &str = "yggi-menubar 1";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Enum)]
 pub enum WidgetKind {
@@ -195,13 +197,16 @@ pub struct WidgetSlot {
     pub kind: WidgetKind,
     pub size: WidgetSize,
     pub show_title: bool,
+    /// Célula do canto de cima à esquerda (coluna 0 a 2, linha a partir de 0).
+    pub column: u8,
+    pub row: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, uniffi::Record)]
 pub struct MenuTab {
     pub id: u32,
     pub name: String,
-    /// Na ordem em que entram na grade.
+    /// Cada widget guarda a própria posição; células vazias ficam vazias no popover.
     pub widgets: Vec<WidgetSlot>,
 }
 
@@ -213,6 +218,13 @@ pub struct MenuBarConfig {
     pub open_first_tab: bool,
     /// Próximo id livre (abas e widgets dividem a numeração).
     pub next_id: u32,
+}
+
+/// Uma célula da grade.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+pub struct GridCell {
+    pub column: u8,
+    pub row: u32,
 }
 
 /// Onde um widget fica na grade da aba, em células.
@@ -228,41 +240,50 @@ pub struct WidgetPlacement {
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct TabGrid {
     pub placements: Vec<WidgetPlacement>,
-    /// Altura da grade em linhas.
+    /// Altura da grade em linhas (até o fim do widget mais baixo).
     pub rows: u32,
 }
 
-/// Encaixa os widgets na grade de 3 colunas, na ordem da aba: cada um vai para o primeiro
-/// lugar livre (de cima para baixo, da esquerda para a direita) onde cabe inteiro.
-/// Assim um widget pequeno depois de um grande preenche o buraco ao lado dele.
+/// Onde cada widget está, na ordem de leitura (linha, depois coluna).
 #[uniffi::export]
 pub fn tab_grid(tab: MenuTab) -> TabGrid {
-    let cols = GRID_COLUMNS as usize;
-    let mut used: Vec<[bool; GRID_COLUMNS as usize]> = Vec::new();
-    let mut placements = Vec::with_capacity(tab.widgets.len());
-    for w in &tab.widgets {
-        let (wc, wr) = (w.size.columns() as usize, w.size.rows() as usize);
-        let mut row = 0usize;
-        let (r, c) = 'search: loop {
-            while used.len() < row + wr {
-                used.push([false; GRID_COLUMNS as usize]);
-            }
-            for c in 0..=(cols - wc) {
-                if (row..row + wr).all(|r| (c..c + wc).all(|cc| !used[r][cc])) {
-                    break 'search (row, c);
-                }
-            }
-            row += 1;
-        };
-        for rr in r..r + wr {
-            for cc in c..c + wc {
-                used[rr][cc] = true;
-            }
-        }
-        placements.push(WidgetPlacement { widget_id: w.id, column: c as u8, row: r as u32, columns: wc as u8, rows: wr as u8 });
-    }
+    let mut widgets = tab.widgets.clone();
+    widgets.sort_by_key(|w| (w.row, w.column));
+    let placements: Vec<_> = widgets
+        .iter()
+        .map(|w| WidgetPlacement { widget_id: w.id, column: w.column, row: w.row, columns: w.size.columns(), rows: w.size.rows() })
+        .collect();
     let rows = placements.iter().map(|p| p.row + p.rows as u32).max().unwrap_or(0);
     TabGrid { placements, rows }
+}
+
+fn overlaps(a: (u8, u32, WidgetSize), b: (u8, u32, WidgetSize)) -> bool {
+    let (ac, ar, asz) = a;
+    let (bc, br, bsz) = b;
+    ac < bc + bsz.columns() && bc < ac + asz.columns() && ar < br + bsz.rows() as u32 && br < ar + asz.rows() as u32
+}
+
+fn fits(tab: &MenuTab, size: WidgetSize, column: u8, row: u32, ignoring: Option<u32>) -> bool {
+    column + size.columns() <= GRID_COLUMNS
+        && tab
+            .widgets
+            .iter()
+            .filter(|w| Some(w.id) != ignoring)
+            .all(|w| !overlaps((column, row, size), (w.column, w.row, w.size)))
+}
+
+/// O primeiro lugar livre (de cima para baixo, da esquerda para a direita) onde o tamanho cabe.
+fn first_free(tab: &MenuTab, size: WidgetSize, ignoring: Option<u32>) -> (u8, u32) {
+    (0u32..)
+        .find_map(|row| (0..=GRID_COLUMNS - size.columns()).find(|&c| fits(tab, size, c, row, ignoring)).map(|c| (c, row)))
+        .expect("sempre há lugar numa linha nova")
+}
+
+/// Se um widget desse tamanho cabe na célula (dentro das 3 colunas e sem cobrir outro).
+/// `ignoring` é o widget que está sendo arrastado, que não conta como obstáculo.
+#[uniffi::export]
+pub fn menu_can_place(tab: MenuTab, size: WidgetSize, column: u8, row: u32, ignoring: Option<u32>) -> bool {
+    fits(&tab, size, column, row, ignoring)
 }
 
 /// As quatro abas de fábrica.
@@ -279,11 +300,13 @@ pub fn default_menu_bar() -> MenuBarConfig {
     ];
     for (name, widgets) in tabs {
         let id = take_id(&mut config);
-        let widgets = widgets
-            .iter()
-            .map(|&(kind, size)| WidgetSlot { id: take_id(&mut config), kind, size, show_title: true })
-            .collect();
-        config.tabs.push(MenuTab { id, name: name.into(), widgets });
+        let mut tab = MenuTab { id, name: name.into(), widgets: Vec::new() };
+        for &(kind, size) in widgets {
+            let (column, row) = first_free(&tab, size, None);
+            let id = take_id(&mut config);
+            tab.widgets.push(WidgetSlot { id, kind, size, show_title: true, column, row });
+        }
+        config.tabs.push(tab);
     }
     config
 }
@@ -349,16 +372,19 @@ pub fn menu_move_tab(mut config: MenuBarConfig, tab_id: u32, to_index: u32) -> M
     config
 }
 
-/// Adiciona um widget do tipo `kind`, no tamanho padrão dele, na posição `at_index`
-/// da aba (ou no fim).
+/// Adiciona um widget do tipo `kind`, no tamanho padrão dele, na célula `at` se couber ali;
+/// senão (ou sem `at`), no primeiro lugar livre.
 #[uniffi::export]
-pub fn menu_add_widget(mut config: MenuBarConfig, tab_id: u32, kind: WidgetKind, at_index: Option<u32>) -> MenuBarConfig {
+pub fn menu_add_widget(mut config: MenuBarConfig, tab_id: u32, kind: WidgetKind, at: Option<GridCell>) -> MenuBarConfig {
     let Some(t) = tab_index(&config, tab_id) else { return config };
+    let size = widget_info(kind).sizes[0];
+    let tab = &config.tabs[t];
+    let (column, row) = match at {
+        Some(cell) if fits(tab, size, cell.column, cell.row, None) => (cell.column, cell.row),
+        _ => first_free(tab, size, None),
+    };
     let id = take_id(&mut config);
-    let slot = WidgetSlot { id, kind, size: widget_info(kind).sizes[0], show_title: true };
-    let widgets = &mut config.tabs[t].widgets;
-    let at = at_index.map_or(widgets.len(), |i| (i as usize).min(widgets.len()));
-    widgets.insert(at, slot);
+    config.tabs[t].widgets.push(WidgetSlot { id, kind, size, show_title: true, column, row });
     config
 }
 
@@ -370,27 +396,49 @@ pub fn menu_remove_widget(mut config: MenuBarConfig, widget_id: u32) -> MenuBarC
     config
 }
 
-/// Arrastar: leva o widget para a aba `to_tab_id`, na posição `to_index` (limitada ao fim).
-/// Serve para reordenar dentro da mesma aba e para mudar de aba.
+/// Arrastar: põe o widget na célula da aba `to_tab_id`. Se não couber ali, nada muda.
 #[uniffi::export]
-pub fn menu_move_widget(mut config: MenuBarConfig, widget_id: u32, to_tab_id: u32, to_index: u32) -> MenuBarConfig {
+pub fn menu_place_widget(mut config: MenuBarConfig, widget_id: u32, to_tab_id: u32, column: u8, row: u32) -> MenuBarConfig {
     let (Some((t, i)), Some(to_t)) = (find_widget(&config, widget_id), tab_index(&config, to_tab_id)) else { return config };
-    let slot = config.tabs[t].widgets.remove(i);
-    let widgets = &mut config.tabs[to_t].widgets;
-    let to = (to_index as usize).min(widgets.len());
-    widgets.insert(to, slot);
+    let size = config.tabs[t].widgets[i].size;
+    if !fits(&config.tabs[to_t], size, column, row, Some(widget_id)) {
+        return config;
+    }
+    let mut slot = config.tabs[t].widgets.remove(i);
+    slot.column = column;
+    slot.row = row;
+    config.tabs[to_t].widgets.push(slot);
     config
 }
 
-/// Muda o tamanho, se o widget aceitar esse tamanho.
+/// Leva o widget para outra aba, no primeiro lugar livre dela.
+#[uniffi::export]
+pub fn menu_move_widget_to_tab(mut config: MenuBarConfig, widget_id: u32, to_tab_id: u32) -> MenuBarConfig {
+    let (Some((t, i)), Some(to_t)) = (find_widget(&config, widget_id), tab_index(&config, to_tab_id)) else { return config };
+    if t == to_t {
+        return config;
+    }
+    let mut slot = config.tabs[t].widgets.remove(i);
+    (slot.column, slot.row) = first_free(&config.tabs[to_t], slot.size, None);
+    config.tabs[to_t].widgets.push(slot);
+    config
+}
+
+/// Muda o tamanho, se o widget aceitar esse tamanho. Fica no mesmo lugar se couber (encostando
+/// na direita se passar da 3ª coluna); senão, vai para o primeiro lugar livre.
 #[uniffi::export]
 pub fn menu_set_widget_size(mut config: MenuBarConfig, widget_id: u32, size: WidgetSize) -> MenuBarConfig {
-    if let Some((t, i)) = find_widget(&config, widget_id) {
-        let slot = &mut config.tabs[t].widgets[i];
-        if widget_info(slot.kind).sizes.contains(&size) {
-            slot.size = size;
-        }
+    let Some((t, i)) = find_widget(&config, widget_id) else { return config };
+    let slot = config.tabs[t].widgets[i];
+    if !widget_info(slot.kind).sizes.contains(&size) {
+        return config;
     }
+    let tab = &config.tabs[t];
+    let column = slot.column.min(GRID_COLUMNS - size.columns());
+    let (column, row) =
+        if fits(tab, size, column, slot.row, Some(widget_id)) { (column, slot.row) } else { first_free(tab, size, Some(widget_id)) };
+    let slot = &mut config.tabs[t].widgets[i];
+    (slot.size, slot.column, slot.row) = (size, column, row);
     config
 }
 
@@ -402,6 +450,19 @@ pub fn menu_set_widget_title(mut config: MenuBarConfig, widget_id: u32, show: bo
     config
 }
 
+/// Tira os buracos da aba: cada widget, na ordem de leitura, sobe para o primeiro lugar livre.
+#[uniffi::export]
+pub fn menu_compact_tab(mut config: MenuBarConfig, tab_id: u32) -> MenuBarConfig {
+    let Some(t) = tab_index(&config, tab_id) else { return config };
+    let mut widgets = std::mem::take(&mut config.tabs[t].widgets);
+    widgets.sort_by_key(|w| (w.row, w.column));
+    for mut w in widgets {
+        (w.column, w.row) = first_free(&config.tabs[t], w.size, None);
+        config.tabs[t].widgets.push(w);
+    }
+    config
+}
+
 /// Texto para guardar a configuração (no Mac hoje; no teclado quando houver firmware).
 #[uniffi::export]
 pub fn menu_bar_encode(config: MenuBarConfig) -> String {
@@ -409,19 +470,21 @@ pub fn menu_bar_encode(config: MenuBarConfig) -> String {
     for tab in &config.tabs {
         out += &format!("tab {} {}\n", tab.id, escape(&tab.name));
         for w in &tab.widgets {
-            out += &format!("widget {} {} {} {}\n", w.id, w.kind.code(), w.size.code(), u8::from(w.show_title));
+            out += &format!("widget {} {} {} {} {} {}\n", w.id, w.kind.code(), w.size.code(), u8::from(w.show_title), w.column, w.row);
         }
     }
     out
 }
 
-/// Lê o texto de `menu_bar_encode`. `None` se não for uma configuração válida.
-/// Widgets de tipos desconhecidos (de uma versão mais nova) são ignorados, e um tamanho
-/// que o widget não aceita volta ao padrão dele.
+/// Lê o texto de `menu_bar_encode` (e o da versão 1, sem posições). `None` se não for uma
+/// configuração válida. Widgets de tipos desconhecidos (de uma versão mais nova) são ignorados,
+/// um tamanho que o widget não aceita volta ao padrão, e posição ausente ou ocupada vira o
+/// primeiro lugar livre.
 #[uniffi::export]
 pub fn menu_bar_decode(text: String) -> Option<MenuBarConfig> {
     let mut lines = text.lines();
-    if lines.next()? != HEADER {
+    let header = lines.next()?;
+    if header != HEADER && header != HEADER_V1 {
         return None;
     }
     let mut config = MenuBarConfig { tabs: Vec::new(), open_first_tab: true, next_id: 1 };
@@ -443,7 +506,7 @@ pub fn menu_bar_decode(text: String) -> Option<MenuBarConfig> {
             }
             "widget" => {
                 let f: Vec<&str> = rest.split(' ').collect();
-                if f.len() != 4 {
+                if f.len() != 4 && f.len() != 6 {
                     return None;
                 }
                 let id: u32 = f[0].parse().ok()?;
@@ -452,7 +515,12 @@ pub fn menu_bar_decode(text: String) -> Option<MenuBarConfig> {
                 let info = widget_info(kind);
                 let size = WidgetSize::from_code(f[2]).filter(|s| info.sizes.contains(s)).unwrap_or(info.sizes[0]);
                 let tab = config.tabs.last_mut()?;
-                tab.widgets.push(WidgetSlot { id, kind, size, show_title: f[3] == "1" });
+                let wanted = if f.len() == 6 { f[4].parse::<u8>().ok().zip(f[5].parse::<u32>().ok()) } else { None };
+                let (column, row) = match wanted {
+                    Some((c, r)) if c < GRID_COLUMNS && fits(tab, size, c, r, None) => (c, r),
+                    _ => first_free(tab, size, None),
+                };
+                tab.widgets.push(WidgetSlot { id, kind, size, show_title: f[3] == "1", column, row });
             }
             "" => {}
             _ => continue,
@@ -489,14 +557,20 @@ fn unescape(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use WidgetSize as S;
 
-    fn tab_with(sizes: &[WidgetSize]) -> MenuTab {
-        let widgets = sizes.iter().enumerate().map(|(i, &size)| WidgetSlot { id: i as u32, kind: WidgetKind::Battery, size, show_title: true }).collect();
+    fn slot(id: u32, size: WidgetSize, column: u8, row: u32) -> WidgetSlot {
+        WidgetSlot { id, kind: WidgetKind::Battery, size, show_title: true, column, row }
+    }
+
+    fn tab_of(widgets: Vec<WidgetSlot>) -> MenuTab {
         MenuTab { id: 99, name: "t".into(), widgets }
     }
 
-    fn cells(grid: &TabGrid) -> Vec<(u8, u32)> {
-        grid.placements.iter().map(|p| (p.column, p.row)).collect()
+    fn pos(c: &MenuBarConfig, id: u32) -> (u8, u32) {
+        let (t, i) = find_widget(c, id).unwrap();
+        let w = c.tabs[t].widgets[i];
+        (w.column, w.row)
     }
 
     #[test]
@@ -506,36 +580,25 @@ mod tests {
     }
 
     #[test]
-    fn grade_enche_linha_por_linha() {
-        use WidgetSize as S;
-        let grid = tab_grid(tab_with(&[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByOne]));
-        assert_eq!(cells(&grid), vec![(0, 0), (0, 1), (1, 1), (0, 2)]);
-        assert_eq!(grid.rows, 3);
+    fn grade_respeita_as_posicoes_e_deixa_buracos() {
+        let grid = tab_grid(tab_of(vec![slot(1, S::OneByOne, 2, 3), slot(2, S::TwoByOne, 0, 0)]));
+        assert_eq!(grid.placements.iter().map(|p| p.widget_id).collect::<Vec<_>>(), vec![2, 1], "ordem de leitura");
+        assert_eq!(grid.rows, 4, "linhas vazias no meio continuam");
+        assert_eq!(tab_grid(tab_of(vec![])).rows, 0);
     }
 
     #[test]
-    fn pequeno_preenche_o_buraco_ao_lado_do_2x2() {
-        use WidgetSize as S;
-        let grid = tab_grid(tab_with(&[S::TwoByTwo, S::OneByOne, S::OneByOne, S::ThreeByOne]));
-        assert_eq!(cells(&grid), vec![(0, 0), (2, 0), (2, 1), (0, 2)]);
-        assert_eq!(grid.rows, 3);
+    fn cabe_so_dentro_das_colunas_e_sem_cobrir_outro() {
+        let tab = tab_of(vec![slot(1, S::TwoByTwo, 0, 0)]);
+        assert!(menu_can_place(tab.clone(), S::OneByOne, 2, 0, None));
+        assert!(!menu_can_place(tab.clone(), S::OneByOne, 1, 1, None), "dentro do 2x2");
+        assert!(!menu_can_place(tab.clone(), S::TwoByOne, 2, 5, None), "passa da 3ª coluna");
+        assert!(menu_can_place(tab.clone(), S::ThreeByOne, 0, 2, None));
+        assert!(menu_can_place(tab, S::TwoByTwo, 0, 1, Some(1)), "o próprio widget não atrapalha");
     }
 
     #[test]
-    fn largo_desce_quando_nao_cabe() {
-        use WidgetSize as S;
-        let grid = tab_grid(tab_with(&[S::OneByOne, S::ThreeByTwo]));
-        assert_eq!(cells(&grid), vec![(0, 0), (0, 1)]);
-        assert_eq!(grid.rows, 3);
-    }
-
-    #[test]
-    fn aba_vazia_tem_zero_linhas() {
-        assert_eq!(tab_grid(tab_with(&[])).rows, 0);
-    }
-
-    #[test]
-    fn padrao_tem_quatro_abas_e_ids_unicos() {
+    fn padrao_tem_quatro_abas_ids_unicos_e_nada_se_cobre() {
         let c = default_menu_bar();
         assert_eq!(c.tabs.iter().map(|t| t.name.as_str()).collect::<Vec<_>>(), ["Início", "Computadores", "Luz", "Escrita"]);
         let mut ids: Vec<u32> = c.tabs.iter().flat_map(|t| std::iter::once(t.id).chain(t.widgets.iter().map(|w| w.id))).collect();
@@ -544,14 +607,20 @@ mod tests {
         ids.dedup();
         assert_eq!(ids.len(), n);
         assert!(ids.iter().all(|&id| id < c.next_id));
+        for tab in &c.tabs {
+            for w in &tab.widgets {
+                assert!(fits(tab, w.size, w.column, w.row, Some(w.id)), "{:?} cobre outro", w.kind);
+            }
+        }
+        // Início: stagger 3x1 em cima, bateria e computador ativo lado a lado, hoje embaixo.
+        assert_eq!(c.tabs[0].widgets.iter().map(|w| (w.column, w.row)).collect::<Vec<_>>(), vec![(0, 0), (0, 1), (1, 1), (0, 2)]);
     }
 
     #[test]
-    fn todo_widget_aceita_o_proprio_tamanho_padrao_e_o_catalogo_esta_completo() {
+    fn catalogo_esta_completo_e_sem_tamanho_repetido() {
         let catalog = widget_catalog();
         assert_eq!(catalog.len(), KINDS.len());
         for info in catalog {
-            assert!(!info.sizes.is_empty());
             let mut sizes = info.sizes.clone();
             sizes.dedup();
             assert_eq!(sizes.len(), info.sizes.len(), "{} repete tamanho", info.name);
@@ -559,29 +628,76 @@ mod tests {
     }
 
     #[test]
-    fn arrastar_reordena_e_muda_de_aba() {
+    fn arrastar_poe_na_celula_se_couber() {
         let c = default_menu_bar();
         let inicio = c.tabs[0].id;
+        let bateria = c.tabs[0].widgets[1].id;
+        // Linha 5, deixando buraco: pode.
+        let c = menu_place_widget(c, bateria, inicio, 2, 5);
+        assert_eq!(pos(&c, bateria), (2, 5));
+        // Em cima do stagger: não pode, fica onde estava.
+        let c = menu_place_widget(c, bateria, inicio, 1, 0);
+        assert_eq!(pos(&c, bateria), (2, 5));
+        // Para outra aba, numa célula livre.
         let luz = c.tabs[2].id;
-        let last = c.tabs[0].widgets[3].id;
-        let c = menu_move_widget(c, last, inicio, 0);
-        assert_eq!(c.tabs[0].widgets[0].id, last);
-        let c = menu_move_widget(c, last, luz, 1);
+        let c = menu_place_widget(c, bateria, luz, 0, 3);
+        assert_eq!(pos(&c, bateria), (0, 3));
         assert_eq!(c.tabs[0].widgets.len(), 3);
-        assert_eq!(c.tabs[2].widgets[1].id, last);
-        let c = menu_move_widget(c, last, luz, 999);
-        assert_eq!(c.tabs[2].widgets.last().unwrap().id, last);
+        assert_eq!(c.tabs[2].widgets.len(), 4);
     }
 
     #[test]
-    fn tamanho_nao_aceito_e_ignorado() {
+    fn mudar_de_aba_vai_para_o_primeiro_lugar_livre() {
+        let c = default_menu_bar();
+        let bateria = c.tabs[0].widgets[1].id;
+        let luz = c.tabs[2].id;
+        let c = menu_move_widget_to_tab(c, bateria, luz);
+        // Luz: brilho 3x1 na linha 0, cor 2x1 e stagger rápido 1x1 na linha 1.
+        assert_eq!(pos(&c, bateria), (0, 2));
+    }
+
+    #[test]
+    fn tamanho_novo_fica_no_lugar_ou_procura_outro() {
         let c = default_menu_bar();
         let stagger = c.tabs[0].widgets[0];
-        assert_eq!(stagger.kind, WidgetKind::Stagger);
-        let c = menu_set_widget_size(c, stagger.id, WidgetSize::OneByOne);
-        assert_eq!(c.tabs[0].widgets[0].size, WidgetSize::ThreeByOne);
-        let c = menu_set_widget_size(c, stagger.id, WidgetSize::TwoByTwo);
-        assert_eq!(c.tabs[0].widgets[0].size, WidgetSize::TwoByTwo);
+        let c = menu_set_widget_size(c, stagger.id, S::OneByOne);
+        assert_eq!(c.tabs[0].widgets[0].size, S::ThreeByOne, "tamanho que o widget não aceita");
+        // 2x2 no lugar do 3x1 cobriria a bateria (linha 1): vai para o primeiro lugar livre.
+        let c = menu_set_widget_size(c, stagger.id, S::TwoByTwo);
+        assert_eq!(c.tabs[0].widgets[0].size, S::TwoByTwo);
+        let (t, i) = find_widget(&c, stagger.id).unwrap();
+        let w = c.tabs[t].widgets[i];
+        assert!(fits(&c.tabs[t], w.size, w.column, w.row, Some(w.id)));
+        // Bateria 1x1 na coluna 2 virando 3x1: encosta na esquerda da linha se couber.
+        let tab = c.tabs[0].id;
+        let bat = c.tabs[0].widgets[1].id;
+        let c = menu_place_widget(c, bat, tab, 2, 7);
+        let c = menu_set_widget_size(c, bat, S::ThreeByOne);
+        assert_eq!(pos(&c, bat), (0, 7));
+    }
+
+    #[test]
+    fn adicionar_na_celula_ou_no_primeiro_livre() {
+        let c = default_menu_bar();
+        let tab = c.tabs[1].id;
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 2, row: 6 }));
+        assert_eq!(c.tabs[1].widgets.last().map(|w| (w.column, w.row)), Some((2, 6)));
+        // Célula ocupada: primeiro lugar livre.
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 0, row: 0 }));
+        let w = *c.tabs[1].widgets.last().unwrap();
+        assert!(fits(&c.tabs[1], w.size, w.column, w.row, Some(w.id)));
+        assert_ne!((w.column, w.row), (0, 0));
+    }
+
+    #[test]
+    fn compactar_tira_os_buracos() {
+        let c = default_menu_bar();
+        let tab = c.tabs[0].id;
+        let hoje = c.tabs[0].widgets[3].id;
+        let c = menu_place_widget(c, hoje, tab, 0, 6);
+        let c = menu_compact_tab(c, tab);
+        assert_eq!(pos(&c, hoje), (0, 2));
+        assert_eq!(tab_grid(c.tabs[0].clone()).rows, 3);
     }
 
     #[test]
@@ -592,47 +708,47 @@ mod tests {
         }
         assert_eq!(c.tabs.len(), MAX_TABS);
         assert_eq!(c.tabs[4].name, "muito espaço");
-        let c = menu_rename_tab(c.clone(), c.tabs[0].id, "".into());
+        let first = c.tabs[0].id;
+        let mut c = menu_rename_tab(c, first, "".into());
         assert_eq!(c.tabs[0].name, "Nova aba");
-        let mut c = c;
         while c.tabs.len() > 1 {
             let id = c.tabs[0].id;
             c = menu_remove_tab(c, id);
         }
         let last = c.tabs[0].id;
-        let c = menu_remove_tab(c, last);
-        assert_eq!(c.tabs.len(), 1);
-    }
-
-    #[test]
-    fn adicionar_usa_o_tamanho_padrao_e_a_posicao() {
-        let c = default_menu_bar();
-        let tab = c.tabs[1].id;
-        let c = menu_add_widget(c, tab, WidgetKind::Heatmap, Some(1));
-        let w = c.tabs[1].widgets[1];
-        assert_eq!((w.kind, w.size), (WidgetKind::Heatmap, WidgetSize::ThreeByOne));
+        assert_eq!(menu_remove_tab(c, last).tabs.len(), 1);
     }
 
     #[test]
     fn guardar_e_ler_devolve_a_mesma_configuracao() {
         let c = default_menu_bar();
         let tab = c.tabs[0].id;
+        let bat = c.tabs[0].widgets[1].id;
+        let c = menu_place_widget(c, bat, tab, 2, 4);
         let c = menu_rename_tab(c, tab, "Meu \\ início\nnovo".into());
-        let c = menu_move_tab(c, tab, 3);
-        let mut c = c;
+        let mut c = menu_move_tab(c, tab, 3);
         c.open_first_tab = false;
         let back = menu_bar_decode(menu_bar_encode(c.clone())).expect("lê o que gravou");
         assert_eq!(back, c);
     }
 
     #[test]
-    fn leitura_tolera_versao_nova_e_rejeita_lixo() {
-        let text = format!("{HEADER}\nopen_first_tab 1\ntab 1 A\nwidget 2 widget_do_futuro 1x1 1\nwidget 3 stagger 1x1 1\n");
+    fn le_a_versao_1_encaixando_e_tolera_widget_novo() {
+        let text = format!("{HEADER_V1}\nopen_first_tab 1\ntab 1 A\nwidget 2 widget_do_futuro 1x1 1\nwidget 3 stagger 1x1 1\nwidget 4 battery 1x1 1\n");
         let c = menu_bar_decode(text).unwrap();
-        assert_eq!(c.tabs[0].widgets.len(), 1);
-        assert_eq!(c.tabs[0].widgets[0].size, WidgetSize::ThreeByOne);
-        assert_eq!(c.next_id, 4);
+        let w = &c.tabs[0].widgets;
+        assert_eq!(w.len(), 2);
+        assert_eq!((w[0].size, w[0].column, w[0].row), (S::ThreeByOne, 0, 0));
+        assert_eq!((w[1].column, w[1].row), (0, 1));
+        assert_eq!(c.next_id, 5);
         assert!(menu_bar_decode("outra coisa".into()).is_none());
         assert!(menu_bar_decode(format!("{HEADER}\n")).is_none());
+    }
+
+    #[test]
+    fn leitura_resolve_posicao_ocupada() {
+        let text = format!("{HEADER}\nopen_first_tab 1\ntab 1 A\nwidget 2 battery 1x1 1 0 0\nwidget 3 battery 1x1 1 0 0\n");
+        let c = menu_bar_decode(text).unwrap();
+        assert_eq!(c.tabs[0].widgets.iter().map(|w| (w.column, w.row)).collect::<Vec<_>>(), vec![(0, 0), (1, 0)]);
     }
 }

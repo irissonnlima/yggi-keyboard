@@ -43,7 +43,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.delegate = self
 
         // Aberto pela pessoa (não no login, que usa --hidden): mostra a janela.
-        if !CommandLine.arguments.contains("--hidden") { showMain() }
+        if !CommandLine.arguments.contains("--hidden") { showMain(section: Self.sectionArgument) }
+    }
+
+    /// `--section barra` abre a janela direto numa seção (útil para testar).
+    private static var sectionArgument: AppSection? {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "--section"), args.indices.contains(i + 1) else { return nil }
+        return switch args[i + 1] {
+        case "teclas": .keys
+        case "luzes": .lights
+        case "estatisticas": .stats
+        case "barra": .menuBar
+        default: .overview
+        }
     }
 
     /// Clicar no Dock ou abrir o app de novo com ele rodando traz a janela.

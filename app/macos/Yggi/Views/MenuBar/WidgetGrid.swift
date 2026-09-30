@@ -68,8 +68,9 @@ struct WidgetCard<Content: View>: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+            // O conteúdo fica centrado no espaço que sobra embaixo do título.
             content
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
