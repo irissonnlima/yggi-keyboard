@@ -23,8 +23,8 @@ final class KeyboardStore {
     var hasUnsentLighting: Bool { lighting != sentLighting }
     /// Simula segurar fn (a tecla real vem do teclado).
     var fnHeld = false
-    /// Quanto de stagger usar ao soltar as colunas.
-    var staggerLevel: UInt8 = 150
+    /// Abertura usada ao soltar as colunas (0 a 100%): a última escolhida na barrinha.
+    var staggerLevel: UInt8 = 100
 
     /// Abas e widgets do popover da barra de menus. Guardado a cada mudança.
     private(set) var menuBar: MenuBarConfig {
@@ -167,8 +167,9 @@ final class KeyboardStore {
 
     // Controles físicos (só no simulador; no teclado real vêm dos sensores).
     func setStagger(_ on: Bool) { simulator?.setStagger(percent: on ? staggerLevel : 0) }
+    /// Barrinha de 0 a 100%. Zero fecha as colunas; o resto vira a abertura padrão.
     func setStaggerLevel(_ level: UInt8) {
-        staggerLevel = level
+        if level > 0 { staggerLevel = level }
         simulator?.setStagger(percent: level)
     }
     func setHalvesJoined(_ joined: Bool) { simulator?.setHalvesJoined(joined: joined) }

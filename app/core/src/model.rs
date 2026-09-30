@@ -70,7 +70,7 @@ pub struct KeyboardState {
     pub active_host: Option<u8>,
     /// Sempre `HOST_SLOTS` vagas, na ordem.
     pub hosts: Vec<HostSlot>,
-    /// 0 = ortho; 50, 100 ou 150 = colunas soltas. Depende de um sensor no teclado (em aberto).
+    /// Abertura do stagger, de 0 (ortho) a 100%. Depende de um sensor no teclado (em aberto).
     pub stagger_percent: u8,
     /// Metades encaixadas pelo pogo (um teclado só) ou separadas.
     pub halves_joined: bool,

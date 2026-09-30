@@ -4,6 +4,7 @@
 //! - `layout`: onde cada tecla fica e quanto cada coluna sobe no stagger.
 //! - `lighting`: luz de cada tecla (efeito, cores por tecla, teclas de ação).
 //! - `stats`: estatísticas de digitação (só contagens).
+//! - `brand`: a marca do Yggi e o ícone da barra de menus em cada estado.
 //! - `menubar`: abas e widgets do popover da barra de menus.
 //! - `keyboard`: a interface que o teclado simulado e o real implementam.
 //! - `simulator`: o teclado simulado, usado enquanto o firmware não existe.
@@ -12,6 +13,7 @@
 //! As interfaces de cada sistema (Swift no macOS hoje) chamam este núcleo pela ponte
 //! gerada pelo UniFFI. Nada aqui depende de interface gráfica.
 
+pub mod brand;
 pub mod keyboard;
 pub mod layout;
 pub mod lighting;

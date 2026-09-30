@@ -89,12 +89,6 @@ pub struct ActionRule {
     pub mode: LightMode,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
-pub enum Brightness {
-    Low,
-    Medium,
-    High,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct KeyColor {
@@ -109,7 +103,8 @@ pub struct LightingConfig {
     pub key_colors: Vec<KeyColor>,
     /// Teclas de ação (camada de cima). Se duas valem para a mesma tecla, vence a última.
     pub actions: Vec<ActionRule>,
-    pub brightness: Brightness,
+    /// Brilho das luzes, de 0 a 100%.
+    pub brightness: u8,
     /// Onda de luz pelas teclas ao encaixar o e-reader.
     pub wave_on_dock: bool,
     /// Segurando fn, acender as teclas que têm função (fileira F), na cor da regra de fn.
@@ -141,7 +136,7 @@ pub fn default_lighting() -> LightingConfig {
             rule("L-yggi", ActionTrigger::Pairing, 0x0a84ff, LightMode::Blink),
             rule("L-esc", ActionTrigger::LowBattery, 0xff453a, LightMode::Pulse),
         ],
-        brightness: Brightness::Medium,
+        brightness: 75,
         wave_on_dock: true,
         fn_map: true,
         idle_off: true,
@@ -170,12 +165,8 @@ fn speed_factor(speed: Speed) -> f64 {
     }
 }
 
-fn brightness_factor(b: Brightness) -> f32 {
-    match b {
-        Brightness::Low => 0.45,
-        Brightness::Medium => 0.75,
-        Brightness::High => 1.0,
-    }
+fn brightness_factor(percent: u8) -> f32 {
+    percent.min(100) as f32 / 100.0
 }
 
 /// Sobe e desce entre `low` e 1, começando em 1.
@@ -361,7 +352,7 @@ mod tests {
     fn solid(effect: EffectKind) -> LightingConfig {
         let mut c = default_lighting();
         c.effect.kind = effect;
-        c.brightness = Brightness::High;
+        c.brightness = 100;
         c
     }
 
@@ -435,7 +426,7 @@ mod tests {
     #[test]
     fn brightness_scales_intensity() {
         let mut c = solid(EffectKind::Static);
-        c.brightness = Brightness::Low;
+        c.brightness = 45;
         let f = LightingEngine::new(c).frame(state(), false, 0.0);
         assert!((glow(&f, "L-a").unwrap().intensity - 0.45).abs() < 1e-6);
     }

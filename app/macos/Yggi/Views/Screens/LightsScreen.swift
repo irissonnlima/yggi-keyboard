@@ -226,14 +226,10 @@ private struct GeneralLightPanel: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Geral").font(.headline)
                 LabeledContent("Brilho") {
-                    Picker("Brilho", selection: $store.lighting.brightness) {
-                        Text("baixo").tag(Brightness.low)
-                        Text("médio").tag(Brightness.medium)
-                        Text("alto").tag(Brightness.high)
+                    PercentSlider(value: store.lighting.brightness, label: "Brilho", symbols: ("sun.min", "sun.max.fill")) {
+                        store.lighting.brightness = $0
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
+                    .frame(width: 220)
                 }
                 Toggle("Onda de luz ao encaixar o e-reader", isOn: $store.lighting.waveOnDock)
                 Toggle("Segurando fn, acender as teclas que têm função", isOn: $store.lighting.fnMap)

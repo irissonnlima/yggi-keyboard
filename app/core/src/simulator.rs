@@ -242,7 +242,7 @@ impl Simulator {
         self.update(|s| s.right_on = on);
     }
 
-    /// Solta as colunas (0 = ortho, até 150%). Na mão, é o botão ao lado dos LEDs.
+    /// Solta as colunas (0 = ortho, até 100%). Na mão, é o botão ao lado dos LEDs.
     pub fn set_stagger(&self, percent: u8) {
         self.update(|s| s.stagger_percent = percent.min(MAX_STAGGER_PERCENT));
     }
@@ -448,7 +448,7 @@ mod tests {
         sim.set_reader(ReaderState::Loose);
         sim.set_caps_lock(true);
         let s = sim.state();
-        assert_eq!((s.stagger_percent, s.halves_joined, s.reader, s.caps_lock), (150, false, ReaderState::Loose, true));
+        assert_eq!((s.stagger_percent, s.halves_joined, s.reader, s.caps_lock), (100, false, ReaderState::Loose, true));
     }
 
     #[test]

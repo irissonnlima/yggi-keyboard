@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 98" width="80" height="98">
+<title>Yggi (desconectado)</title>
+<g fill="none" stroke="#000" stroke-width="6">
+  <rect x="-17.4" y="-7" width="34.8" height="14" rx="7" transform="translate(16 18.5) rotate(55)"/>
+  <rect x="-17.4" y="-7" width="34.8" height="14" rx="7" transform="translate(64 18.5) rotate(-55)"/>
+  <rect x="34" y="43" width="12" height="52" rx="6"/>
+</g>
+</svg>

@@ -1,19 +1,16 @@
 import SwiftUI
 import YggiCore
 
-/// Ícone na barra de menus. Mostra a porcentagem quando alguma bateria está baixa.
+/// Ícone na barra de menus: a marca do Yggi na pose do teclado (stagger aberto, metades
+/// separadas, bateria baixa, desconectado). A pose vem do núcleo (`menuBarPose`).
 struct MenuBarLabel: View {
     let state: KeyboardState
     @Environment(\.openWindow) private var openWindow
     @MainActor private static var openedAtLaunch = false
 
     var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: state.isConnected ? "keyboard" : "keyboard.badge.ellipsis")
-            if let battery = lowestBattery(state: state), isLowBattery(battery: battery) {
-                Text("\(battery.level)%")
-            }
-        }
+        Image(nsImage: MarkRenderer.menuBarImage(pose: menuBarPose(state: state)))
+            .accessibilityLabel(accessibilityText)
         .task {
             // Aberto pela pessoa (não no login, que usa --hidden): mostra a janela uma vez.
             guard !Self.openedAtLaunch, !CommandLine.arguments.contains("--hidden") else { return }
@@ -21,6 +18,15 @@ struct MenuBarLabel: View {
             openWindow(id: WindowID.main)
             NSApp.activate()
         }
+    }
+
+    private var accessibilityText: String {
+        guard state.isConnected else { return "Yggi, \(state.connectionText.lowercased())" }
+        var parts = ["Yggi"]
+        parts.append(state.staggerPercent > 0 ? "stagger aberto" : "ortho")
+        if !state.halvesJoined { parts.append("metades separadas") }
+        if let battery = lowestBattery(state: state), isLowBattery(battery: battery) { parts.append("bateria baixa") }
+        return parts.joined(separator: ", ")
     }
 }
 
@@ -36,8 +42,9 @@ struct MenuBarView: View {
         let tab = store.currentMenuTab
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Circle().fill(state.isConnected ? .green : .secondary).frame(width: 7, height: 7)
+                YggiMark(pose: menuBarPose(state: state)).frame(width: 17, height: 16)
                 Text("Yggi").font(.headline)
+                Circle().fill(state.isConnected ? .green : .secondary).frame(width: 6, height: 6)
                 Text(state.connectionText).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if store.simulator != nil { SimulatedTag() }

@@ -44,32 +44,18 @@ struct WidgetView: View {
     private var isStaggered: Bool { state.staggerPercent > 0 }
 
     private var stagger: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center, spacing: 10) {
-                ColumnsGlyph(percent: state.staggerPercent)
-                    .frame(width: cols >= 3 ? 120 : 64, height: 30)
-                if cols >= 2 {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(isStaggered ? "Stagger \(state.staggerPercent)%" : "Ortho")
-                            .font(.callout.weight(.semibold))
-                        Text(isStaggered ? "colunas abertas" : "colunas alinhadas")
-                            .font(.caption2).foregroundStyle(.secondary)
-                    }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 8) {
+                if cols >= 3 || tall {
+                    ColumnsGlyph(percent: state.staggerPercent)
+                        .frame(width: tall ? 96 : 64, height: tall ? 36 : 22)
                 }
+                Text(isStaggered ? "Aberto" : "Ortho").font(.callout.weight(.semibold))
                 Spacer(minLength: 0)
-                if cols >= 3 && !tall { staggerButton }
+                staggerButton
             }
-            if tall || cols < 3 { staggerButton }
-            if tall {
-                @Bindable var store = store
-                HStack(spacing: 6) {
-                    Text("Quanto").font(.caption2).foregroundStyle(.secondary)
-                    Slider(value: Binding(get: { Double(store.staggerLevel) },
-                                          set: { store.setStaggerLevel(UInt8($0)) }),
-                           in: 25...Double(store.layout.maxStaggerPercent), step: 25)
-                        .controlSize(.mini)
-                }
-            }
+            PercentSlider(value: state.staggerPercent, label: "Abertura do stagger") { store.setStaggerLevel($0) }
+                .disabled(!state.isConnected)
         }
     }
 
@@ -214,15 +200,9 @@ struct WidgetView: View {
 
     private var brightness: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Picker("Brilho", selection: Binding(get: { store.sentLighting.brightness },
-                                                set: { b in store.changeLightingNow { $0.brightness = b } })) {
-                Image(systemName: "sun.min").tag(Brightness.low)
-                Image(systemName: "sun.max").tag(Brightness.medium)
-                Image(systemName: "sun.max.fill").tag(Brightness.high)
+            PercentSlider(value: store.sentLighting.brightness, label: "Brilho", symbols: ("sun.min", "sun.max.fill")) { b in
+                store.changeLightingNow { $0.brightness = b }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .controlSize(.small)
             if cols >= 3 {
                 HStack(spacing: 6) {
                     ForEach([EffectKind.off, .static, .wave, .reactive], id: \.self) { kind in
@@ -407,6 +387,31 @@ struct WidgetView: View {
     }
 }
 
+/// Barrinha de 0 a 100%, com o valor escrito ao lado.
+struct PercentSlider: View {
+    let value: UInt8
+    let label: String
+    /// Símbolos nas pontas (mínimo, máximo); sem eles, só a barrinha e o número.
+    var symbols: (String, String)? = nil
+    let change: (UInt8) -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let symbols { Image(systemName: symbols.0).font(.caption2).foregroundStyle(.secondary) }
+            Slider(value: Binding(get: { Double(value) }, set: { change(UInt8($0.rounded())) }), in: 0...100)
+                .controlSize(.mini)
+                .labelsHidden()
+                .accessibilityLabel(label)
+                .accessibilityValue("\(value)%")
+            if let symbols { Image(systemName: symbols.1).font(.caption2).foregroundStyle(.secondary) }
+            Text("\(value)%")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 34, alignment: .trailing)
+        }
+    }
+}
+
 /// Colunas do teclado desenhadas pequenas, subindo e descendo com o stagger.
 struct ColumnsGlyph: View {
     let percent: UInt8
@@ -419,7 +424,7 @@ struct ColumnsGlyph: View {
             let n = CGFloat(columns.count)
             let gap: CGFloat = 2
             let w = (geo.size.width - gap * (n - 1) - 6) / n
-            let amount = CGFloat(percent) / 150
+            let amount = CGFloat(percent) / 100
             HStack(alignment: .top, spacing: gap) {
                 ForEach(Array(columns.enumerated()), id: \.offset) { i, lift in
                     RoundedRectangle(cornerRadius: 1.5)

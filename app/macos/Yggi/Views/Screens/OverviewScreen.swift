@@ -118,16 +118,9 @@ struct OverviewToolbar: ToolbarContent {
             .pickerStyle(.segmented)
             .help("Colunas em ortho ou soltas pela mola")
 
-            Picker("Quanto de stagger", selection: Binding(
-                get: { store.staggerLevel },
-                set: { store.setStaggerLevel($0) }
-            )) {
-                Text("50%").tag(UInt8(50))
-                Text("100%").tag(UInt8(100))
-                Text("150%").tag(UInt8(150))
-            }
-            .pickerStyle(.segmented)
-            .opacity(state.staggerPercent > 0 ? 1 : 0.5)
+            PercentSlider(value: state.staggerPercent, label: "Abertura do stagger") { store.setStaggerLevel($0) }
+                .frame(width: 170)
+                .help("Quanto as colunas abrem, de 0 (ortho) a 100%")
 
             Picker("Metades", selection: Binding(
                 get: { state.halvesJoined },

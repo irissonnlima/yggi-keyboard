@@ -5,8 +5,8 @@
 //! que agora é um aparelho à parte), y de 0 a 6,25. A metade esquerda vai de x 4 a 11 e a
 //! direita de x 12 a 19; juntas, as metades encostam (não há espaço entre elas).
 
-/// Maior stagger que o mecanismo permite.
-pub const MAX_STAGGER_PERCENT: u8 = 150;
+/// Abertura máxima do stagger (100% = colunas no ponto mais aberto que o mecanismo permite).
+pub const MAX_STAGGER_PERCENT: u8 = 100;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum Half {
@@ -53,7 +53,7 @@ pub struct ColumnDef {
     pub half: Half,
     pub x: f32,
     pub w: f32,
-    /// Quanto a coluna sobe no stagger máximo (150%), em u.
+    /// Quanto a coluna sobe com o stagger todo aberto (100%), em u.
     /// Médio 15 mm, anelar e indicador 9 mm, mindinho 0.
     pub lift_at_max: f32,
 }
@@ -114,7 +114,7 @@ impl K {
     }
 }
 
-/// (x, largura, subida a 150% em u) de cada coluna móvel, esquerda e direita.
+/// (x, largura, subida a 100% em u) de cada coluna móvel, esquerda e direita.
 const LEFT_COLUMNS: [(f32, f32, f32); 4] = [(6.0, 1.0, 0.0), (7.0, 1.0, 0.5), (8.0, 1.0, 0.83), (9.0, 2.0, 0.5)];
 const RIGHT_COLUMNS: [(f32, f32, f32); 4] = [(12.0, 2.0, 0.5), (14.0, 1.0, 0.83), (15.0, 1.0, 0.5), (16.0, 1.0, 0.0)];
 const COLUMNS_BOTTOM: f32 = 5.25;
@@ -260,7 +260,7 @@ pub fn yggi_layout() -> KeyboardLayout {
     }
 }
 
-/// Quanto uma coluna está levantada (em u) num dado stagger (0 = ortho, 150 = máximo).
+/// Quanto uma coluna está levantada (em u) num dado stagger (0 = ortho, 100 = todo aberto).
 #[uniffi::export]
 pub fn column_lift(column: ColumnDef, stagger_percent: u8) -> f32 {
     column.lift_at_max * stagger_percent.min(MAX_STAGGER_PERCENT) as f32 / MAX_STAGGER_PERCENT as f32
@@ -298,8 +298,8 @@ mod tests {
         let layout = yggi_layout();
         let middle = || layout.columns[2].clone();
         assert_eq!(column_lift(middle(), 0), 0.0);
-        assert!((column_lift(middle(), 150) - 0.83).abs() < 1e-6);
-        assert!((column_lift(middle(), 75) - 0.415).abs() < 1e-6);
-        assert_eq!(column_lift(middle(), 200), column_lift(middle(), 150));
+        assert!((column_lift(middle(), 100) - 0.83).abs() < 1e-6);
+        assert!((column_lift(middle(), 50) - 0.415).abs() < 1e-6);
+        assert_eq!(column_lift(middle(), 200), column_lift(middle(), 100));
     }
 }

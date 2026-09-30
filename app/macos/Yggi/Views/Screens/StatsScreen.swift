@@ -237,7 +237,7 @@ struct StatsScreen: View {
                 Text("Ortho × stagger").font(.headline)
                 HStack(alignment: .top) {
                     mode("Ortho", s.ortho)
-                    mode("Stagger 150%", s.stagger)
+                    mode("Stagger", s.stagger)
                 }
             }
         }

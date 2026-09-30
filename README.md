@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/brand/yggi-marca.svg" width="72" alt="Marca do Yggi"></p>
+
 # Yggi Keyboard
 
 **Um teclado split ortholinear que vira column stagger com um clique.** Open hardware e open source.
@@ -22,13 +24,21 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 
 ![E-reader destacável e conectores pogo](docs/media/conceito/e-reader-e-conectores.webp)
 
+## Marca
+
+Três cápsulas em Y: os dois braços são as metades do teclado e a haste é o tronco que liga tudo, como a Yggdrasil. Os arquivos estão em [`docs/brand/`](docs/brand/): [marca](docs/brand/yggi-marca.svg), [marca branca](docs/brand/yggi-marca-branca.svg), [assinatura](docs/brand/yggi-assinatura.svg) e [ícone do app](docs/brand/yggi-icone.svg).
+
+Na barra de menus do Mac, a marca mostra o estado do teclado: os braços abrem com o stagger, os lados se afastam e a haste se divide com as metades separadas, a haste esvazia com a bateria baixa, e fica só o contorno quando o teclado está desconectado.
+
+![Ícone da barra de menus em cada estado](docs/brand/barra-de-menus-estados.png)
+
 ## Onde está cada coisa
 
 | Pasta | O que tem |
 |---|---|
 | [`hardware/`](hardware/) | mecanismo de stagger (CAD), placas de circuito, layout das teclas, simulação interativa |
 | [`app/`](app/) | app do computador: núcleo em Rust + interface macOS em SwiftUI ([como rodar](app/README.md)) |
-| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md), [app](docs/app.md) e imagens de conceito |
+| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md), [app](docs/app.md), marca e imagens de conceito |
 
 Ainda virá `firmware/` (ZMK + módulos Yggi).
 
