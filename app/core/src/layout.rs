@@ -222,10 +222,7 @@ fn column_of(columns: &[ColumnDef], half: Half, x: f32, y: f32) -> Option<u8> {
     if y >= COLUMNS_BOTTOM {
         return None;
     }
-    columns
-        .iter()
-        .find(|c| c.half == half && x >= c.x && x < c.x + c.w)
-        .map(|c| c.index)
+    columns.iter().find(|c| c.half == half && x >= c.x && x < c.x + c.w).map(|c| c.index)
 }
 
 /// O layout completo do Yggi.
@@ -250,14 +247,7 @@ pub fn yggi_layout() -> KeyboardLayout {
             });
         }
     }
-    KeyboardLayout {
-        keys,
-        columns,
-        columns_bottom: COLUMNS_BOTTOM,
-        width: 15.0,
-        height: 6.25,
-        max_stagger_percent: MAX_STAGGER_PERCENT,
-    }
+    KeyboardLayout { keys, columns, columns_bottom: COLUMNS_BOTTOM, width: 15.0, height: 6.25, max_stagger_percent: MAX_STAGGER_PERCENT }
 }
 
 /// Quanto uma coluna está levantada (em u) num dado stagger (0 = ortho, 100 = todo aberto).
@@ -266,9 +256,102 @@ pub fn column_lift(column: ColumnDef, stagger_percent: u8) -> f32 {
     column.lift_at_max * stagger_percent.min(MAX_STAGGER_PERCENT) as f32 / MAX_STAGGER_PERCENT as f32
 }
 
+/// Espaço entre as metades separadas, em u, nos desenhos simplificados.
+pub const SPLIT_GAP_U: f32 = 1.0;
+
+/// Uma tecla no desenho visto de cima, em u.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct KeyRect {
+    pub key_id: String,
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct KeyboardShape {
+    pub width: f32,
+    pub height: f32,
+    pub keys: Vec<KeyRect>,
+}
+
+/// O teclado visto de cima, sem o e-reader, a partir de (0, 0): cada tecla onde está com o
+/// stagger aberto `stagger` (0 a 100, com casas decimais, para animar) e as metades afastadas
+/// `separation` (0 = juntas, encostando; 1 = separadas por `SPLIT_GAP_U`).
+///
+/// No layout a metade esquerda vai de x 4 a 11 e a direita começa em 12; aqui, juntas, elas
+/// encostam. Desenhos simplificados (mapa de calor, miniaturas) usam isto em vez de refazer a conta.
+#[uniffi::export]
+pub fn keyboard_shape(stagger: f32, separation: f32) -> KeyboardShape {
+    let layout = yggi_layout();
+    let opening = stagger.clamp(0.0, MAX_STAGGER_PERCENT as f32) / MAX_STAGGER_PERCENT as f32;
+    let max_lift = layout.columns.iter().map(|c| c.lift_at_max).fold(0.0, f32::max);
+    let left_end = layout.keys.iter().filter(|k| k.half == Half::Left).map(|k| k.x + k.w).fold(f32::MIN, f32::max);
+    let right_start = layout.keys.iter().filter(|k| k.half == Half::Right).map(|k| k.x).fold(f32::MAX, f32::min);
+    let min_x = layout.keys.iter().map(|k| k.x).fold(f32::MAX, f32::min);
+    // A metade direita encosta na esquerda e depois se afasta.
+    let right_shift = left_end - right_start + SPLIT_GAP_U * separation.clamp(0.0, 1.0);
+    let keys: Vec<KeyRect> = layout
+        .keys
+        .iter()
+        .map(|k| {
+            let lift = k.column.map_or(0.0, |c| layout.columns[c as usize].lift_at_max * opening);
+            let shift = if k.half == Half::Right { right_shift } else { 0.0 };
+            KeyRect { key_id: k.id.clone(), x: k.x - min_x + shift, y: max_lift + k.y - lift, w: k.w, h: k.h }
+        })
+        .collect();
+    let width = keys.iter().map(|k| k.x + k.w).fold(0.0, f32::max);
+    let height = keys.iter().map(|k| k.y + k.h).fold(0.0, f32::max);
+    KeyboardShape { width, height, keys }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn edges(shape: &KeyboardShape) -> (f32, f32) {
+        let layout = yggi_layout();
+        let half = |id: &str| layout.keys.iter().find(|k| k.id == id).unwrap().half;
+        let left_end = shape.keys.iter().filter(|k| half(&k.key_id) == Half::Left).map(|k| k.x + k.w).fold(f32::MIN, f32::max);
+        let right_start = shape.keys.iter().filter(|k| half(&k.key_id) == Half::Right).map(|k| k.x).fold(f32::MAX, f32::min);
+        (left_end, right_start)
+    }
+
+    #[test]
+    fn metades_juntas_encostam_e_separadas_se_afastam() {
+        // Regressão: o mapa de calor desenhava um vão de 1u entre as metades juntas.
+        let (l, r) = edges(&keyboard_shape(0.0, 0.0));
+        assert!((r - l).abs() < 1e-5, "juntas devem encostar: {l} × {r}");
+        let (l, r) = edges(&keyboard_shape(0.0, 1.0));
+        assert!((r - l - SPLIT_GAP_U).abs() < 1e-5);
+        let (l, r) = edges(&keyboard_shape(0.0, 0.5));
+        assert!((r - l - SPLIT_GAP_U / 2.0).abs() < 1e-5, "meio caminho na animação");
+    }
+
+    #[test]
+    fn forma_comeca_em_zero_e_cabe_na_caixa() {
+        for (st, sep) in [(0.0, 0.0), (100.0, 0.0), (0.0, 1.0), (100.0, 1.0), (250.0, 3.0)] {
+            let shape = keyboard_shape(st, sep);
+            assert_eq!(shape.keys.len(), yggi_layout().keys.len());
+            for k in &shape.keys {
+                assert!(k.x >= -1e-5 && k.y >= -1e-5, "{} fora da caixa", k.key_id);
+                assert!(k.x + k.w <= shape.width + 1e-5 && k.y + k.h <= shape.height + 1e-5);
+            }
+            assert!(shape.keys.iter().any(|k| k.x.abs() < 1e-5), "encosta na esquerda");
+        }
+    }
+
+    #[test]
+    fn stagger_sobe_as_colunas_e_a_barra_do_polegar_fica() {
+        let y = |shape: &KeyboardShape, id: &str| shape.keys.iter().find(|k| k.key_id == id).unwrap().y;
+        let (ortho, open) = (keyboard_shape(0.0, 0.0), keyboard_shape(100.0, 0.0));
+        assert!((y(&ortho, "L-e") - y(&open, "L-e") - 0.83).abs() < 1e-5, "médio sobe 0,83u");
+        assert!((y(&ortho, "L-a") - y(&open, "L-a")).abs() < 1e-5, "mindinho não sobe");
+        let thumb = yggi_layout().keys.iter().find(|k| k.column.is_none() && k.y > 5.0).unwrap().id.clone();
+        assert_eq!(y(&ortho, &thumb), y(&open, &thumb), "barra do polegar é fixa");
+        assert_eq!(keyboard_shape(250.0, 0.0), keyboard_shape(100.0, 0.0), "limitado ao máximo");
+    }
 
     #[test]
     fn has_all_keys_with_unique_ids() {

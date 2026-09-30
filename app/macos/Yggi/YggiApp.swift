@@ -9,6 +9,7 @@ struct YggiApp: App {
     init() {
         #if DEBUG
         Snapshots.runIfRequested()
+        Verificacoes.runIfRequested()
         #endif
     }
 

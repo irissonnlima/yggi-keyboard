@@ -68,14 +68,7 @@ impl Listeners {
 
     /// Avisa todos. Nunca chame segurando outra trava: o ouvinte pode chamar o teclado de volta.
     pub fn notify(&self, state: &KeyboardState) {
-        let entries: Vec<_> = self
-            .inner
-            .lock()
-            .unwrap()
-            .entries
-            .iter()
-            .map(|(_, l)| l.clone())
-            .collect();
+        let entries: Vec<_> = self.inner.lock().unwrap().entries.iter().map(|(_, l)| l.clone()).collect();
         for listener in entries {
             listener.on_state(state.clone());
         }

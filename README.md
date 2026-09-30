@@ -38,7 +38,7 @@ Na barra de menus do Mac, o ícone é o próprio teclado em miniatura, visto de 
 |---|---|
 | [`hardware/`](hardware/) | mecanismo de stagger (CAD), placas de circuito, layout das teclas, simulação interativa |
 | [`app/`](app/) | app do computador: núcleo em Rust + interface macOS em SwiftUI ([como rodar](app/README.md)) |
-| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md), [app](docs/app.md), marca e imagens de conceito |
+| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md), [app](docs/app.md), [arquitetura e testes](docs/arquitetura.md), marca e imagens de conceito |
 
 Ainda virá `firmware/` (ZMK + módulos Yggi).
 

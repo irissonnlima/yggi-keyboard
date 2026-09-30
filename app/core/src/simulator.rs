@@ -12,9 +12,7 @@ use std::time::Duration;
 use crate::keyboard::{Keyboard, KeyboardError, Listeners};
 use crate::layout::MAX_STAGGER_PERCENT;
 use crate::lighting::{LightingConfig, default_lighting};
-use crate::model::{
-    Battery, Connection, HOST_SLOTS, HalfStatus, YGGI_KEY_HOSTS, HostSlot, KeyboardState, ReaderState, Transport,
-};
+use crate::model::{Battery, Connection, HOST_SLOTS, HalfStatus, HostSlot, KeyboardState, ReaderState, Transport, YGGI_KEY_HOSTS};
 use crate::stats::{Statistics, StatsPeriod, simulated_statistics};
 
 const TICK: Duration = Duration::from_secs(1);
@@ -140,11 +138,7 @@ impl SimState {
     }
 
     fn select_host(&mut self, index: u8) -> Result<(), KeyboardError> {
-        let host = self
-            .hosts
-            .iter()
-            .find(|h| h.index == index)
-            .ok_or(KeyboardError::InvalidHost { index })?;
+        let host = self.hosts.iter().find(|h| h.index == index).ok_or(KeyboardError::InvalidHost { index })?;
         if !host.paired {
             return Err(KeyboardError::HostNotPaired { index });
         }
@@ -166,10 +160,7 @@ impl SimState {
     /// O que o app enxergaria. Desconectado, ele não sabe bateria nem computador ativo.
     fn visible(&self) -> KeyboardState {
         let connected = matches!(self.connection, Connection::Connected { .. });
-        let half = |on: bool, battery: Battery| HalfStatus {
-            reachable: connected && on,
-            battery: (connected && on).then_some(battery),
-        };
+        let half = |on: bool, battery: Battery| HalfStatus { reachable: connected && on, battery: (connected && on).then_some(battery) };
         KeyboardState {
             connection: self.connection,
             left: half(true, self.left),
@@ -188,7 +179,7 @@ impl SimState {
 fn step_battery(b: &mut Battery, ticks: u64, drain_every: u64) {
     if b.charging {
         b.level = (b.level + CHARGE_PER_TICK).min(100);
-    } else if ticks % drain_every == 0 {
+    } else if ticks.is_multiple_of(drain_every) {
         b.level = b.level.saturating_sub(1);
     }
 }
@@ -387,10 +378,7 @@ mod tests {
         sim.connect().unwrap();
         assert_eq!(sim.state().connection, Connection::Connecting);
         sim.advance(CONNECT_TICKS as u32);
-        assert_eq!(
-            sim.state().connection,
-            Connection::Connected { transport: Transport::Bluetooth }
-        );
+        assert_eq!(sim.state().connection, Connection::Connected { transport: Transport::Bluetooth });
     }
 
     #[test]

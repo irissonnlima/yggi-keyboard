@@ -112,7 +112,7 @@ enum Snapshots {
             ForEach([(0.0, 0.0, "Ortho, juntas"), (100, 0, "Aberto, juntas"), (0, 1, "Ortho, separadas"), (100, 1, "Aberto, separadas")], id: \.2) { st, sep, name in
                 HStack(spacing: 16) {
                     Text(name).font(.system(size: 13)).frame(width: 130, alignment: .leading)
-                    HeatKeyboard(layout: store.layout, levels: levels, stagger: st, separation: sep)
+                    HeatKeyboard(levels: levels, stagger: st, separation: sep)
                         .frame(width: 330, height: 150)
                         .background(Color(white: 0.17))
                 }

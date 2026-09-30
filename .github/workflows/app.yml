@@ -1,0 +1,45 @@
+# Testes do app: o mesmo que `make check` roda na máquina, a cada push e pull request.
+name: app
+
+on:
+  push:
+    paths: ["app/**", "docs/brand/**", ".github/workflows/app.yml"]
+  pull_request:
+    paths: ["app/**", "docs/brand/**", ".github/workflows/app.yml"]
+
+jobs:
+  nucleo:
+    name: núcleo (formato, lint, testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/core
+    steps:
+      - uses: actions/checkout@v4
+      # A versão vem de app/core/rust-toolchain.toml (a mesma da máquina).
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/core
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  mac:
+    name: app macOS (compila e verifica)
+    runs-on: macos-26
+    needs: nucleo
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - run: rustup show active-toolchain || (cd core && rustup toolchain install)
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/core
+      # Compila núcleo + app (avisos do Swift são erro) e roda `--verificar`.
+      - run: make test

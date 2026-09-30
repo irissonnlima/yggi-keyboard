@@ -89,7 +89,6 @@ pub struct ActionRule {
     pub mode: LightMode,
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct KeyColor {
     pub key_id: String,
@@ -123,12 +122,7 @@ pub fn lighting_palette() -> Vec<Rgb> {
 pub fn default_lighting() -> LightingConfig {
     let rule = |key: &str, trigger, color, mode| ActionRule { key_id: key.into(), trigger, color: Rgb::hex(color), mode };
     LightingConfig {
-        effect: Effect {
-            kind: EffectKind::Wave,
-            color: Rgb::hex(0x64d2ff),
-            speed: Speed::Medium,
-            direction: WaveDirection::Right,
-        },
+        effect: Effect { kind: EffectKind::Wave, color: Rgb::hex(0x64d2ff), speed: Speed::Medium, direction: WaveDirection::Right },
         key_colors: vec![],
         actions: vec![
             rule("L-caps", ActionTrigger::CapsLock, 0x30d158, LightMode::Solid),
@@ -206,10 +200,7 @@ fn trigger_active(trigger: ActionTrigger, state: &KeyboardState, fn_held: bool) 
         ActionTrigger::CapsLock => state.caps_lock,
         ActionTrigger::FnHeld => fn_held,
         ActionTrigger::Pairing => state.pairing,
-        ActionTrigger::LowBattery => [state.left, state.right]
-            .iter()
-            .filter_map(|h| h.battery)
-            .any(is_low_battery),
+        ActionTrigger::LowBattery => [state.left, state.right].iter().filter_map(|h| h.battery).any(is_low_battery),
     }
 }
 
@@ -281,7 +272,13 @@ impl LightingEngine {
                 let level = match mode {
                     LightMode::Solid => 1.0,
                     LightMode::Pulse => swing(time, 1.6, 0.3),
-                    LightMode::Blink => if (time / 0.9).fract() < 0.5 { 1.0 } else { 0.08 },
+                    LightMode::Blink => {
+                        if (time / 0.9).fract() < 0.5 {
+                            1.0
+                        } else {
+                            0.08
+                        }
+                    }
                 };
                 (color, level)
             } else if let Some(&color) = painted.get(key.id.as_str()) {
@@ -338,8 +335,8 @@ impl LightingEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::simulator::{Scenario, Simulator};
     use crate::keyboard::Keyboard;
+    use crate::simulator::{Scenario, Simulator};
 
     fn state() -> KeyboardState {
         Simulator::new(Scenario::Normal, false).state()

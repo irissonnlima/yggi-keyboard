@@ -9,7 +9,7 @@ BUILD_DIR := build
 APP := $(BUILD_DIR)/Build/Products/Debug/Yggi.app
 XCODEBUILD := xcodebuild -project macos/Yggi.xcodeproj -scheme Yggi -configuration Debug -derivedDataPath $(BUILD_DIR) -destination "platform=macOS,arch=$(shell uname -m)"
 
-.PHONY: help core universal test app install run snapshots xcode clean
+.PHONY: help core universal test check app install run snapshots xcode clean
 
 help: ## mostra os comandos
 	@grep -E '^[a-z]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-10s %s\n", $$1, $$2}'
@@ -20,8 +20,16 @@ core: ## compila o núcleo em Rust e gera a ponte Swift
 universal: ## igual a core, para Apple Silicon e Intel
 	scripts/build-core.sh --universal
 
-test: ## roda os testes do núcleo
-	cd core && cargo test
+test: app ## testes do núcleo (Rust) e verificações da camada Swift
+	cd core && cargo test --quiet
+	$(APP)/Contents/MacOS/Yggi --verificar
+
+check: ## tudo que roda antes de subir: formato, lint, testes, verificações e imagens
+	cd core && cargo fmt --check
+	cd core && cargo clippy --all-targets --quiet -- -D warnings
+	$(MAKE) test
+	$(MAKE) snapshots
+	@echo "✓ tudo certo para subir"
 
 app: core ## compila o app macOS (Debug)
 	$(XCODEBUILD) build -quiet

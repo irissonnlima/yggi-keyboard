@@ -513,7 +513,7 @@ struct WidgetView: View {
         let max = counts.map(\.count).max() ?? 0
         var levels: [String: Int] = [:]
         for k in counts { levels[k.keyId] = Int(heatLevel(count: k.count, max: max)) }
-        return HeatKeyboard(layout: store.layout, levels: levels,
+        return HeatKeyboard(levels: levels,
                             stagger: Double(state.staggerPercent), separation: state.halvesJoined ? 0 : 1)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -709,9 +709,9 @@ struct VerticalPercentBar: View {
 }
 
 /// O teclado inteiro em quadradinhos, sem legenda, pintado pelo uso de cada tecla.
-/// Segue a forma de agora: colunas sobem com o stagger e as metades se afastam; anima entre os estados.
+/// A forma (colunas subindo, metades afastadas) vem do núcleo (`keyboardShape`); aqui só se
+/// desenha. Anima entre os estados porque `stagger` e `separation` são interpolados.
 struct HeatKeyboard: View, @MainActor Animatable {
-    let layout: KeyboardLayout
     /// Nível de calor (0 a 4, de `heatLevel`) por id de tecla.
     let levels: [String: Int]
     var stagger: Double
@@ -722,33 +722,20 @@ struct HeatKeyboard: View, @MainActor Animatable {
         set { (stagger, separation) = (newValue.first, newValue.second) }
     }
 
-    /// Espaço entre as metades separadas, em u.
-    private let splitGap = 1.0
     private let keyGap = 0.14
 
     var body: some View {
         Canvas { context, size in
-            let keys = layout.keys
-            guard let minX = keys.map({ Double($0.x) }).min(),
-                  let maxX = keys.map({ Double($0.x + $0.w) }).max(),
-                  let maxY = keys.map({ Double($0.y + $0.h) }).max() else { return }
-            let maxLift = layout.columns.map { Double($0.liftAtMax) }.max() ?? 0
-            // No layout a metade direita começa em x 12 e a esquerda termina em 11: juntas, encostam.
-            let gap = splitGap * separation - 1
-            let widthU = maxX - minX + gap
-            let heightU = maxY + maxLift
-            let scale = min(size.width / widthU, size.height / heightU)
-            let ox = (size.width - widthU * scale) / 2
-            let oy = (size.height - heightU * scale) / 2
-            for key in keys {
-                let lift = key.column.map { Double(layout.columns[Int($0)].liftAtMax) * stagger / 100 } ?? 0
-                let shift = key.half == .right ? gap : 0
-                let rect = CGRect(x: ox + (Double(key.x) - minX + shift + keyGap / 2) * scale,
-                                  y: oy + (maxLift + Double(key.y) - lift + keyGap / 2) * scale,
+            let shape = keyboardShape(stagger: Float(stagger), separation: Float(separation))
+            let scale = min(size.width / Double(shape.width), size.height / Double(shape.height))
+            let ox = (size.width - Double(shape.width) * scale) / 2
+            let oy = (size.height - Double(shape.height) * scale) / 2
+            for key in shape.keys {
+                let rect = CGRect(x: ox + (Double(key.x) + keyGap / 2) * scale,
+                                  y: oy + (Double(key.y) + keyGap / 2) * scale,
                                   width: (Double(key.w) - keyGap) * scale,
                                   height: (Double(key.h) - keyGap) * scale)
-                let level = levels[key.id]
-                let color = level.map { StatsScreen.ramp[$0].0 } ?? Color.secondary.opacity(0.15)
+                let color = levels[key.keyId].map { StatsScreen.ramp[$0].0 } ?? Color.secondary.opacity(0.15)
                 context.fill(Path(roundedRect: rect, cornerRadius: scale * 0.12), with: .color(color))
             }
         }

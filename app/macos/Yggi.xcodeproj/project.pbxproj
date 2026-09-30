@@ -171,6 +171,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Yggi;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = NO;
@@ -198,6 +199,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Yggi;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = NO;

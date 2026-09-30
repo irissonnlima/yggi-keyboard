@@ -6,8 +6,8 @@ use std::sync::Arc;
 use crate::keyboard::{Keyboard, KeyboardError, StateListener};
 use crate::lighting::LightingConfig;
 use crate::model::KeyboardState;
-use crate::stats::{Statistics, StatsPeriod};
 use crate::simulator::Simulator;
+use crate::stats::{Statistics, StatsPeriod};
 
 #[derive(uniffi::Object)]
 pub struct KeyboardSession {

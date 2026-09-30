@@ -124,12 +124,25 @@ fn key_weight(id: &str) -> f64 {
     }
 }
 
+/// Um período de exemplo: totais, rótulos e ppm do gráfico, divisão por computador (%),
+/// e (ppm, correções por mil) em ortho e em stagger.
+type Sample = (StatTotals, Vec<&'static str>, Vec<u32>, [u8; 3], (u32, u32), (u32, u32));
+
 /// Estatísticas de exemplo, sempre as mesmas para o mesmo período.
 #[uniffi::export]
 pub fn simulated_statistics(period: StatsPeriod) -> Statistics {
-    let (totals, labels, wpm, hosts, ortho, stagger): (StatTotals, Vec<&str>, Vec<u32>, [u8; 3], (u32, u32), (u32, u32)) = match period {
+    let (totals, labels, wpm, hosts, ortho, stagger): Sample = match period {
         StatsPeriod::Today => (
-            StatTotals { keystrokes: 14_382, words: 2_451, avg_wpm: 66, peak_wpm: 94, peak_when: "às 15h".into(), typing_minutes: 112, sessions: 9, change_percent: 12 },
+            StatTotals {
+                keystrokes: 14_382,
+                words: 2_451,
+                avg_wpm: 66,
+                peak_wpm: 94,
+                peak_when: "às 15h".into(),
+                typing_minutes: 112,
+                sessions: 9,
+                change_percent: 12,
+            },
             vec!["8h", "9h", "10h", "11h", "12h", "13h", "14h", "15h", "16h", "17h", "18h", "19h"],
             vec![52, 61, 68, 72, 70, 38, 49, 75, 71, 66, 58, 44],
             [64, 28, 8],
@@ -137,7 +150,16 @@ pub fn simulated_statistics(period: StatsPeriod) -> Statistics {
             (69, 54),
         ),
         StatsPeriod::Week => (
-            StatTotals { keystrokes: 71_904, words: 12_187, avg_wpm: 64, peak_wpm: 97, peak_when: "quinta-feira".into(), typing_minutes: 580, sessions: 41, change_percent: 4 },
+            StatTotals {
+                keystrokes: 71_904,
+                words: 12_187,
+                avg_wpm: 64,
+                peak_wpm: 97,
+                peak_when: "quinta-feira".into(),
+                typing_minutes: 580,
+                sessions: 41,
+                change_percent: 4,
+            },
             vec!["seg", "ter", "qua", "qui", "sex", "sáb", "dom"],
             vec![62, 65, 63, 70, 66, 55, 48],
             [58, 34, 8],
@@ -145,7 +167,16 @@ pub fn simulated_statistics(period: StatsPeriod) -> Statistics {
             (67, 56),
         ),
         StatsPeriod::Month => (
-            StatTotals { keystrokes: 288_140, words: 48_830, avg_wpm: 63, peak_wpm: 97, peak_when: "dia 18".into(), typing_minutes: 2_295, sessions: 162, change_percent: 9 },
+            StatTotals {
+                keystrokes: 288_140,
+                words: 48_830,
+                avg_wpm: 63,
+                peak_wpm: 97,
+                peak_when: "dia 18".into(),
+                typing_minutes: 2_295,
+                sessions: 162,
+                change_percent: 9,
+            },
             vec!["sem. 1", "sem. 2", "sem. 3", "sem. 4"],
             vec![59, 62, 65, 66],
             [61, 31, 8],
@@ -158,10 +189,7 @@ pub fn simulated_statistics(period: StatsPeriod) -> Statistics {
     let total_weight: f64 = keys.iter().map(|k| key_weight(&k.id)).sum();
     let key_counts = keys
         .iter()
-        .map(|k| KeyCount {
-            key_id: k.id.clone(),
-            count: (totals.keystrokes as f64 * key_weight(&k.id) / total_weight).round() as u64,
-        })
+        .map(|k| KeyCount { key_id: k.id.clone(), count: (totals.keystrokes as f64 * key_weight(&k.id) / total_weight).round() as u64 })
         .collect();
 
     Statistics {

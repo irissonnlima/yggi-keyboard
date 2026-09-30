@@ -1,0 +1,4 @@
+# Mesma versão aqui e no CI: versões novas do clippy trazem avisos novos, e aviso aqui é erro.
+[toolchain]
+channel = "1.98.1"
+components = ["rustfmt", "clippy"]

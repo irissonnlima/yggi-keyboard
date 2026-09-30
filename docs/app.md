@@ -21,6 +21,8 @@
 
 ## Arquitetura
 
+Detalhes, regras, testes e regressões conhecidas em [arquitetura.md](arquitetura.md).
+
 ```
  interface (por sistema)             núcleo yggi-core (Rust, igual em todos)
 ┌──────────────────────────┐        ┌─────────────────────────────────────────┐

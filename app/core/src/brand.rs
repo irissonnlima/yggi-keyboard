@@ -63,13 +63,7 @@ pub fn yggi_mark() -> MarkDrawing {
         .into_iter()
         .map(|deg| {
             let (sin, cos) = deg.to_radians().sin_cos();
-            MarkCapsule {
-                cx: ox + r * cos,
-                cy: oy + r * sin,
-                length: MARK_BAR_LENGTH,
-                width: MARK_BAR_WIDTH,
-                angle: deg % 180.0,
-            }
+            MarkCapsule { cx: ox + r * cos, cy: oy + r * sin, length: MARK_BAR_LENGTH, width: MARK_BAR_WIDTH, angle: deg % 180.0 }
         })
         .collect();
     MarkDrawing { width: MARK_WIDTH, height: MARK_HEIGHT, capsules, dimmed: false }
@@ -109,11 +103,7 @@ pub fn keyboard_glyph_frame(stagger: f32, separation: f32) -> MarkDrawing {
     let opening = stagger.clamp(0.0, MAX_STAGGER_PERCENT as f32) / MAX_STAGGER_PERCENT as f32;
     // Subida (fração da maior) da coluna que cobre a posição x, ou 0 nas colunas fixas.
     let lift_at = |half: Half, ux: f32| {
-        layout
-            .columns
-            .iter()
-            .find(|c| c.half == half && ux >= c.x && ux < c.x + c.w)
-            .map_or(0.0, |c| c.lift_at_max / max_lift * opening)
+        layout.columns.iter().find(|c| c.half == half && ux >= c.x && ux < c.x + c.w).map_or(0.0, |c| c.lift_at_max / max_lift * opening)
     };
     let gap = HALVES_GAP_JOINED + (HALVES_GAP_SEPARATED - HALVES_GAP_JOINED) * separation.clamp(0.0, 1.0);
     let left_x0 = (GLYPH_WIDTH - 2.0 * HALF_WIDTH - gap) / 2.0;

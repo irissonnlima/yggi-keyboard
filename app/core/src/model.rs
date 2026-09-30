@@ -104,11 +104,7 @@ pub fn is_low_battery(battery: Battery) -> bool {
 /// A menor bateria entre as metades alcançáveis (o que a barra de menus mostra).
 #[uniffi::export]
 pub fn lowest_battery(state: KeyboardState) -> Option<Battery> {
-    [state.left, state.right]
-        .into_iter()
-        .filter(|h| h.reachable)
-        .filter_map(|h| h.battery)
-        .min_by_key(|b| b.level)
+    [state.left, state.right].into_iter().filter(|h| h.reachable).filter_map(|h| h.battery).min_by_key(|b| b.level)
 }
 
 #[uniffi::export]

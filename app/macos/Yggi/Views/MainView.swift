@@ -27,6 +27,9 @@ enum AppSection: Hashable {
 
 /// Janela principal: barra lateral à esquerda, teclado à direita.
 struct MainView: View {
+    /// Menor janela possível. Toda seção tem que caber nela (`--verificar` confere).
+    static let minimumSize = CGSize(width: 1220, height: 780)
+
     @Environment(KeyboardStore.self) private var store
 
     var body: some View {
@@ -47,7 +50,7 @@ struct MainView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(nsColor: .windowBackgroundColor))
         }
-        .frame(minWidth: 1100, minHeight: 780)
+        .frame(minWidth: Self.minimumSize.width, minHeight: Self.minimumSize.height)
     }
 }
 

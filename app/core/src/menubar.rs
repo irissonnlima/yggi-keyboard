@@ -171,21 +171,72 @@ pub fn widget_info(kind: WidgetKind) -> WidgetInfo {
     use WidgetKind as K;
     use WidgetSize as S;
     let (name, category, summary, sizes): (&str, &str, &str, &[WidgetSize]) = match kind {
-        K::Stagger => ("Stagger", "Teclado", "Colunas ao vivo, abrir e fechar e quanto abrir", &[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo, S::ThreeByTwo]),
-        K::StaggerQuick => ("Stagger rápido", "Teclado", "Só o botão de abrir e fechar", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo]),
-        K::ActiveHost => ("Computador ativo", "Teclado", "Qual computador recebe as teclas; toque para o próximo", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo]),
-        K::Hosts => ("Computadores", "Teclado", "Os computadores pareados, para trocar", &[S::ThreeByTwo, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
+        K::Stagger => (
+            "Stagger",
+            "Teclado",
+            "Colunas ao vivo, abrir e fechar e quanto abrir",
+            &[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo, S::ThreeByTwo],
+        ),
+        K::StaggerQuick => {
+            ("Stagger rápido", "Teclado", "Só o botão de abrir e fechar", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo])
+        }
+        K::ActiveHost => (
+            "Computador ativo",
+            "Teclado",
+            "Qual computador recebe as teclas; toque para o próximo",
+            &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo],
+        ),
+        K::Hosts => (
+            "Computadores",
+            "Teclado",
+            "Os computadores pareados, para trocar",
+            &[S::ThreeByTwo, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo],
+        ),
         K::Layer => ("Camada ativa", "Teclado", "Camada e perfil em uso", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo]),
-        K::Battery => ("Bateria", "Energia", "As duas metades, e o e-reader quando encaixado", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
-        K::Halves => ("Metades e e-reader", "Energia", "Juntas ou separadas, e-reader encaixado ou solto", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo]),
-        K::Brightness => ("Brilho e efeito", "Luz", "Intensidade e efeito das luzes", &[S::ThreeByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo]),
+        K::Battery => (
+            "Bateria",
+            "Energia",
+            "As duas metades, e o e-reader quando encaixado",
+            &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo],
+        ),
+        K::Halves => (
+            "Metades e e-reader",
+            "Energia",
+            "Juntas ou separadas, e-reader encaixado ou solto",
+            &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo],
+        ),
+        K::Brightness => {
+            ("Brilho e efeito", "Luz", "Intensidade e efeito das luzes", &[S::ThreeByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo])
+        }
         K::LightColor => ("Cor da luz", "Luz", "Cor do efeito", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
-        K::Today => ("Hoje", "Escrita", "Palavras, ritmo e tempo digitando", &[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo]),
-        K::DailyGoal => ("Meta do dia", "Escrita", "Quanto falta para a meta de palavras", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo]),
-        K::Heatmap => ("Mapa de calor", "Escrita", "Teclas mais usadas, sem guardar o texto", &[S::ThreeByTwo, S::TwoByOne, S::ThreeByOne, S::TwoByTwo]),
+        K::Today => {
+            ("Hoje", "Escrita", "Palavras, ritmo e tempo digitando", &[S::ThreeByOne, S::OneByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo])
+        }
+        K::DailyGoal => (
+            "Meta do dia",
+            "Escrita",
+            "Quanto falta para a meta de palavras",
+            &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo, S::TwoByTwo],
+        ),
+        K::Heatmap => (
+            "Mapa de calor",
+            "Escrita",
+            "Teclas mais usadas, sem guardar o texto",
+            &[S::ThreeByTwo, S::TwoByOne, S::ThreeByOne, S::TwoByTwo],
+        ),
         K::Break => ("Pausa", "Saúde", "Tempo até a próxima pausa", &[S::TwoByOne, S::OneByOne, S::ThreeByOne, S::OneByTwo]),
-        K::QuickActions => ("Ações rápidas", "Atalhos", "Abrir o Yggi, apagar a luz, estatísticas", &[S::ThreeByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo]),
-        K::CustomButton => ("Botão personalizado", "Atalhos", "Uma tecla, macro ou camada à sua escolha", &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo]),
+        K::QuickActions => (
+            "Ações rápidas",
+            "Atalhos",
+            "Abrir o Yggi, apagar a luz, estatísticas",
+            &[S::ThreeByOne, S::TwoByOne, S::OneByTwo, S::TwoByTwo],
+        ),
+        K::CustomButton => (
+            "Botão personalizado",
+            "Atalhos",
+            "Uma tecla, macro ou camada à sua escolha",
+            &[S::OneByOne, S::TwoByOne, S::ThreeByOne, S::OneByTwo],
+        ),
         K::Firmware => ("Firmware", "Sistema", "Versão e atualização", &[S::OneByOne, S::TwoByOne, S::ThreeByOne]),
     };
     WidgetInfo { kind, name: name.into(), category: category.into(), summary: summary.into(), sizes: sizes.to_vec() }
@@ -281,11 +332,7 @@ fn overlaps(a: (u8, u32, WidgetSize), b: (u8, u32, WidgetSize)) -> bool {
 
 fn fits(tab: &MenuTab, size: WidgetSize, column: u8, row: u32, ignoring: Option<u32>) -> bool {
     column + size.columns() <= GRID_COLUMNS
-        && tab
-            .widgets
-            .iter()
-            .filter(|w| Some(w.id) != ignoring)
-            .all(|w| !overlaps((column, row, size), (w.column, w.row, w.size)))
+        && tab.widgets.iter().filter(|w| Some(w.id) != ignoring).all(|w| !overlaps((column, row, size), (w.column, w.row, w.size)))
 }
 
 /// O primeiro lugar livre (de cima para baixo, da esquerda para a direita) onde o tamanho cabe.
@@ -305,7 +352,14 @@ pub fn menu_can_place(tab: MenuTab, size: WidgetSize, column: u8, row: u32, igno
 /// O tamanho com que o widget entra na célula: o preferido se couber; senão o maior que ele
 /// aceita e que cabe ali (o widget se ajusta ao espaço). `None` se nenhum couber.
 #[uniffi::export]
-pub fn widget_fit_size(tab: MenuTab, kind: WidgetKind, preferred: WidgetSize, column: u8, row: u32, ignoring: Option<u32>) -> Option<WidgetSize> {
+pub fn widget_fit_size(
+    tab: MenuTab,
+    kind: WidgetKind,
+    preferred: WidgetSize,
+    column: u8,
+    row: u32,
+    ignoring: Option<u32>,
+) -> Option<WidgetSize> {
     fit_size(&tab, kind, preferred, column, row, ignoring)
 }
 
@@ -378,10 +432,10 @@ pub fn menu_add_tab(mut config: MenuBarConfig, name: String) -> MenuBarConfig {
 /// Remove a aba e os widgets dela. A última aba não pode ser removida.
 #[uniffi::export]
 pub fn menu_remove_tab(mut config: MenuBarConfig, tab_id: u32) -> MenuBarConfig {
-    if config.tabs.len() > 1 {
-        if let Some(i) = tab_index(&config, tab_id) {
-            config.tabs.remove(i);
-        }
+    if config.tabs.len() > 1
+        && let Some(i) = tab_index(&config, tab_id)
+    {
+        config.tabs.remove(i);
     }
     config
 }
@@ -408,7 +462,13 @@ pub fn menu_move_tab(mut config: MenuBarConfig, tab_id: u32, to_index: u32) -> M
 /// Adiciona um widget do tipo `kind`. Com `at`, entra na célula no tamanho `size` (ou no maior
 /// que couber ali); sem `at`, ou se nada couber, vai no tamanho padrão para o primeiro lugar livre.
 #[uniffi::export]
-pub fn menu_add_widget(mut config: MenuBarConfig, tab_id: u32, kind: WidgetKind, at: Option<GridCell>, size: Option<WidgetSize>) -> MenuBarConfig {
+pub fn menu_add_widget(
+    mut config: MenuBarConfig,
+    tab_id: u32,
+    kind: WidgetKind,
+    at: Option<GridCell>,
+    size: Option<WidgetSize>,
+) -> MenuBarConfig {
     let Some(t) = tab_index(&config, tab_id) else { return config };
     let info = widget_info(kind);
     let tab = &config.tabs[t];
@@ -520,7 +580,8 @@ pub fn menu_compact_tab(mut config: MenuBarConfig, tab_id: u32) -> MenuBarConfig
 /// Texto para guardar a configuração (no Mac hoje; no teclado quando houver firmware).
 #[uniffi::export]
 pub fn menu_bar_encode(config: MenuBarConfig) -> String {
-    let mut out = format!("{HEADER}\nopen_first_tab {}\n", u8::from(config.open_first_tab));
+    // next_id vai junto: sem ele, ids de widgets apagados voltariam a ser usados depois de reabrir.
+    let mut out = format!("{HEADER}\nopen_first_tab {}\nnext_id {}\n", u8::from(config.open_first_tab), config.next_id);
     for tab in &config.tabs {
         out += &format!("tab {} {}\n", tab.id, escape(&tab.name));
         for w in &tab.widgets {
@@ -543,12 +604,14 @@ pub fn menu_bar_decode(text: String) -> Option<MenuBarConfig> {
     }
     let mut config = MenuBarConfig { tabs: Vec::new(), open_first_tab: true, next_id: 1 };
     let mut max_id = 0u32;
+    let mut saved_next: Option<u32> = None;
     for line in lines {
         let mut parts = line.splitn(2, ' ');
         let key = parts.next()?;
         let rest = parts.next().unwrap_or("");
         match key {
             "open_first_tab" => config.open_first_tab = rest == "1",
+            "next_id" => saved_next = rest.parse().ok(),
             "tab" => {
                 let mut p = rest.splitn(2, ' ');
                 let id: u32 = p.next()?.parse().ok()?;
@@ -583,7 +646,8 @@ pub fn menu_bar_decode(text: String) -> Option<MenuBarConfig> {
     if config.tabs.is_empty() {
         return None;
     }
-    config.next_id = max_id + 1;
+    // Nunca abaixo do maior id em uso (o texto pode ter sido editado à mão).
+    config.next_id = saved_next.unwrap_or(0).max(max_id + 1);
     Some(config)
 }
 
@@ -817,6 +881,61 @@ mod tests {
         assert_eq!(c.tabs[0].widgets.last().unwrap().size, S::TwoByOne);
     }
 
+    /// Gerador simples e determinístico (sem dependências): a mesma semente, a mesma sequência.
+    struct Rng(u64);
+    impl Rng {
+        fn next(&mut self, n: u32) -> u32 {
+            self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            ((self.0 >> 33) % n as u64) as u32
+        }
+    }
+
+    fn assert_invariants(c: &MenuBarConfig, step: usize) {
+        assert!((1..=MAX_TABS).contains(&c.tabs.len()), "passo {step}: {} abas", c.tabs.len());
+        let mut ids = std::collections::HashSet::new();
+        for tab in &c.tabs {
+            assert!(ids.insert(tab.id), "passo {step}: id repetido {}", tab.id);
+            for w in &tab.widgets {
+                assert!(ids.insert(w.id), "passo {step}: id repetido {}", w.id);
+                assert!(w.column + w.size.columns() <= GRID_COLUMNS, "passo {step}: {:?} passa da 3ª coluna", w);
+                assert!(widget_info(w.kind).sizes.contains(&w.size), "passo {step}: {:?} num tamanho que não aceita", w);
+                assert!(fits(tab, w.size, w.column, w.row, Some(w.id)), "passo {step}: {:?} cobre outro widget", w);
+            }
+        }
+        assert!(ids.iter().all(|&id| id < c.next_id), "passo {step}: next_id atrás dos ids");
+        assert_eq!(menu_bar_decode(menu_bar_encode(c.clone())).as_ref(), Some(c), "passo {step}: gravar e ler muda a config");
+    }
+
+    #[test]
+    fn nenhuma_sequencia_de_edicoes_quebra_a_grade() {
+        for seed in 1..=20u64 {
+            let mut rng = Rng(seed);
+            let mut c = default_menu_bar();
+            for step in 0..300 {
+                let tab = c.tabs[rng.next(c.tabs.len() as u32) as usize].id;
+                let widgets: Vec<u32> = c.tabs.iter().flat_map(|t| t.widgets.iter().map(|w| w.id)).collect();
+                let widget = (!widgets.is_empty()).then(|| widgets[rng.next(widgets.len() as u32) as usize]);
+                let kind = KINDS[rng.next(KINDS.len() as u32) as usize];
+                let size = WidgetSize::ALL[rng.next(WidgetSize::ALL.len() as u32) as usize];
+                let (col, row) = (rng.next(4) as u8, rng.next(6));
+                c = match (rng.next(10), widget) {
+                    (0, _) => menu_add_widget(c, tab, kind, Some(GridCell { column: col, row }), Some(size)),
+                    (1, _) => menu_add_widget(c, tab, kind, None, None),
+                    (2, Some(w)) => menu_place_widget(c, w, tab, col, row),
+                    (3, Some(w)) => menu_resize_widget(c, w, rng.next(4) as u8, rng.next(3) as u8),
+                    (4, Some(w)) => menu_set_widget_size(c, w, size),
+                    (5, Some(w)) => menu_move_widget_to_tab(c, w, tab),
+                    (6, Some(w)) => menu_remove_widget(c, w),
+                    (7, _) => menu_compact_tab(c, tab),
+                    (8, _) => menu_add_tab(c, "Aba".into()),
+                    (9, _) if rng.next(3) == 0 => menu_remove_tab(c, tab),
+                    _ => c,
+                };
+                assert_invariants(&c, step);
+            }
+        }
+    }
+
     #[test]
     fn compactar_tira_os_buracos() {
         let c = default_menu_bar();
@@ -862,7 +981,9 @@ mod tests {
 
     #[test]
     fn le_a_versao_1_encaixando_e_tolera_widget_novo() {
-        let text = format!("{HEADER_V1}\nopen_first_tab 1\ntab 1 A\nwidget 2 widget_do_futuro 1x1 1\nwidget 3 firmware 2x2 1\nwidget 4 battery 1x1 1\n");
+        let text = format!(
+            "{HEADER_V1}\nopen_first_tab 1\ntab 1 A\nwidget 2 widget_do_futuro 1x1 1\nwidget 3 firmware 2x2 1\nwidget 4 battery 1x1 1\n"
+        );
         let c = menu_bar_decode(text).unwrap();
         let w = &c.tabs[0].widgets;
         assert_eq!(w.len(), 2);
@@ -871,6 +992,19 @@ mod tests {
         assert_eq!(c.next_id, 5);
         assert!(menu_bar_decode("outra coisa".into()).is_none());
         assert!(menu_bar_decode(format!("{HEADER}\n")).is_none());
+    }
+
+    #[test]
+    fn ids_apagados_nao_voltam_depois_de_reabrir() {
+        // Regressão (achada pelo teste de sequências): next_id não era gravado.
+        let c = default_menu_bar();
+        let tab = c.tabs[0].id;
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, None, None);
+        let apagado = c.tabs[0].widgets.last().unwrap().id;
+        let c = menu_remove_widget(c, apagado);
+        let c = menu_bar_decode(menu_bar_encode(c)).unwrap();
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, None, None);
+        assert_ne!(c.tabs[0].widgets.last().unwrap().id, apagado);
     }
 
     #[test]
