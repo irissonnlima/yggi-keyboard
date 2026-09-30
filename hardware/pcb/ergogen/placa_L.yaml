@@ -111,7 +111,7 @@ pcbs:
     footprints:
       choc:
         what: choc
-        where: true
+        where: -/_r5$/
         params:
           keycaps: true
           reverse: false
@@ -120,12 +120,31 @@ pcbs:
           to: "{{colrow}}"
       diode:
         what: diode
-        where: true
+        where: -/_r5$/
         params:
           from: "{{colrow}}"
           to: "{{row_net}}"
         adjust:
           shift: [0, -5.3]
+      choc_bar:
+        what: choc
+        where: /_r5$/
+        adjust:
+          rotate: 180
+        params:
+          keycaps: true
+          reverse: false
+          hotswap: false
+          from: "{{column_net}}"
+          to: "{{colrow}}"
+      diode_bar:
+        what: diode
+        where: /_r5$/
+        params:
+          from: "{{colrow}}"
+          to: "{{row_net}}"
+        adjust:
+          shift: [0, 5.3]
       jout_0:
         what: pad
         where: big_c0_r4

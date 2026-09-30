@@ -154,7 +154,7 @@ python3 tools/make_gif.py docs/media/yggi-stagger.gif /tmp/f0.png /tmp/f25.png /
 
 **Pendências conhecidas:**
 - Switch das setas de 0,5u (o Choc não cabe em meia altura).
-- Traçar as trilhas das placas no KiCad e colocar os LEDs; rev1 com MCU, carregador e USB-C na placa L.
+- Rev1 da placa L com o MCU, o carregador e o USB-C (as placas da rev0 já estão roteadas, com LEDs e DRC limpo).
 - Estabilizadores das teclas de 2u.
 - Escolher a mola de força constante e a bateria reais.
 - Testar folgas e a força da trava na prática.

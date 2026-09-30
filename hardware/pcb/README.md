@@ -14,11 +14,12 @@ placa L  ──►  coluna 1u  ──►  coluna 1u  ──►  coluna 1u  ─�
 - **Coluna 2u** (indicador, fim da cadeia): 10 switches e 10 diodos.
 - A metade direita usa as mesmas placas, espelhadas.
 
-Os arquivos são gerados com o [Ergogen](https://ergogen.xyz) a partir de [`ergogen/generate.py`](ergogen/generate.py). Os resultados ficam versionados:
+As placas saem em duas etapas: o [Ergogen](https://ergogen.xyz) posiciona switches, diodos e pads a partir de [`ergogen/generate.py`](ergogen/generate.py), e o [`route.py`](route.py) termina cada placa no KiCad (diodos SOD-123, LEDs, regras da JLCPCB, trilhas pelo [Freerouting](https://github.com/freerouting/freerouting) e DRC). Os resultados ficam versionados:
 
 | Arquivo | O que é |
 |---|---|
-| [`kicad/*.kicad_pcb`](kicad/) | placas para o KiCad (footprints e redes posicionados, trilhas ainda não traçadas) |
+| [`kicad/*.kicad_pcb`](kicad/) | placas roteadas para o KiCad 10, com DRC limpo (0 violações, 0 ligações faltando) |
+| [`kicad/*.kicad_pro`](kicad/) | regras de projeto (trilha 0,25, isolamento 0,2, via 0,6/0,3, borda 0,5) |
 | [`outlines/*.dxf`](outlines/) | contornos de corte, os mesmos usados no CAD |
 | [`preview.svg`](preview.svg) | a prévia acima (`python3 hardware/tools/pcb_preview.py`) |
 
@@ -78,19 +79,26 @@ Diodos no sentido **COL2ROW**, o padrão do ZMK: coluna → switch → diodo →
 - **MCU externo na rev0.** A placa L tem um **cabeçalho de 18 pads** (GND, R0–R5, COL0–COL6, LED1–3). Na bancada, ele se liga por fios a uma placa nRF52840 (nice!nano / Pro Micro), como combinamos para as protoboards.
 - **Na rev1** entram na própria placa L: o módulo nRF52840 (~10 × 15,5 mm), o carregador, o conector da bateria e o USB-C. As posições já estão reservadas no CAD: o MCU ao lado das teclas de 2u, e o USB-C na frente da barra, no canto externo.
 - **Espessura:** o CAD usa placa de **1,2 mm**. Encomendar com 1,2 mm, ou ajustar `pcb_t` no CAD para 1,6.
-- **Trilhas não traçadas.** Os footprints e as redes estão posicionados. O roteamento é feito no KiCad (as colunas são simples: 5 switches, 5 diodos, 10 pads).
-- **LEDs** (3 × 0805 + resistores) ainda não estão na placa L. As redes LED1–3 já existem no cabeçalho, e o lugar deles é a faixa entre F e números, acima da tecla Yggi.
+- **Trilhas traçadas pelo Freerouting**, em 2 camadas, e conferidas pelo DRC do KiCad. O traçado é automático (funciona, mas não é o mais bonito). O barramento rotativo obriga as trilhas a trocar de face na faixa entre F e números: J_IN e J_OUT têm a mesma ordem, deslocada, e isso não cabe numa face só.
+- **Diodos SOD-123 na face de baixo** (1N4148W). O `route.py` troca o diodo do Ergogen, que tem pads nas duas faces e furos passantes, por um SMD simples: fácil de soldar à mão e montável pela JLCPCB.
+- **Barra do polegar com os switches girados 180°.** Com o pino 2 virado para trás, o anel dele ficava a 0,28 mm da borda de trás da barra (abaixo do mínimo da JLCPCB). Virado, fica a 0,58 mm da borda da frente, e o diodo vai para trás do switch. O keycap do Choc é simétrico, então nada muda para quem digita.
+- **LEDs:** 3 LEDs 0805 na face de cima, na faixa entre F e números acima da tecla Yggi (CAD x = 4, 9 e 14 mm), cada um com um resistor 0805 de 1 kΩ embaixo, no mesmo lugar. Ligação: pino LEDn do MCU → resistor → LED → GND (acende com o pino em nível alto).
+- **Furo do botão da trava** (CAD 22; 87,25): o `route.py` põe uma área proibida de 2,1 mm de raio em volta dele, porque o Freerouting não aplica a folga de borda aos furos internos.
 
 ## Como regenerar
 
-A partir da raiz do repositório:
+Precisa do KiCad 10 (`brew install --cask kicad`), do Java (`brew install openjdk`) e do [Freerouting 2.4.1](https://github.com/freerouting/freerouting/releases) em `~/.local/share/freerouting/` (ou na variável `FREEROUTING`). A partir da raiz do repositório:
 
 ```bash
 python3 hardware/pcb/ergogen/generate.py
 ```
 
 ```bash
-cd hardware/pcb/ergogen && for d in coluna_1u coluna_2u placa_L; do npx ergogen@4.2.1 $d.yaml -o output/$d && cp output/$d/pcbs/$d.kicad_pcb ../kicad/ && cp output/$d/outlines/board.dxf ../outlines/$d.dxf; done
+(cd hardware/pcb/ergogen && for d in coluna_1u coluna_2u placa_L; do npx ergogen@4.2.1 $d.yaml -o output/$d && cp output/$d/outlines/board.dxf ../outlines/$d.dxf; done)
+```
+
+```bash
+/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3 hardware/pcb/route.py
 ```
 
 ```bash

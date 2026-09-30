@@ -190,7 +190,8 @@ module fixed_block(round_left, leds, pogo = false) {
         if (pogo) for (i = [0:3]) translate([-0.01, POGO_Y + i * 2.5, sled_floor + sock_h / 2]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 2);
     }
     link_pads(28.5, true);                                    // saída da placa L (J_OUT)
-    if (leds) for (i = [-1:1]) color("lime") translate([U / 2 + i * 5 - 0.8, latch[1] - 0.5, gav_h]) cube([1.6, 1, 0.6]);
+    // LEDs 0805 em cima da placa (x = 4, 9, 14); os resistores 0805 ficam embaixo, no mesmo lugar
+    if (leds) for (i = [-1:1]) color("lime") translate([U / 2 + i * 5 - 1, latch[1] - 0.625, gav_h]) cube([2, 1.25, 0.8]);
 }
 
 // ---------- Barra do polegar (fixa, apoiada em pernas entre as saias) ----------

@@ -9,7 +9,8 @@ import pathlib
 import re
 import sys
 
-COL = {"switch": "#3b7dd8", "diode": "#e39a2d", "pad": "#c9a227", "hole": "#1b1a18", "edge": "#2e8b57"}
+COL = {"switch": "#3b7dd8", "diode": "#e39a2d", "pad": "#c9a227", "hole": "#1b1a18", "edge": "#2e8b57",
+       "led": "#d6336c", "F.Cu": "#c0392b", "B.Cu": "#5b8fd6", "via": "#6b6860"}
 
 
 def dxf_shapes(path):
@@ -39,23 +40,51 @@ def dxf_shapes(path):
     return segs, circles
 
 
-def pads(path):
-    s = open(path).read()
-    out = []
-    for m in s.split("(module ")[1:]:
-        name = m.split()[0]
-        at = re.search(r"\(at ([-\d.]+) ([-\d.]+)(?: ([-\d.]+))?\)", m)
-        X, Y, R = float(at.group(1)), -float(at.group(2)), float(at.group(3) or 0)
-        for line in m.splitlines():
-            if "(pad " not in line:
-                continue
-            a = re.search(r"\(at ([-\d.]+) ([-\d.]+)", line)
-            sz = re.search(r"\(size ([-\d.]+) ([-\d.]+)\)", line)
-            dx, dy = float(a.group(1)), -float(a.group(2))
-            r = math.radians(R)
-            out.append((name, X + dx * math.cos(r) - dy * math.sin(r), Y + dx * math.sin(r) + dy * math.cos(r),
-                        float(sz.group(1)), float(sz.group(2)), "circle" in line, "np_thru" in line))
-    return out
+def sexp(text):
+    """Lê uma S-expression do KiCad em listas aninhadas (átomos como texto)."""
+    tokens = re.findall(r'\(|\)|"(?:[^"\\]|\\.)*"|[^\s()]+', text)
+    stack = [[]]
+    for t in tokens:
+        if t == "(":
+            stack.append([])
+        elif t == ")":
+            done = stack.pop()
+            stack[-1].append(done)
+        else:
+            stack[-1].append(t.strip('"'))
+    return stack[0][0]
+
+
+def child(node, key):
+    return next((c for c in node if isinstance(c, list) and c and c[0] == key), None)
+
+
+def children(node, key):
+    return [c for c in node if isinstance(c, list) and c and c[0] == key]
+
+
+def board_items(path):
+    """Pads (com o nome do footprint), trilhas e vias. Aceita os formatos do KiCad 5 e do atual."""
+    root = sexp(open(path).read())
+    pads, tracks, vias = [], [], []
+    for fp in children(root, "footprint") + children(root, "module"):
+        name = fp[1]
+        at = child(fp, "at")
+        X, Y, R = float(at[1]), -float(at[2]), float(at[3]) if len(at) > 3 else 0.0
+        r = math.radians(R)
+        for pad in children(fp, "pad"):
+            a, sz = child(pad, "at"), child(pad, "size")
+            dx, dy = float(a[1]), -float(a[2])
+            pads.append((name, X + dx * math.cos(r) - dy * math.sin(r), Y + dx * math.sin(r) + dy * math.cos(r),
+                         float(sz[1]), float(sz[2]), pad[3] == "circle", pad[2] == "np_thru_hole"))
+    for seg in children(root, "segment"):
+        a, b = child(seg, "start"), child(seg, "end")
+        tracks.append((float(a[1]), -float(a[2]), float(b[1]), -float(b[2]),
+                       float(child(seg, "width")[1]), child(seg, "layer")[1]))
+    for v in children(root, "via"):
+        a = child(v, "at")
+        vias.append((float(a[1]), -float(a[2]), float(child(v, "size")[1])))
+    return pads, tracks, vias
 
 
 def main():
@@ -67,33 +96,39 @@ def main():
         segs, circles = dxf_shapes(root / "outlines" / f"{name}.dxf")
         xs = [v for s in segs for v in (s[0], s[2])]
         ys = [v for s in segs for v in (s[1], s[3])]
-        boards.append((name, segs, circles, pads(f), min(xs), max(xs), min(ys), max(ys)))
+        boards.append((name, segs, circles, board_items(f), min(xs), max(xs), min(ys), max(ys)))
     total_w = sum(b[5] - b[4] for b in boards) + gap * (len(boards) - 1)
     ymin, ymax = min(b[6] for b in boards), max(b[7] for b in boards)
-    W, H = (total_w + 20) * S, (ymax - ymin + 30) * S
+    W, H = (total_w + 20) * S, (ymax - ymin + 34) * S
     svg = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.0f} {H:.0f}" width="100%" font-family="sans-serif">',
            f'<rect width="{W:.0f}" height="{H:.0f}" fill="#f7f6f2"/>']
     x0 = 10
-    for name, segs, circles, P, bx0, bx1, by0, by1 in boards:
+    for name, segs, circles, (P, T, V), bx0, bx1, by0, by1 in boards:
         tx = lambda x: (x0 + x - bx0) * S
         ty = lambda y: (ymax - y + 10) * S
         for a, b, c, d in segs:
             svg.append(f'<line x1="{tx(a):.1f}" y1="{ty(b):.1f}" x2="{tx(c):.1f}" y2="{ty(d):.1f}" stroke="{COL["edge"]}" stroke-width="2"/>')
         for cx, cy, r in circles:
             svg.append(f'<circle cx="{tx(cx):.1f}" cy="{ty(cy):.1f}" r="{r * S:.1f}" fill="none" stroke="{COL["edge"]}" stroke-width="2"/>')
+        for a, b, c, d, w, layer in sorted(T, key=lambda t: t[5] == "F.Cu"):
+            svg.append(f'<line x1="{tx(a):.1f}" y1="{ty(b):.1f}" x2="{tx(c):.1f}" y2="{ty(d):.1f}" stroke="{COL[layer]}" '
+                       f'stroke-width="{w * S:.1f}" stroke-linecap="round" opacity="0.8"/>')
         for fp, x, y, w, h, circ, npth in P:
-            c = COL["hole"] if npth else COL["switch"] if fp == "PG1350" else COL["diode"] if "Diode" in fp else COL["pad"]
+            c = (COL["hole"] if npth else COL["switch"] if fp == "PG1350" else COL["diode"] if "Diode" in fp or "SOD" in fp
+                 else COL["led"] if fp.startswith(("LED", "R_")) else COL["pad"])
             if circ:
                 svg.append(f'<circle cx="{tx(x):.1f}" cy="{ty(y):.1f}" r="{w / 2 * S:.1f}" fill="{c}" opacity="{0.85 if npth else 0.9}"/>')
             else:
                 svg.append(f'<rect x="{tx(x) - w / 2 * S:.1f}" y="{ty(y) - h / 2 * S:.1f}" width="{w * S:.1f}" height="{h * S:.1f}" fill="{c}"/>')
+        for x, y, d in V:
+            svg.append(f'<circle cx="{tx(x):.1f}" cy="{ty(y):.1f}" r="{d / 2 * S:.1f}" fill="{COL["via"]}"/>')
         svg.append(f'<text x="{tx((bx0 + bx1) / 2):.1f}" y="{ty(by0) + 7 * S:.1f}" font-size="{3.2 * S:.0f}" text-anchor="middle" fill="#3a3834">{name.replace("_", " ")}</text>')
         x0 += bx1 - bx0 + gap
-    legend = [("contorno", COL["edge"]), ("pinos do switch Choc", COL["switch"]), ("diodo", COL["diode"]), ("pads da cadeia / MCU", COL["pad"]), ("furos", COL["hole"])]
-    lx = 10 * S
-    for label, c in legend:
-        svg.append(f'<rect x="{lx}" y="{H - 5 * S}" width="{2.5 * S}" height="{2.5 * S}" fill="{c}"/><text x="{lx + 3.5 * S}" y="{H - 3 * S}" font-size="{2.6 * S:.0f}" fill="#3a3834">{label}</text>')
-        lx += (len(label) * 1.7 + 9) * S
+    legend = [("contorno", COL["edge"]), ("pinos do switch Choc", COL["switch"]), ("diodo", COL["diode"]), ("LEDs e resistores", COL["led"]), ("pads da cadeia / MCU", COL["pad"]),
+              ("trilha em cima", COL["F.Cu"]), ("trilha embaixo", COL["B.Cu"]), ("furos", COL["hole"])]
+    for i, (label, c) in enumerate(legend):          # duas linhas de 4
+        lx, ly = (10 + (i % 4) * (W / S - 20) / 4) * S, H - (9 - (i // 4) * 4.5) * S
+        svg.append(f'<rect x="{lx:.0f}" y="{ly:.0f}" width="{2.5 * S}" height="{2.5 * S}" fill="{c}"/><text x="{lx + 3.5 * S:.0f}" y="{ly + 2 * S:.0f}" font-size="{2.6 * S:.0f}" fill="#3a3834">{label}</text>')
     svg.append("</svg>")
     pathlib.Path(out).write_text("\n".join(svg))
     print("prévia:", out)

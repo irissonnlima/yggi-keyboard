@@ -85,24 +85,26 @@ def pads(prefix, ref, x0, nets, back=True):
     return out
 
 
-def switches(where="true"):
-    return f"""    choc:
+def switches(where="true", name="", rotate=0):
+    """Switch Choc + diodo. rotate=180 vira o switch (pinos para a frente) e leva o diodo para trás."""
+    rot = f"\n      adjust:\n        rotate: {rotate}" if rotate else ""
+    return f"""    choc{name}:
       what: choc
-      where: {where}
+      where: {where}{rot}
       params:
         keycaps: true
         reverse: false
         hotswap: false
         from: "{{{{column_net}}}}"
         to: "{{{{colrow}}}}"
-    diode:
+    diode{name}:
       what: diode
       where: {where}
       params:
         from: "{{{{colrow}}}}"
         to: "{{{{row_net}}}}"
       adjust:
-        shift: [0, -5.3]
+        shift: [0, {5.3 if rotate else -5.3}]
 """
 
 
@@ -246,6 +248,8 @@ for i, net in enumerate(mcu_nets):
         text: ''
         net: {net}
 """
-lb += pcb("placa_L", switches() + pads("jout", REF, 19.5 + DX, ["R0", "R1", "R2", "R3", "R4", "COL2", "COL3", "COL4", "COL5", "COL6"]) + mcu)
+# Barra do polegar: switches girados 180°. Com o pino 2 para trás, o anel dele ficaria a 0,28 mm
+# da borda de trás da barra (a JLCPCB pede 0,3 mm e o DRC 0,5 mm); virado, fica a 0,58 mm da frente.
+lb += pcb("placa_L", switches("-/_r5$/") + switches("/_r5$/", "_bar", 180) + pads("jout", REF, 19.5 + DX, ["R0", "R1", "R2", "R3", "R4", "COL2", "COL3", "COL4", "COL5", "COL6"]) + mcu)
 (HERE / "placa_L.yaml").write_text(lb)
 print("configs geradas:", [p.name for p in HERE.glob("*.yaml")])
