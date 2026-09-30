@@ -19,6 +19,7 @@ As placas saem em duas etapas: o [Ergogen](https://ergogen.xyz) posiciona switch
 | Arquivo | O que é |
 |---|---|
 | [`kicad/*.kicad_pcb`](kicad/) | placas roteadas para o KiCad 10, com DRC limpo (0 violações, 0 ligações faltando) |
+| [`kicad/metade_esquerda*.kicad_pcb`](kicad/) | **só para ver**: as 5 placas de uma metade juntas, na posição do CAD (ortho e stagger 150%), com as redes reais da matriz; os jumpers aparecem como linhas de ligação. Gerado por [`assemble.py`](assemble.py) |
 | [`kicad/*.kicad_pro`](kicad/) | regras de projeto (trilha 0,25, isolamento 0,2, via 0,6/0,3, borda 0,5) |
 | [`outlines/*.dxf`](outlines/) | contornos de corte, os mesmos usados no CAD |
 | [`preview.svg`](preview.svg) | a prévia acima (`python3 hardware/tools/pcb_preview.py`) |
@@ -99,6 +100,10 @@ python3 hardware/pcb/ergogen/generate.py
 
 ```bash
 /Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3 hardware/pcb/route.py
+```
+
+```bash
+python3 hardware/pcb/assemble.py && python3 hardware/pcb/assemble.py 150
 ```
 
 ```bash

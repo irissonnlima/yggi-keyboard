@@ -143,6 +143,16 @@ def keepout(board, x, y, r, n=24):
     board.Add(z)
 
 
+def center_on_page(board):
+    """O Ergogen põe a origem no centro de uma tecla, e a placa fica fora da folha no KiCad.
+    Move tudo para o centro da folha A3 que o Ergogen define (antes do roteamento)."""
+    box = board.GetBoardEdgesBoundingBox()
+    c = box.GetCenter()
+    d = pcbnew.VECTOR2I(mm(420 / 2) - c.x, mm(297 / 2) - c.y)
+    for item in list(board.GetFootprints()) + list(board.GetDrawings()) + list(board.Zones()):
+        item.Move(d)
+
+
 def freeroute(board, work):
     dsn, ses = work / "board.dsn", work / "board.ses"
     if not pcbnew.ExportSpecctraDSN(board, str(dsn)):
@@ -171,6 +181,7 @@ def finish(name):
     if name == "placa_L":
         add_leds(board)
         keepout(board, 13, BAND_Y, 1.4 + 0.7)        # furo do botão da trava (CAD 22; 87,25)
+    center_on_page(board)
     work = BUILD / name / "route"
     work.mkdir(exist_ok=True)
     freeroute(board, work)

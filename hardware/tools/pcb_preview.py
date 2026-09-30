@@ -84,7 +84,10 @@ def board_items(path):
     for v in children(root, "via"):
         a = child(v, "at")
         vias.append((float(a[1]), -float(a[2]), float(child(v, "size")[1])))
-    return pads, tracks, vias
+    # o route.py centraliza a placa na folha; o canto do contorno (Edge.Cuts) alinha tudo com o .dxf
+    edge = [(float(p[1]), -float(p[2])) for g in children(root, "gr_line")
+            if child(g, "layer")[1] == "Edge.Cuts" for p in (child(g, "start"), child(g, "end"))]
+    return pads, tracks, vias, (min(x for x, _ in edge), min(y for _, y in edge))
 
 
 def main():
@@ -96,7 +99,12 @@ def main():
         segs, circles = dxf_shapes(root / "outlines" / f"{name}.dxf")
         xs = [v for s in segs for v in (s[0], s[2])]
         ys = [v for s in segs for v in (s[1], s[3])]
-        boards.append((name, segs, circles, board_items(f), min(xs), max(xs), min(ys), max(ys)))
+        pads_, tracks, vias, (ex, ey) = board_items(f)
+        dx, dy = min(xs) - ex, min(ys) - ey
+        items = ([(n, x + dx, y + dy, *r) for n, x, y, *r in pads_],
+                 [(a + dx, b + dy, c + dx, d + dy, w, l) for a, b, c, d, w, l in tracks],
+                 [(x + dx, y + dy, d) for x, y, d in vias])
+        boards.append((name, segs, circles, items, min(xs), max(xs), min(ys), max(ys)))
     total_w = sum(b[5] - b[4] for b in boards) + gap * (len(boards) - 1)
     ymin, ymax = min(b[6] for b in boards), max(b[7] for b in boards)
     W, H = (total_w + 20) * S, (ymax - ymin + 34) * S
