@@ -57,11 +57,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         }
     }
 
+    // Animação do ícone: vai do quadro mostrado até o estado novo, quadro a quadro.
+    private var shown: (stagger: Double, separation: Double)?
+    private var animation: (from: (Double, Double), to: (Double, Double), start: Date, duration: Double, opening: Bool)?
+    private var iconTimer: Timer?
+    private var iconDimmed = false
+
     private func updateIcon(_ state: KeyboardState) {
         guard let button = statusItem?.button else { return }
-        button.image = MarkRenderer.menuBarImage(menuBarGlyph(state: state))
         button.setAccessibilityLabel(Self.accessibilityText(state))
         button.toolTip = Self.accessibilityText(state)
+        iconDimmed = !state.isConnected
+        let target = (Double(state.staggerPercent), state.halvesJoined ? 0.0 : 1.0)
+        guard let current = shown else {
+            shown = target
+            drawIcon()
+            return
+        }
+        guard current != target else { drawIcon(); return }
+        // Abrir é a mola soltando as colunas (mais lento, freia no fim); fechar é empurrar até a trava.
+        let opening = target.0 > current.stagger || target.1 > current.separation
+        animation = (from: (current.stagger, current.separation), to: target, start: Date(), duration: opening ? 0.55 : 0.35, opening: opening)
+        if iconTimer == nil {
+            let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { _ in
+                MainActor.assumeIsolated { AppDelegate.shared?.stepIcon() }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            iconTimer = timer
+        }
+    }
+
+    private func stepIcon() {
+        guard let a = animation else { iconTimer?.invalidate(); iconTimer = nil; return }
+        let t = min(Date().timeIntervalSince(a.start) / a.duration, 1)
+        let k = a.opening ? 1 - pow(1 - t, 3) : t * t * t
+        shown = (a.from.0 + (a.to.0 - a.from.0) * k, a.from.1 + (a.to.1 - a.from.1) * k)
+        drawIcon()
+        if t >= 1 {
+            animation = nil
+            iconTimer?.invalidate()
+            iconTimer = nil
+        }
+    }
+
+    private func drawIcon() {
+        guard let button = statusItem?.button, let shown else { return }
+        var drawing = keyboardGlyphFrame(stagger: Float(shown.stagger), separation: Float(shown.separation))
+        drawing.dimmed = iconDimmed
+        button.image = MarkRenderer.menuBarImage(drawing)
     }
 
     static func accessibilityText(_ state: KeyboardState) -> String {

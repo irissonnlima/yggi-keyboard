@@ -36,15 +36,31 @@ struct YggiMark: View {
 }
 
 /// O teclado em miniatura (o mesmo da barra de menus): colunas abertas ou não, metades juntas ou não.
+/// Anima junto com o estado: as colunas sobem e as metades deslizam.
 struct KeyboardGlyph: View {
     let percent: UInt8
     var joined = true
 
     var body: some View {
         let drawing = keyboardGlyph(staggerPercent: percent, halvesJoined: joined)
-        MarkShape(drawing: drawing)
+        KeyboardGlyphShape(stagger: Double(percent), separation: joined ? 0 : 1)
             .aspectRatio(CGFloat(drawing.width / drawing.height), contentMode: .fit)
             .accessibilityHidden(true)
+    }
+}
+
+/// Um quadro do teclado em miniatura; o SwiftUI interpola `stagger` e `separation`.
+struct KeyboardGlyphShape: Shape {
+    var stagger: Double
+    var separation: Double
+
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(stagger, separation) }
+        set { (stagger, separation) = (newValue.first, newValue.second) }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        MarkShape(drawing: keyboardGlyphFrame(stagger: Float(stagger), separation: Float(separation))).path(in: rect)
     }
 }
 

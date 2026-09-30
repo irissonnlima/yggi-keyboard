@@ -3,7 +3,7 @@
 //! Os desenhos saem daqui em cápsulas (centro, comprimento, largura, ângulo) para toda
 //! interface desenhar igual. A marca bate com `docs/brand/yggi-marca.svg`.
 
-use crate::layout::{Half, column_lift, yggi_layout};
+use crate::layout::{Half, MAX_STAGGER_PERCENT, yggi_layout};
 use crate::model::KeyboardState;
 
 /// Caixa da marca.
@@ -65,22 +65,30 @@ pub const GLYPH_HEIGHT: f32 = GLYPH_MAX_LIFT + BAR_HEIGHT + THUMB_GAP + THUMB_HE
 /// O teclado visto de cima, simplificado: colunas abertas ou em ortho, metades juntas ou separadas.
 #[uniffi::export]
 pub fn keyboard_glyph(stagger_percent: u8, halves_joined: bool) -> MarkDrawing {
+    keyboard_glyph_frame(stagger_percent as f32, if halves_joined { 0.0 } else { 1.0 })
+}
+
+/// Um quadro da animação entre estados: `stagger` de 0 a 100 (com casas decimais) e
+/// `separation` de 0 (metades juntas) a 1 (separadas). Valores fora da faixa são limitados.
+#[uniffi::export]
+pub fn keyboard_glyph_frame(stagger: f32, separation: f32) -> MarkDrawing {
     let layout = yggi_layout();
     let max_lift = layout.columns.iter().map(|c| c.lift_at_max).fold(0.0, f32::max);
-    // Subida (em u) da coluna que cobre a posição x, ou 0 nas colunas fixas.
+    let opening = stagger.clamp(0.0, MAX_STAGGER_PERCENT as f32) / MAX_STAGGER_PERCENT as f32;
+    // Subida (fração da maior) da coluna que cobre a posição x, ou 0 nas colunas fixas.
     let lift_at = |half: Half, ux: f32| {
         layout
             .columns
             .iter()
             .find(|c| c.half == half && ux >= c.x && ux < c.x + c.w)
-            .map_or(0.0, |c| column_lift(c.clone(), stagger_percent))
+            .map_or(0.0, |c| c.lift_at_max / max_lift * opening)
     };
-    let gap = if halves_joined { HALVES_GAP_JOINED } else { HALVES_GAP_SEPARATED };
+    let gap = HALVES_GAP_JOINED + (HALVES_GAP_SEPARATED - HALVES_GAP_JOINED) * separation.clamp(0.0, 1.0);
     let left_x0 = (GLYPH_WIDTH - 2.0 * HALF_WIDTH - gap) / 2.0;
-    let mut capsules = Vec::with_capacity(2 * COLUMNS_PER_HALF);
+    let mut capsules = Vec::with_capacity(2 * COLUMNS_PER_HALF + 2);
     for (half, first_u, x0) in [(Half::Left, 6.0, left_x0), (Half::Right, 12.0, left_x0 + HALF_WIDTH + gap)] {
         for i in 0..COLUMNS_PER_HALF {
-            let lift = lift_at(half, first_u + i as f32) / max_lift * GLYPH_MAX_LIFT;
+            let lift = lift_at(half, first_u + i as f32) * GLYPH_MAX_LIFT;
             capsules.push(MarkCapsule {
                 cx: x0 + i as f32 * (BAR_WIDTH + BAR_GAP) + BAR_WIDTH / 2.0,
                 cy: GLYPH_MAX_LIFT + BAR_HEIGHT / 2.0 - lift,
@@ -158,6 +166,20 @@ mod tests {
             assert!(left >= -1e-5 && right <= d.width + 1e-5);
             assert!(((left + right) / 2.0 - d.width / 2.0).abs() < 1e-4, "centralizado");
         }
+    }
+
+    #[test]
+    fn quadros_da_animacao_ficam_entre_os_estados() {
+        let meio = keyboard_glyph_frame(50.0, 0.5);
+        let (fechado, aberto) = (keyboard_glyph(0, true), keyboard_glyph(100, false));
+        for ((m, a), b) in meio.capsules.iter().zip(&fechado.capsules).zip(&aberto.capsules) {
+            assert!((m.cy - (a.cy + b.cy) / 2.0).abs() < 1e-4);
+            assert!((m.cx - (a.cx + b.cx) / 2.0).abs() < 1e-4);
+        }
+        // Quadros inteiros batem com o desenho do estado.
+        assert_eq!(keyboard_glyph_frame(100.0, 1.0), aberto);
+        // Fora da faixa não sai da caixa.
+        assert_eq!(keyboard_glyph_frame(130.0, 1.4), aberto);
     }
 
     #[test]
