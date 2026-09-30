@@ -8,7 +8,7 @@ Em ortholinear, as duas metades formam um retângulo perfeito, como um teclado c
 
 O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitologia nórdica. O objetivo de longo prazo é que o Yggi seja o centro que liga os seus computadores e periféricos.
 
-**[▶ Abrir a simulação interativa](docs/simulacao.html)**: vista de cima, corte lateral, vista de frente e o ciclo da mola. Baixe o arquivo e abra no navegador.
+**[▶ Abrir a simulação interativa](https://htmlpreview.github.io/?https://github.com/irissonnlima/yggi-keyboard/blob/main/docs/simulacao.html)** ([arquivo](docs/simulacao.html)): vista de cima com antes e depois, corte lateral, **raio-x com MCU, bateria, USB-C, ímãs, pogo, fios, mola e trava**, e o ciclo da mola em corte.
 
 ---
 
@@ -25,10 +25,6 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 | Ortholinear (0%) | Column stagger (150%) |
 |---|---|
 | ![ortho](docs/media/v3-ortho.png) | ![stagger](docs/media/v3-stagger-150.png) |
-
-**Vista de frente** (baia do e-reader, metade esquerda, metade direita):
-
-![frente](docs/media/v3-frente.png)
 
 **Vista lateral** (inclinação de 5° dada pela cunha da bateria):
 
@@ -92,7 +88,7 @@ O **e-reader** (fase 2) tem cérebro próprio. A base sugerida é o firmware ope
 
 ```
 docs/
-  simulacao.html          simulação interativa (abra no navegador)
+  simulacao.html          simulação interativa: vista de cima, corte, raio-x e mola
   media/                  GIF e imagens do README
 hardware/stagger-mechanism/
   yggi_v3.scad            CAD atual (mecanismo fino, inclinado, com mola)
