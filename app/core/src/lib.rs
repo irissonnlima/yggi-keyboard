@@ -4,6 +4,7 @@
 //! - `layout`: onde cada tecla fica e quanto cada coluna sobe no stagger.
 //! - `lighting`: luz de cada tecla (efeito, cores por tecla, teclas de ação).
 //! - `stats`: estatísticas de digitação (só contagens).
+//! - `menubar`: abas e widgets do popover da barra de menus.
 //! - `keyboard`: a interface que o teclado simulado e o real implementam.
 //! - `simulator`: o teclado simulado, usado enquanto o firmware não existe.
 //! - `session`: `KeyboardSession`, o ponto de entrada das interfaces.
@@ -14,6 +15,7 @@
 pub mod keyboard;
 pub mod layout;
 pub mod lighting;
+pub mod menubar;
 pub mod model;
 pub mod session;
 pub mod simulator;

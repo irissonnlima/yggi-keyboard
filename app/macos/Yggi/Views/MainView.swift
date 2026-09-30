@@ -2,7 +2,7 @@ import SwiftUI
 import YggiCore
 
 enum AppSection: Hashable {
-    case overview, keys, lights, stats
+    case overview, keys, lights, stats, menuBar
 
     var title: String {
         switch self {
@@ -10,6 +10,7 @@ enum AppSection: Hashable {
         case .keys: "Teclas e camadas"
         case .lights: "Luzes e efeitos"
         case .stats: "Estatísticas"
+        case .menuBar: "Barra de menus"
         }
     }
 
@@ -19,6 +20,7 @@ enum AppSection: Hashable {
         case .keys: "square.3.layers.3d"
         case .lights: "lightbulb"
         case .stats: "chart.bar.xaxis"
+        case .menuBar: "menubar.rectangle"
         }
     }
 }
@@ -26,19 +28,20 @@ enum AppSection: Hashable {
 /// Janela principal: barra lateral à esquerda, teclado à direita.
 struct MainView: View {
     @Environment(KeyboardStore.self) private var store
-    @State private var section: AppSection? = .overview
 
     var body: some View {
+        @Bindable var store = store
         NavigationSplitView {
-            SidebarView(section: $section)
+            SidebarView(section: $store.section)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 232, max: 280)
         } detail: {
             Group {
-                switch section ?? .overview {
+                switch store.section ?? .overview {
                 case .overview: OverviewScreen()
                 case .keys: KeysScreen()
                 case .lights: LightsScreen()
                 case .stats: StatsScreen()
+                case .menuBar: MenuBarEditorScreen()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -55,7 +58,7 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $section) {
             Section("Yggi") {
-                ForEach([AppSection.overview, .keys, .lights, .stats], id: \.self) { item in
+                ForEach([AppSection.overview, .keys, .lights, .stats, .menuBar], id: \.self) { item in
                     Label(item.title, systemImage: item.symbol)
                         .badge(item == .lights && store.hasUnsentLighting ? Text("1") : nil)
                         .tag(item)

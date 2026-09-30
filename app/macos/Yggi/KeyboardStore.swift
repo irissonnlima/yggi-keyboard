@@ -26,6 +26,17 @@ final class KeyboardStore {
     /// Quanto de stagger usar ao soltar as colunas.
     var staggerLevel: UInt8 = 150
 
+    /// Abas e widgets do popover da barra de menus. Guardado a cada mudança.
+    private(set) var menuBar: MenuBarConfig {
+        didSet { UserDefaults.standard.set(menuBarEncode(config: menuBar), forKey: Self.menuBarKey) }
+    }
+    /// Aba aberta no popover.
+    var menuTab: UInt32?
+    /// Todos os widgets que podem entrar numa aba.
+    let catalog = widgetCatalog()
+    /// Seção aberta na janela principal.
+    var section: AppSection? = .overview
+
     /// Calcula a luz de cada tecla, quadro a quadro.
     @ObservationIgnored let engine: LightingEngine
     /// Relógio comum das animações de luz.
@@ -41,6 +52,8 @@ final class KeyboardStore {
         self.lighting = config
         self.sentLighting = config
         self.engine = LightingEngine(config: config)
+        let saved = UserDefaults.standard.string(forKey: Self.menuBarKey).flatMap { menuBarDecode(text: $0) }
+        self.menuBar = saved ?? defaultMenuBar()
         // O núcleo avisa de qualquer thread; a fila principal mantém a ordem dos avisos.
         _ = session.subscribe(listener: StateRelay { [weak self] state in
             DispatchQueue.main.async {
@@ -55,6 +68,8 @@ final class KeyboardStore {
     }
 
     var now: Double { Date().timeIntervalSince(clockStart) }
+
+    private static let menuBarKey = "menuBar"
 
     /// Aplica o novo estado com a animação que combina com o que mudou.
     private func apply(_ new: KeyboardState) {
@@ -96,6 +111,45 @@ final class KeyboardStore {
     }
 
     func discardLighting() { lighting = sentLighting }
+
+    /// Mudança de luz feita pela barra de menus: vale na hora, sem rascunho.
+    func changeLightingNow(_ change: (inout LightingConfig) -> Void) {
+        var sent = sentLighting
+        change(&sent)
+        run {
+            try session.setLighting(config: sent)
+            sentLighting = sent
+            change(&lighting)
+        }
+    }
+
+    // MARK: barra de menus
+
+    /// Aplica uma operação do núcleo (`menuAddTab`, `menuMoveWidget`…) à configuração.
+    func editMenuBar(_ change: (MenuBarConfig) -> MenuBarConfig) {
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            menuBar = change(menuBar)
+        }
+    }
+
+    func resetMenuBar() { editMenuBar { _ in defaultMenuBar() } }
+
+    func setOpenFirstTab(_ on: Bool) {
+        var config = menuBar
+        config.openFirstTab = on
+        menuBar = config
+    }
+
+    /// A aba mostrada no popover (a escolhida, se ainda existir; senão a primeira).
+    var currentMenuTab: MenuTab {
+        menuBar.tabs.first { $0.id == menuTab } ?? menuBar.tabs[0]
+    }
+
+    func info(_ kind: WidgetKind) -> WidgetInfo {
+        catalog.first { $0.kind == kind } ?? widgetInfo(kind: kind)
+    }
+
+    func openSection(_ section: AppSection) { self.section = section }
 
     func statistics(_ period: StatsPeriod) -> Statistics? {
         try? session.statistics(period: period)

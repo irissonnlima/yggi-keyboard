@@ -43,6 +43,26 @@ enum Snapshots {
             save(screen(OverviewScreen(), s, scheme), to: dir.appending(path: "visao-geral\(suffix).png"))
             save(screen(LightsScreen(), s, scheme), to: dir.appending(path: "luzes\(suffix).png"))
             save(screen(StatsScreen(scrolls: false), s, scheme), to: dir.appending(path: "estatisticas\(suffix).png"))
+            // Cada aba de fábrica e uma aba com todos os widgets, no maior tamanho de cada um.
+            var all = s.menuBar.tabs
+            let every = s.catalog.enumerated().map { i, info in
+                WidgetSlot(id: UInt32(1000 + i), kind: info.kind,
+                           size: info.sizes.max { $0.columns * $0.rows < $1.columns * $1.rows } ?? info.sizes[0], showTitle: true)
+            }
+            all.append(MenuTab(id: 999, name: "Todos", widgets: every))
+            let tabs = HStack(alignment: .top, spacing: 20) {
+                ForEach(all, id: \.id) { tab in
+                    VStack(alignment: .leading) {
+                        Text(tab.name).font(.headline)
+                        WidgetGrid(tab: tab) { slot, _ in WidgetView(slot: slot) }
+                    }
+                }
+            }
+            .padding(20)
+            .environment(s)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .environment(\.colorScheme, scheme)
+            save(tabs, to: dir.appending(path: "abas\(suffix).png"))
             save(MenuBarView().environment(s).environment(\.colorScheme, scheme)
                     .background(Color(nsColor: .windowBackgroundColor)),
                  to: dir.appending(path: "menu\(suffix).png"))
