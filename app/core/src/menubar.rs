@@ -475,6 +475,27 @@ pub fn menu_set_widget_size(mut config: MenuBarConfig, widget_id: u32, size: Wid
     config
 }
 
+/// Redimensionar arrastando a borda: o canto de cima à esquerda fica parado e o widget vai
+/// para o tamanho que ele aceita mais perto de `columns` × `rows`, sem cobrir outro widget.
+/// Se nenhum tamanho couber ali, nada muda.
+#[uniffi::export]
+pub fn menu_resize_widget(mut config: MenuBarConfig, widget_id: u32, columns: u8, rows: u8) -> MenuBarConfig {
+    let Some((t, i)) = find_widget(&config, widget_id) else { return config };
+    let slot = config.tabs[t].widgets[i];
+    let tab = &config.tabs[t];
+    let distance = |s: &WidgetSize| (s.columns() as i32 - columns as i32).abs() + (s.rows() as i32 - rows as i32).abs();
+    let best = widget_info(slot.kind)
+        .sizes
+        .into_iter()
+        .filter(|&s| fits(tab, s, slot.column, slot.row, Some(widget_id)))
+        // Mais perto do pedido; no empate, o que mais muda na direção puxada (o maior).
+        .min_by_key(|s| (distance(s), std::cmp::Reverse(s.area())));
+    if let Some(size) = best {
+        config.tabs[t].widgets[i].size = size;
+    }
+    config
+}
+
 #[uniffi::export]
 pub fn menu_set_widget_title(mut config: MenuBarConfig, widget_id: u32, show: bool) -> MenuBarConfig {
     if let Some((t, i)) = find_widget(&config, widget_id) {
@@ -765,6 +786,35 @@ mod tests {
         // Na coluna 1 não cabe 3 de largura: vira 2x2.
         let c = menu_add_widget(c, tab, WidgetKind::Heatmap, Some(GridCell { column: 1, row: 5 }), Some(S::ThreeByTwo));
         assert_eq!(c.tabs[0].widgets.last().map(|w| (w.size, w.column, w.row)), Some((S::TwoByTwo, 1, 5)));
+    }
+
+    #[test]
+    fn puxar_a_borda_vai_para_o_tamanho_mais_perto_que_cabe() {
+        // Stagger sozinho numa aba: aceita todos os tamanhos.
+        let mut c = default_menu_bar();
+        let tab = c.tabs[0].id;
+        c.tabs[0].widgets.retain(|w| w.kind == WidgetKind::Stagger);
+        let id = c.tabs[0].widgets[0].id;
+        let size = |c: &MenuBarConfig| c.tabs[0].widgets[0].size;
+        let c = menu_resize_widget(c, id, 2, 1);
+        assert_eq!(size(&c), S::TwoByOne);
+        let c = menu_resize_widget(c, id, 2, 2);
+        assert_eq!(size(&c), S::TwoByTwo);
+        let c = menu_resize_widget(c, id, 9, 9);
+        assert_eq!(size(&c), S::ThreeByTwo, "limitado ao máximo do widget");
+        let c = menu_resize_widget(c, id, 1, 2);
+        assert_eq!(size(&c), S::OneByTwo);
+        // Firmware não fica em pé nem cresce além de 3x1.
+        let c = menu_add_widget(c, tab, WidgetKind::Firmware, Some(GridCell { column: 0, row: 4 }), Some(S::OneByOne));
+        let fw = c.tabs[0].widgets.last().unwrap().id;
+        let c = menu_resize_widget(c, fw, 3, 2);
+        assert_eq!(c.tabs[0].widgets.last().unwrap().size, S::ThreeByOne);
+        // Um vizinho na frente limita: com um 1x1 na coluna 2, não passa de 2 colunas.
+        let c = menu_add_widget(c, tab, WidgetKind::Layer, Some(GridCell { column: 2, row: 6 }), Some(S::OneByOne));
+        let c = menu_add_widget(c, tab, WidgetKind::Break, Some(GridCell { column: 0, row: 6 }), Some(S::OneByOne));
+        let pausa = c.tabs[0].widgets.last().unwrap().id;
+        let c = menu_resize_widget(c, pausa, 3, 1);
+        assert_eq!(c.tabs[0].widgets.last().unwrap().size, S::TwoByOne);
     }
 
     #[test]

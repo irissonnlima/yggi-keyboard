@@ -177,6 +177,13 @@ struct MenuBarEditorScreen: View {
                     }
                     .contextMenu { WidgetMenu(slot: slot, remove: { remove(slot.id) }) }
             }
+            .overlay {
+                // Bordas da direita e de baixo (e o canto): arrastar muda o tamanho na hora.
+                ResizeHandles(slot: slot, metrics: metrics) { columns, rows in
+                    selected = slot.id
+                    store.editMenuBar { menuResizeWidget(config: $0, widgetId: slot.id, columns: UInt8(columns), rows: UInt8(rows)) }
+                }
+            }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(store.info(slot.kind).name), \(slot.size.label), coluna \(slot.column + 1), linha \(slot.row + 1)")
             .accessibilityAction(named: "Remover") { remove(slot.id) }
@@ -226,6 +233,118 @@ struct MenuBarEditorScreen: View {
         remove(id)
         dragging = nil
         return true
+    }
+}
+
+// MARK: - redimensionar pelas bordas
+
+private enum ResizeEdge {
+    case right, bottom, corner
+
+    var cursor: NSCursor {
+        switch self {
+        case .right: .resizeLeftRight
+        case .bottom: .resizeUpDown
+        case .corner:
+            if #available(macOS 15, *) {
+                .frameResize(position: .bottomRight, directions: .all)
+            } else {
+                .crosshair
+            }
+        }
+    }
+}
+
+/// Faixas invisíveis na borda direita, na de baixo e no canto. Com o mouse perto, o cursor
+/// vira o de redimensionar; arrastando, o widget muda de tamanho encaixando na grade. O núcleo
+/// escolhe o tamanho aceito mais perto do puxado (até o máximo do widget, sem cobrir outro).
+private struct ResizeHandles: View {
+    let slot: WidgetSlot
+    let metrics: GridMetrics
+    let resize: (_ columns: Int, _ rows: Int) -> Void
+
+    @State private var hovering: ResizeEdge?
+    @State private var active: ResizeEdge?
+    /// Tamanho em pontos quando o arrasto começou, e o último tamanho pedido.
+    @State private var start: CGSize?
+    @State private var asked: (Int, Int)?
+
+    private let thickness: CGFloat = 10
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            ZStack(alignment: .topLeading) {
+                strip(.right, size: CGSize(width: thickness, height: h - thickness), at: CGPoint(x: w - thickness / 2 - 2, y: 0))
+                strip(.bottom, size: CGSize(width: w - thickness, height: thickness), at: CGPoint(x: 0, y: h - thickness / 2 - 2))
+                strip(.corner, size: CGSize(width: thickness * 1.8, height: thickness * 1.8),
+                      at: CGPoint(x: w - thickness * 1.3, y: h - thickness * 1.3))
+            }
+        }
+    }
+
+    private func strip(_ edge: ResizeEdge, size: CGSize, at origin: CGPoint) -> some View {
+        let lit = hovering == edge || active == edge
+        return ZStack {
+            Color.white.opacity(0.001)
+            if lit { mark(edge) }
+        }
+        .frame(width: max(size.width, 1), height: max(size.height, 1))
+        .offset(x: origin.x, y: origin.y)
+        .onHover { inside in
+            if inside {
+                hovering = edge
+                edge.cursor.push()
+            } else if hovering == edge {
+                hovering = nil
+                NSCursor.pop()
+            }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { g in drag(edge, g.translation) }
+                .onEnded { _ in
+                    active = nil
+                    start = nil
+                    asked = nil
+                }
+        )
+        .accessibilityHidden(true)
+    }
+
+    /// A marquinha que aparece na borda com o mouse perto.
+    @ViewBuilder private func mark(_ edge: ResizeEdge) -> some View {
+        switch edge {
+        case .right: Capsule().fill(Color.accentColor).frame(width: 4, height: 26)
+        case .bottom: Capsule().fill(Color.accentColor).frame(width: 26, height: 4)
+        case .corner:
+            Image(systemName: "arrow.down.right").font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 14, height: 14)
+                .background(Circle().fill(Color.accentColor))
+        }
+    }
+
+    private func drag(_ edge: ResizeEdge, _ t: CGSize) {
+        if start == nil {
+            active = edge
+            let r = metrics.rect(WidgetPlacement(widgetId: 0, column: 0, row: 0,
+                                                 columns: UInt8(slot.size.columns), rows: UInt8(slot.size.rows)))
+            start = r.size
+        }
+        guard let start else { return }
+        let colW = metrics.cell + metrics.gap, rowH = metrics.row + metrics.gap
+        var columns = slot.size.columns, rows = slot.size.rows
+        if edge != .bottom {
+            columns = min(max(Int(((start.width + metrics.gap + t.width) / colW).rounded()), 1), 3)
+        }
+        if edge != .right {
+            rows = min(max(Int(((start.height + metrics.gap + t.height) / rowH).rounded()), 1), 2)
+        }
+        if asked.map({ $0 != (columns, rows) }) ?? true {
+            asked = (columns, rows)
+            resize(columns, rows)
+        }
     }
 }
 
