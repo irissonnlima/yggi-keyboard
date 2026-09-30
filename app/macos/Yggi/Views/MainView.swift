@@ -47,7 +47,7 @@ struct MainView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(nsColor: .windowBackgroundColor))
         }
-        .frame(minWidth: 1100, minHeight: 760)
+        .frame(minWidth: 1180, minHeight: 760)
     }
 }
 

@@ -26,11 +26,11 @@ struct MenuBarEditorScreen: View {
     var body: some View {
         HStack(spacing: 0) {
             TabsPanel(editingTab: $editingTab)
-                .frame(width: 240)
+                .frame(width: 200)
             Divider()
             ScrollView {
                 preview
-                    .padding(28)
+                    .padding(20)
                     .frame(maxWidth: .infinity)
             }
             .background(Color(nsColor: .underPageBackgroundColor))
@@ -42,7 +42,7 @@ struct MenuBarEditorScreen: View {
                 }
                 WidgetLibrary(tab: tab, dragging: $dragging, removeDragged: removeDragged)
             }
-            .frame(width: 300)
+            .frame(width: 280)
         }
         .navigationTitle("Barra de menus")
         .onAppear { if editingTab == nil { editingTab = store.menuBar.tabs.first?.id } }

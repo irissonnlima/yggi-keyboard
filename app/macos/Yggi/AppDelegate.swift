@@ -17,7 +17,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var mainWindow: NSWindow?
     private var settingsWindow: NSWindow?
 
-    static var shared: AppDelegate? { NSApp.delegate as? AppDelegate }
+    /// O SwiftUI põe um objeto dele em `NSApp.delegate`; a referência a este fica aqui.
+    private(set) static weak var shared: AppDelegate?
+
+    override init() {
+        super.init()
+        Self.shared = self
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Appearance.applySaved()
@@ -79,8 +85,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         let opening = target.0 > current.stagger || target.1 > current.separation
         animation = (from: (current.stagger, current.separation), to: target, start: Date(), duration: opening ? 0.55 : 0.35, opening: opening)
         if iconTimer == nil {
-            let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { _ in
-                MainActor.assumeIsolated { AppDelegate.shared?.stepIcon() }
+            let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.stepIcon() }
             }
             RunLoop.main.add(timer, forMode: .common)
             iconTimer = timer
@@ -143,12 +149,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         if mainWindow == nil {
             let host = NSHostingController(rootView: MainView().environment(store))
             host.sceneBridgingOptions = [.toolbars, .title]
+            // A janela não fica menor que o mínimo das telas (senão o SwiftUI corta as bordas).
+            host.sizingOptions = [.minSize]
             let window = NSWindow(contentViewController: host)
             window.title = "Yggi"
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             window.setContentSize(NSSize(width: 1280, height: 820))
             window.isReleasedWhenClosed = false
-            window.setFrameAutosaveName("YggiMain")
+            window.setFrameAutosaveName("YggiMainWindow")
             window.center()
             // Abre na mesa (Space) em que a pessoa está, mesmo com outro app em tela cheia.
             window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
