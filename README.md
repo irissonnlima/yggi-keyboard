@@ -11,9 +11,10 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 | Pasta | O que tem |
 |---|---|
 | [`hardware/`](hardware/) | mecanismo de stagger (CAD), placas de circuito, layout das teclas, simulação interativa |
-| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md) |
+| [`app/`](app/) | app do computador: núcleo em Rust + interface macOS em SwiftUI ([como rodar](app/README.md)) |
+| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md), [app](docs/app.md) |
 
-Ainda virão `firmware/` (ZMK + módulos Yggi) e o app do computador.
+Ainda virá `firmware/` (ZMK + módulos Yggi).
 
 ## Fases
 
