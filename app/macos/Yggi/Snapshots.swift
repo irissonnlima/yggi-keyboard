@@ -36,24 +36,27 @@ enum Snapshots {
         }
 
         // Ícone da barra de menus em cada estado: tamanho real nas barras clara e escura, e ampliado.
-        let poses: [(String, MarkPose)] = [
-            ("Ortho, metades juntas", MarkPose(open: false, separated: false, outline: false, lowBattery: false)),
-            ("Stagger aberto", MarkPose(open: true, separated: false, outline: false, lowBattery: false)),
-            ("Metades separadas", MarkPose(open: false, separated: true, outline: false, lowBattery: false)),
-            ("Aberto e separado", MarkPose(open: true, separated: true, outline: false, lowBattery: false)),
-            ("Bateria baixa", MarkPose(open: false, separated: false, outline: false, lowBattery: true)),
-            ("Aberto, bateria baixa", MarkPose(open: true, separated: false, outline: false, lowBattery: true)),
-            ("Separado, bateria baixa", MarkPose(open: false, separated: true, outline: false, lowBattery: true)),
-            ("Desconectado", MarkPose(open: false, separated: false, outline: true, lowBattery: false)),
+        let cases: [(String, UInt8, Bool, Bool)] = [
+            ("Ortho, metades juntas", 0, true, true),
+            ("Abrindo (50%)", 50, true, true),
+            ("Stagger aberto (100%)", 100, true, true),
+            ("Ortho, metades separadas", 0, false, true),
+            ("Aberto e separado", 100, false, true),
+            ("Desconectado", 0, true, false),
         ]
         let icons = VStack(alignment: .leading, spacing: 10) {
-            ForEach(poses, id: \.0) { name, pose in
+            ForEach(cases, id: \.0) { name, percent, joined, connected in
+                let drawing = { () -> MarkDrawing in
+                    var d = keyboardGlyph(staggerPercent: percent, halvesJoined: joined)
+                    d.dimmed = !connected
+                    return d
+                }()
                 HStack(spacing: 18) {
                     Text(name).font(.system(size: 13)).frame(width: 170, alignment: .leading)
                     ForEach([false, true], id: \.self) { dark in
                         HStack(spacing: 14) {
                             Image(systemName: "wifi").font(.system(size: 13))
-                            Image(nsImage: MarkRenderer.menuBarImage(pose: pose))
+                            Image(nsImage: MarkRenderer.menuBarImage(drawing))
                                 .renderingMode(.template)
                             Image(systemName: "battery.75percent").font(.system(size: 13))
                         }
@@ -62,7 +65,7 @@ enum Snapshots {
                         .frame(height: 24)
                         .background(dark ? Color(white: 0.16) : Color(white: 0.93))
                     }
-                    YggiMark(pose: pose, line: 7).fill(Color(white: 0.15)).frame(width: 54, height: 50)
+                    KeyboardGlyph(percent: percent, joined: joined).foregroundStyle(Color(white: 0.15).opacity(connected ? 1 : 0.35)).frame(width: 120, height: 40)
                 }
             }
         }

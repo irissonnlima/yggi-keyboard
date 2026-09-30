@@ -1,0 +1,139 @@
+import AppKit
+import Observation
+import SwiftUI
+import YggiCore
+
+/// Ícone na barra de menus, balão com os widgets e janelas do app.
+///
+/// Feito em AppKit: o `NSStatusItem` com `NSPopover` dá o balão com a setinha apontando para
+/// o ícone, e as janelas abrem sem depender de nenhuma cena do SwiftUI estar viva.
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+    // Enquanto o firmware não existe, o app sempre usa o teclado simulado.
+    let store = KeyboardStore.simulated()
+
+    private var statusItem: NSStatusItem?
+    private let popover = NSPopover()
+    private var mainWindow: NSWindow?
+    private var settingsWindow: NSWindow?
+
+    static var shared: AppDelegate? { NSApp.delegate as? AppDelegate }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Appearance.applySaved()
+
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.button?.target = self
+        item.button?.action = #selector(togglePopover(_:))
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        statusItem = item
+        watchState()
+
+        let content = NSHostingController(rootView: MenuBarView().environment(store))
+        content.sizingOptions = .preferredContentSize
+        popover.contentViewController = content
+        popover.behavior = .transient
+        popover.animates = true
+        popover.delegate = self
+
+        // Aberto pela pessoa (não no login, que usa --hidden): mostra a janela.
+        if !CommandLine.arguments.contains("--hidden") { showMain() }
+    }
+
+    /// Clicar no Dock ou abrir o app de novo com ele rodando traz a janela.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        showMain()
+        return true
+    }
+
+    // MARK: ícone
+
+    /// Redesenha o ícone a cada mudança do estado do teclado.
+    private func watchState() {
+        withObservationTracking {
+            updateIcon(store.state)
+        } onChange: {
+            Task { @MainActor [weak self] in self?.watchState() }
+        }
+    }
+
+    private func updateIcon(_ state: KeyboardState) {
+        guard let button = statusItem?.button else { return }
+        button.image = MarkRenderer.menuBarImage(menuBarGlyph(state: state))
+        button.setAccessibilityLabel(Self.accessibilityText(state))
+        button.toolTip = Self.accessibilityText(state)
+    }
+
+    static func accessibilityText(_ state: KeyboardState) -> String {
+        guard state.isConnected else { return "Yggi, \(state.connectionText.lowercased())" }
+        var parts = ["Yggi"]
+        parts.append(state.staggerPercent > 0 ? "stagger aberto \(state.staggerPercent)%" : "ortho")
+        parts.append(state.halvesJoined ? "metades juntas" : "metades separadas")
+        return parts.joined(separator: ", ")
+    }
+
+    // MARK: balão
+
+    @objc private func togglePopover(_ sender: NSStatusBarButton) {
+        if popover.isShown {
+            popover.performClose(sender)
+        } else {
+            popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+            sender.highlight(true)
+        }
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        statusItem?.button?.highlight(false)
+    }
+
+    func closePopover() {
+        if popover.isShown { popover.performClose(nil) }
+    }
+
+    // MARK: janelas
+
+    func showMain(section: AppSection? = nil) {
+        closePopover()
+        if let section { store.section = section }
+        if mainWindow == nil {
+            let host = NSHostingController(rootView: MainView().environment(store))
+            host.sceneBridgingOptions = [.toolbars, .title]
+            let window = NSWindow(contentViewController: host)
+            window.title = "Yggi"
+            window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+            window.setContentSize(NSSize(width: 1280, height: 820))
+            window.isReleasedWhenClosed = false
+            window.setFrameAutosaveName("YggiMain")
+            window.center()
+            // Abre na mesa (Space) em que a pessoa está, mesmo com outro app em tela cheia.
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+            mainWindow = window
+        }
+        mainWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate()
+    }
+
+    func showSettings() {
+        closePopover()
+        if settingsWindow == nil {
+            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView().environment(store)))
+            window.title = "Ajustes do Yggi"
+            window.styleMask = [.titled, .closable]
+            window.isReleasedWhenClosed = false
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
+            window.center()
+            settingsWindow = window
+        }
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate()
+    }
+}
+
+/// Para as telas pedirem janelas sem saber de AppKit.
+@MainActor
+enum AppWindows {
+    static func main(_ section: AppSection? = nil) { AppDelegate.shared?.showMain(section: section) }
+    static func settings() { AppDelegate.shared?.showSettings() }
+}

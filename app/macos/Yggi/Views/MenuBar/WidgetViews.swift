@@ -47,7 +47,7 @@ struct WidgetView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .center, spacing: 8) {
                 if cols >= 3 || tall {
-                    ColumnsGlyph(percent: state.staggerPercent)
+                    KeyboardGlyph(percent: state.staggerPercent, joined: state.halvesJoined)
                         .frame(width: tall ? 96 : 64, height: tall ? 36 : 22)
                 }
                 Text(isStaggered ? "Aberto" : "Ortho").font(.callout.weight(.semibold))
@@ -68,7 +68,7 @@ struct WidgetView: View {
     private var staggerQuick: some View {
         Button { store.setStagger(!isStaggered) } label: {
             VStack(spacing: 4) {
-                ColumnsGlyph(percent: state.staggerPercent).frame(width: 40, height: 20)
+                KeyboardGlyph(percent: state.staggerPercent, joined: state.halvesJoined).frame(width: 40, height: 20)
                 Text(isStaggered ? "Fechar" : "Abrir").font(.caption.weight(.medium))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -335,22 +335,15 @@ struct WidgetView: View {
 
     private var quickActions: some View {
         HStack(spacing: 6) {
-            action("Yggi", "keyboard") { store.openSection(.overview); openMainWindow() }
+            action("Yggi", "keyboard") { AppWindows.main(.overview) }
             action(store.sentLighting.effect.kind == .off ? "Acender" : "Apagar", "lightbulb") {
                 store.changeLightingNow { $0.effect.kind = $0.effect.kind == .off ? .wave : .off }
             }
             .disabled(!state.isConnected)
             if cols >= 3 {
-                action("Estatísticas", "chart.bar.xaxis") { store.openSection(.stats); openMainWindow() }
+                action("Estatísticas", "chart.bar.xaxis") { AppWindows.main(.stats) }
             }
         }
-    }
-
-    @Environment(\.openWindow) private var openWindow
-
-    private func openMainWindow() {
-        openWindow(id: WindowID.main)
-        NSApp.activate()
     }
 
     private func action(_ title: String, _ symbol: String, run: @escaping () -> Void) -> some View {
@@ -410,37 +403,6 @@ struct PercentSlider: View {
                 .frame(width: 34, alignment: .trailing)
         }
     }
-}
-
-/// Colunas do teclado desenhadas pequenas, subindo e descendo com o stagger.
-struct ColumnsGlyph: View {
-    let percent: UInt8
-    /// Deslocamento de cada coluna com stagger cheio (fração da altura), metade esquerda.
-    private let shape: [CGFloat] = [0, 0, 0.35, 0.55, 0.3, 0.1]
-
-    var body: some View {
-        GeometryReader { geo in
-            let columns = shape + shape.reversed()
-            let n = CGFloat(columns.count)
-            let gap: CGFloat = 2
-            let w = (geo.size.width - gap * (n - 1) - 6) / n
-            let amount = CGFloat(percent) / 100
-            HStack(alignment: .top, spacing: gap) {
-                ForEach(Array(columns.enumerated()), id: \.offset) { i, lift in
-                    RoundedRectangle(cornerRadius: 1.5)
-                        .fill(lift > 0 && percent > 0 ? Color.accentColor.opacity(0.85) : Color.secondary.opacity(0.45))
-                        .frame(width: w, height: geo.size.height * 0.7)
-                        .offset(y: geo.size.height * 0.3 * (1 - lift * amount * 1.6).clamped)
-                        .padding(.leading, i == columns.count / 2 ? 6 : 0)
-                }
-            }
-        }
-        .accessibilityHidden(true)
-    }
-}
-
-private extension CGFloat {
-    var clamped: CGFloat { Swift.min(Swift.max(self, 0), 1) }
 }
 
 /// Os três LEDs de computador da tecla Yggi.

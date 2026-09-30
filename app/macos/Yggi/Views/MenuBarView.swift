@@ -1,56 +1,23 @@
 import SwiftUI
 import YggiCore
 
-/// Ícone na barra de menus: a marca do Yggi na pose do teclado (stagger aberto, metades
-/// separadas, bateria baixa, desconectado). A pose vem do núcleo (`menuBarPose`).
-struct MenuBarLabel: View {
-    let state: KeyboardState
-    @Environment(\.openWindow) private var openWindow
-    @MainActor private static var openedAtLaunch = false
-
-    var body: some View {
-        Image(nsImage: MarkRenderer.menuBarImage(pose: menuBarPose(state: state)))
-            .accessibilityLabel(accessibilityText)
-        .task {
-            // Aberto pela pessoa (não no login, que usa --hidden): mostra a janela uma vez.
-            guard !Self.openedAtLaunch, !CommandLine.arguments.contains("--hidden") else { return }
-            Self.openedAtLaunch = true
-            openWindow(id: WindowID.main)
-            NSApp.activate()
-        }
-    }
-
-    private var accessibilityText: String {
-        guard state.isConnected else { return "Yggi, \(state.connectionText.lowercased())" }
-        var parts = ["Yggi"]
-        parts.append(state.staggerPercent > 0 ? "stagger aberto" : "ortho")
-        if !state.halvesJoined { parts.append("metades separadas") }
-        if let battery = lowestBattery(state: state), isLowBattery(battery: battery) { parts.append("bateria baixa") }
-        return parts.joined(separator: ", ")
-    }
-}
-
-/// Janelinha que abre ao clicar no ícone da barra de menus: abas montadas com widgets.
+/// Balão que abre ao clicar no ícone da barra de menus: abas montadas com widgets.
 /// Quais abas e widgets existem, e onde cada um fica, vem do núcleo (`MenuBarConfig`).
 struct MenuBarView: View {
     @Environment(KeyboardStore.self) private var store
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.openSettings) private var openSettings
-
     var body: some View {
         let state = store.state
         let tab = store.currentMenuTab
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                YggiMark(pose: menuBarPose(state: state)).frame(width: 17, height: 16)
+                YggiMark().frame(height: 16)
                 Text("Yggi").font(.headline)
                 Circle().fill(state.isConnected ? .green : .secondary).frame(width: 6, height: 6)
                 Text(state.connectionText).font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 if store.simulator != nil { SimulatedTag() }
                 Button {
-                    store.openSection(.menuBar)
-                    openMain()
+                    AppWindows.main(.menuBar)
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                 }
@@ -81,11 +48,8 @@ struct MenuBarView: View {
 
             Divider()
             VStack(alignment: .leading, spacing: 2) {
-                MenuRow(title: "Abrir Yggi…") { openMain() }
-                MenuRow(title: "Ajustes…") {
-                    openSettings()
-                    NSApp.activate()
-                }
+                MenuRow(title: "Abrir Yggi…") { AppWindows.main() }
+                MenuRow(title: "Ajustes…") { AppWindows.settings() }
                 MenuRow(title: "Sair") { NSApp.terminate(nil) }
             }
         }
@@ -94,11 +58,6 @@ struct MenuBarView: View {
         .onAppear {
             if store.menuBar.openFirstTab { store.menuTab = store.menuBar.tabs.first?.id }
         }
-    }
-
-    private func openMain() {
-        openWindow(id: WindowID.main)
-        NSApp.activate()
     }
 }
 

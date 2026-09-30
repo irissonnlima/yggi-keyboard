@@ -67,6 +67,12 @@ struct SettingsView: View {
 }
 
 extension Appearance {
+    /// A aparência guardada em Ajustes.
+    @MainActor static func applySaved() {
+        let raw = UserDefaults.standard.string(forKey: storageKey) ?? Appearance.system.rawValue
+        (Appearance(rawValue: raw) ?? .system).apply()
+    }
+
     /// Aplica no app inteiro (janela, barra de menus e ajustes).
     @MainActor func apply() {
         NSApp.appearance = switch self {

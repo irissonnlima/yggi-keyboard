@@ -3,8 +3,8 @@ import YggiCore
 
 @main
 struct YggiApp: App {
-    // Enquanto o firmware não existe, o app sempre usa o teclado simulado.
-    @State private var store = KeyboardStore.simulated()
+    /// Ícone da barra, balão e janelas ficam no AppDelegate (AppKit).
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var app
 
     init() {
         #if DEBUG
@@ -13,33 +13,7 @@ struct YggiApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra {
-            MenuBarView()
-                .environment(store)
-                .onAppear(perform: applyAppearance)
-        } label: {
-            MenuBarLabel(state: store.state)
-        }
-        .menuBarExtraStyle(.window)
-
-        Window("Yggi", id: WindowID.main) {
-            MainView()
-                .environment(store)
-                .onAppear(perform: applyAppearance)
-        }
-        .defaultSize(width: 1280, height: 820)
-
-        Settings {
-            SettingsView()
-        }
+        // O app vive na barra de menus (LSUIElement); as janelas são abertas pelo AppDelegate.
+        Settings { EmptyView() }
     }
-
-    private func applyAppearance() {
-        let raw = UserDefaults.standard.string(forKey: Appearance.storageKey) ?? Appearance.system.rawValue
-        (Appearance(rawValue: raw) ?? .system).apply()
-    }
-}
-
-enum WindowID {
-    static let main = "main"
 }
