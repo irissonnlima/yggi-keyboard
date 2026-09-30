@@ -68,7 +68,7 @@ footer{margin-top:48px;color:var(--t3);font-size:13px}
 <h2>3 · Vista de frente</h2>
 <p class="note">Três módulos: baia, metade esquerda e metade direita. Faces de encaixe retas (ímãs + pogo), bordas externas arredondadas. Linha contínua = frente; tracejada = silhueta de trás, mais alta por causa da inclinação.</p>
 <div class="card">
-<svg viewBox="0 0 680 190" width="100%" id="front"></svg>
+<svg viewBox="0 0 680 170" width="100%" id="front"></svg>
 <div class="ctrl"><span>Módulos</span><button data-j="1" class="on">encaixados</button><button data-j="0">separados</button></div>
 </div>
 
@@ -114,7 +114,7 @@ function drawTop(){const kb=$('#kb'),W=kb.clientWidth||900,total=dock==0?BW+HW+U
 kb.style.height=(BH+4)*S+'px';let h='';let lx;
 if(dock==0){h+=bayHtml(2,0,S,true);lx=2+BW;h+=half(LAY.L,LAY.PL,LAY.FL,LAY.BL,lx,S,yk,yb)+half(LAY.R,LAY.PR,LAY.FR,LAY.BR,lx+HW+U,S,yk,yb)}
 else{lx=2;h+=half(LAY.L,LAY.PL,LAY.FL,LAY.BL,lx,S,yk,yb);h+=bayHtml(2+HW,0,S,false);h+=half(LAY.R,LAY.PR,LAY.FR,LAY.BR,2+HW+BW,S,yk,yb)}
-h+=`<div class="leds" style="left:${(lx+4)*S}px;top:${(yk+86.3)*S}px">${[0,1,2].map(i=>`<i class="${i==dev?'on':''}"></i>`).join('')}</div>`;
+h+=`<div class="leds" style="left:${(lx+4)*S}px;top:${(yk+17.4)*S}px">${[0,1,2].map(i=>`<i class="${i==dev?'on':''}"></i>`).join('')}</div>`;
 kb.innerHTML=h;$('#pc').textContent=Math.round(u1*100)+'%';
 stats($('#st1'),[['Teclas','79','38 + 41'],['Stagger do médio',`${(15*u1).toFixed(1)} mm`,'máx. 15 mm (150%)'],['Aparelho',`PC ${dev+1}`,'tecla Yggi + 3 LEDs'],['Baia','72 × 117 mm','e-reader 69 × 114 mm']])}
 $('#sl').oninput=e=>{u1=e.target.value/150;drawTop()};
@@ -142,20 +142,20 @@ group('[data-v]','v',v=>{ver=+v;drawSec()});$('#sl2').oninput=e=>{u2=e.target.va
 
 /* ---------- 3. vista de frente ---------- */
 let joined=1;
-function drawFront(){const S=1.85,x0=16,base=150,gap=joined?0:14;let g='';
+function drawFront(){const S=1.85,Z=3,x0=16,base=130,gap=joined?0:14;let g='';
 const mods=[{n:'baia',w:72,top:9.9,roundL:true,roundR:false},{n:'metade esquerda',w:126,top:15.7,roundL:false,roundR:false},{n:'metade direita',w:126,top:15.7,roundL:false,roundR:true}];
 let x=x0;const back=9.3;
-mods.forEach((m,i)=>{const w=m.w*S,hf=m.top*S,hb=(m.top+back)*S,r=6*S;
+mods.forEach((m,i)=>{const w=m.w*S,hf=m.top*S*Z,hb=(m.top+back)*S*Z,r=6*S;
 const path=(h)=>{const tl=m.roundL?r:0,tr=m.roundR?r:0;return `M${x+tl} ${base} L${x+w-tr} ${base} ${tr?`Q${x+w} ${base} ${x+w} ${base-tr}`:''} L${x+w} ${base-h} L${x} ${base-h} L${x} ${base-tl} ${tl?`Q${x} ${base} ${x+tl} ${base}`:''} Z`};
 g+=`<path d="${path(hb)}" fill="none" stroke="var(--b3)" stroke-width="1" stroke-dasharray="4 3"/>`;
 g+=`<path d="${path(hf)}" fill="var(--s1)" stroke="var(--t2)" stroke-width="1"/>`;
-if(i>0){const kc=Math.floor(m.w/18);for(let c=0;c<kc;c++)g+=`<rect x="${x+(c*18+1)*S}" y="${base-hf}" width="${16*S}" height="${2.4*S}" rx="2" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`}
-else g+=`<rect x="${x+1.5*S}" y="${base-hf-0.5*S}" width="${69*S}" height="${5.9*S}" rx="3" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`;
+if(i>0){const kc=Math.floor(m.w/18);for(let c=0;c<kc;c++)g+=`<rect x="${x+(c*18+1)*S}" y="${base-hf}" width="${16*S}" height="${2.4*S*Z}" rx="2" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`}
+else g+=`<rect x="${x+1.5*S}" y="${base-hf-0.5*S*Z}" width="${69*S}" height="${5.9*S*Z}" rx="3" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`;
 g+=`<text x="${x+w/2}" y="${base+18}" font-size="12" fill="var(--t2)" text-anchor="middle">${m.n}</text>`;
-if(i<2&&joined)g+=`<g><circle cx="${x+w}" cy="${base-6}" r="3" fill="var(--acc)"/><circle cx="${x+w}" cy="${base-12}" r="1.6" fill="var(--amber)"/></g>`;
+if(i<2&&joined)g+=`<g><circle cx="${x+w}" cy="${base-8}" r="4" fill="var(--acc)"/><circle cx="${x+w}" cy="${base-20}" r="3" fill="var(--amber)"/></g>`;
 x+=w+gap});
 g+=`<line x1="10" y1="${base}" x2="670" y2="${base}" stroke="var(--b3)" stroke-width="0.6"/>`;
-g+=`<text x="16" y="24" font-size="12" fill="var(--t2)"><tspan fill="var(--acc)">●</tspan> ímã  <tspan fill="var(--amber)">●</tspan> contatos pogo (energia + dados)  ·  frente ≈ 16 mm, trás ≈ 25 mm</text>`;
+g+=`<text x="16" y="24" font-size="12" fill="var(--t2)"><tspan fill="var(--acc)">●</tspan> ímã  <tspan fill="var(--amber)">●</tspan> contatos pogo (energia + dados)  ·  frente ≈ 16 mm, trás ≈ 25 mm · altura exagerada 3×</text>`;
 $('#front').innerHTML=g}
 group('[data-j]','j',v=>{joined=+v;drawFront()});
 
