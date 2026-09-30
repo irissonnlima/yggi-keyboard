@@ -66,7 +66,7 @@ De dentro da pasta `app/`:
 make run
 ```
 
-Compila o núcleo, gera a ponte, compila o app e abre a janela. O app **não aparece no Dock**: depois de fechar a janela, ela volta pelo ícone de teclado na barra de menus ("Abrir Yggi…").
+Compila o núcleo, gera a ponte, compila o app, instala em `~/Applications` (o Dock, o Spotlight e o Launchpad acham ele lá) e abre a janela. É um app normal, com ícone no Dock, e também tem o ícone do teclado na barra de menus: clicar abre o balão com os widgets; clique direito tem "Abrir Yggi…", "Ajustes…" e "Sair".
 
 Outros comandos (`make help` lista todos):
 
