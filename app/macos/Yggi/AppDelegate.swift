@@ -73,8 +73,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private func watchState() {
         withObservationTracking {
             updateIcon(store.state)
-        } onChange: {
-            Task { @MainActor [weak self] in self?.watchState() }
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.watchState() }
         }
     }
 

@@ -54,6 +54,24 @@ struct MenuBarEditorScreen: View {
         }
         .navigationTitle("Barra de menus")
         .onAppear { if editingTab == nil { editingTab = store.menuBar.tabs.first?.id } }
+        .onChange(of: dragging) { _, now in
+            if now != nil { watchDragEnd() }
+        }
+    }
+
+    /// Soltar fora de qualquer alvo não avisa ninguém: quando o botão do mouse sobe, o arrasto acabou.
+    private func watchDragEnd() {
+        Task { @MainActor in
+            while dragging != nil {
+                try? await Task.sleep(for: .milliseconds(150))
+                if NSEvent.pressedMouseButtons & 1 == 0 {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        dragging = nil
+                        target = nil
+                    }
+                }
+            }
+        }
     }
 
     private var tab: MenuTab {
@@ -65,9 +83,11 @@ struct MenuBarEditorScreen: View {
         return store.menuBar.tabs.lazy.flatMap(\.widgets).first { $0.id == selected }
     }
 
-    /// Linhas desenhadas: as usadas, mais uma vazia para soltar embaixo (no mínimo 2).
+    /// Linhas desenhadas: as usadas. Só enquanto algo é arrastado aparece uma linha vazia a
+    /// mais embaixo, para ter onde soltar. Aba vazia mostra uma linha de células.
     private var shownRows: Int {
         let used = Int(tabGrid(tab: tab).rows)
+        guard dragging != nil else { return max(used, 1) }
         let dropBottom = target.map { Int($0.row) + $0.size.rows } ?? 0
         return max(max(used, dropBottom) + 1, 2)
     }
