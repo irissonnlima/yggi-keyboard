@@ -73,23 +73,11 @@ struct KeyboardView: View {
 
             ForEach(layout.keys, id: \.id) { key in
                 KeyCap(key: key, unit: unit, glow: glows[key.id], fill: fills?[key.id],
-                       selected: selectedKey == key.id) {
+                       selected: selectedKey == key.id, activeHost: state.activeHost) {
                     onKey(key)
                 }
                 .offset(x: g.x(key.x, half: key.half) + 2 * g.s,
                         y: g.y + key.y.cg * unit + 2 * g.s - g.lift(of: key))
-            }
-
-            // LEDs de computador: brancos, um por computador.
-            ForEach(0..<3, id: \.self) { i in
-                let on = state.activeHost == UInt8(i)
-                Circle()
-                    .fill(on ? Color.white : Hardware.ledOff)
-                    .frame(width: 6 * g.s, height: 6 * g.s)
-                    .shadow(color: on ? .white.opacity(0.85) : .clear, radius: 4 * g.s)
-                    .offset(x: g.x(4.25 + Float(i) * 0.25, half: .left) - 3 * g.s,
-                            y: g.y + 1.125 * unit - 3 * g.s)
-                    .accessibilityHidden(true)
             }
 
             // Botão que solta as colunas.
@@ -193,6 +181,8 @@ struct KeyCap: View {
     let glow: KeyGlow?
     let fill: KeyFill?
     let selected: Bool
+    /// Computador ativo: acende a perninha dele na marca da tecla Yggi.
+    var activeHost: UInt8? = nil
     let action: () -> Void
 
     var body: some View {
@@ -245,7 +235,16 @@ struct KeyCap: View {
         key.kind == .modifier || key.kind == .function || key.label.count > 3
     }
 
-    private func legends(color: Color, s: CGFloat) -> some View {
+    @ViewBuilder private func legends(color: Color, s: CGFloat) -> some View {
+        if key.kind == .yggi && fill == nil {
+            YggiKeyLegend(activeHost: activeHost)
+                .frame(width: key.w.cg * unit * 0.55)
+        } else {
+            textLegends(color: color, s: s)
+        }
+    }
+
+    private func textLegends(color: Color, s: CGFloat) -> some View {
         VStack(spacing: 1 * s) {
             if !key.sub.isEmpty {
                 Text(key.sub).font(.system(size: 10 * s)).opacity(0.7)
@@ -258,6 +257,28 @@ struct KeyCap: View {
         }
         .padding(.horizontal, 3 * s)
         .foregroundStyle(color)
+    }
+}
+
+/// A legenda da tecla Yggi: a marca, com a perninha do computador ativo acesa em branco (é o
+/// LED do computador) e as outras apagadas. Tocar a tecla passa para o próximo (até 3).
+struct YggiKeyLegend: View {
+    let activeHost: UInt8?
+
+    var body: some View {
+        let mark = yggiMark()
+        let lit = yggiKeyLitLegs(activeHost: activeHost)
+        ZStack {
+            ForEach(Array(mark.capsules.enumerated()), id: \.offset) { i, capsule in
+                let on = lit[i]
+                MarkShape(drawing: MarkDrawing(width: mark.width, height: mark.height, capsules: [capsule], dimmed: false))
+                    .fill(on ? Color.white : Color.white.opacity(0.28))
+                    .shadow(color: on ? .white.opacity(0.9) : .clear, radius: 3)
+            }
+        }
+        .aspectRatio(CGFloat(mark.width / mark.height), contentMode: .fit)
+        .animation(.easeInOut(duration: 0.2), value: activeHost)
+        .accessibilityLabel(activeHost.map { "computador \($0 + 1)" } ?? "sem computador")
     }
 }
 

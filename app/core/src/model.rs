@@ -4,6 +4,9 @@
 /// Quantos computadores o teclado guarda (limite do ZMK).
 pub const HOST_SLOTS: u8 = 5;
 
+/// Computadores que a tecla Yggi alterna: um por perninha da marca, que acende no ativo.
+pub const YGGI_KEY_HOSTS: u8 = 3;
+
 /// Abaixo deste nível a bateria é considerada baixa.
 pub const LOW_BATTERY_PERCENT: u8 = 15;
 

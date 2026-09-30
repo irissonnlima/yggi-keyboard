@@ -13,7 +13,7 @@ use crate::keyboard::{Keyboard, KeyboardError, Listeners};
 use crate::layout::MAX_STAGGER_PERCENT;
 use crate::lighting::{LightingConfig, default_lighting};
 use crate::model::{
-    Battery, Connection, HOST_SLOTS, HalfStatus, HostSlot, KeyboardState, ReaderState, Transport,
+    Battery, Connection, HOST_SLOTS, HalfStatus, YGGI_KEY_HOSTS, HostSlot, KeyboardState, ReaderState, Transport,
 };
 use crate::stats::{Statistics, StatsPeriod, simulated_statistics};
 
@@ -153,8 +153,9 @@ impl SimState {
     }
 
     /// Toque na tecla Yggi: vai para o próximo computador pareado.
+    /// A tecla Yggi passa para o próximo computador pareado entre os `YGGI_KEY_HOSTS` primeiros.
     fn tap_yggi_key(&mut self) {
-        let paired: Vec<u8> = self.hosts.iter().filter(|h| h.paired).map(|h| h.index).collect();
+        let paired: Vec<u8> = self.hosts.iter().filter(|h| h.paired && h.index < YGGI_KEY_HOSTS).map(|h| h.index).collect();
         if let Some(pos) = paired.iter().position(|&i| i == self.active_host) {
             self.active_host = paired[(pos + 1) % paired.len()];
         } else if let Some(&first) = paired.first() {
@@ -436,6 +437,16 @@ mod tests {
             seen.push(sim.state().active_host.unwrap());
         }
         assert_eq!(seen, [1, 2, 0, 1]);
+    }
+
+    #[test]
+    fn yggi_key_only_cycles_the_three_legs() {
+        // Um 4º computador pareado não entra no ciclo da tecla (a marca só tem 3 perninhas).
+        let mut s = SimState::new(Scenario::Normal);
+        s.hosts[3].paired = true;
+        s.active_host = 2;
+        s.tap_yggi_key();
+        assert_eq!(s.active_host, 0);
     }
 
     #[test]

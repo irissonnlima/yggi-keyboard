@@ -9,7 +9,7 @@ BUILD_DIR := build
 APP := $(BUILD_DIR)/Build/Products/Debug/Yggi.app
 XCODEBUILD := xcodebuild -project macos/Yggi.xcodeproj -scheme Yggi -configuration Debug -derivedDataPath $(BUILD_DIR) -destination "platform=macOS,arch=$(shell uname -m)"
 
-.PHONY: help core universal test app run snapshots xcode clean
+.PHONY: help core universal test app install run snapshots xcode clean
 
 help: ## mostra os comandos
 	@grep -E '^[a-z]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-10s %s\n", $$1, $$2}'
@@ -26,9 +26,24 @@ test: ## roda os testes do núcleo
 app: core ## compila o app macOS (Debug)
 	$(XCODEBUILD) build -quiet
 
-run: app ## compila e abre o app (ícone na barra de menus)
+LSREGISTER := /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+INSTALLED := $(HOME)/Applications/Yggi.app
+
+install: app ## instala em ~/Applications (Dock, Spotlight e Launchpad acham ele lá)
 	@pkill -x Yggi || true
-	open $(APP)
+	@mkdir -p $(HOME)/Applications
+	@rm -rf "$(INSTALLED)"
+	@ditto $(APP) "$(INSTALLED)"
+	@# Só a cópia instalada fica registrada, para o Dock e o Spotlight não usarem uma velha.
+	@$(LSREGISTER) -u $(APP) 2>/dev/null || true
+	@touch "$(INSTALLED)" && $(LSREGISTER) -f "$(INSTALLED)"
+	@mdimport "$(INSTALLED)" 2>/dev/null || true
+	@# A pasta build não entra no Spotlight (senão aparecem dois Yggi).
+	@touch $(BUILD_DIR)/.metadata_never_index
+	@echo "✓ instalado em $(INSTALLED)"
+
+run: install ## instala e abre o app (Dock e ícone na barra de menus)
+	open "$(INSTALLED)"
 
 snapshots: app ## desenha as telas de cada cenário em PNG (build/snapshots)
 	$(APP)/Contents/MacOS/Yggi --snapshots $(BUILD_DIR)/snapshots

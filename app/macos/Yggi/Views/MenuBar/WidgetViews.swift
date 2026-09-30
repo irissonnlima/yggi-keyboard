@@ -784,19 +784,23 @@ struct PercentSlider: View {
     }
 }
 
-/// Os três LEDs de computador da tecla Yggi.
+/// A marca da tecla Yggi em miniatura: a perninha do computador ativo acesa.
 struct HostDots: View {
     let hosts: [HostSlot]
     let active: UInt8?
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) { i in
-                Circle()
-                    .fill(active == UInt8(i) ? Color.accentColor : Color.secondary.opacity(0.3))
-                    .frame(width: 8, height: 8)
+        let mark = yggiMark()
+        let lit = yggiKeyLitLegs(activeHost: active)
+        ZStack {
+            ForEach(Array(mark.capsules.enumerated()), id: \.offset) { i, capsule in
+                MarkShape(drawing: MarkDrawing(width: mark.width, height: mark.height, capsules: [capsule], dimmed: false))
+                    .fill(lit[i] ? Color.accentColor : Color.secondary.opacity(0.3))
             }
         }
+        .aspectRatio(CGFloat(mark.width / mark.height), contentMode: .fit)
+        .frame(width: 22)
+        .animation(.easeInOut(duration: 0.2), value: active)
         .accessibilityLabel("computador \((active ?? 0) + 1)")
     }
 }

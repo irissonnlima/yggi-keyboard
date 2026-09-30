@@ -38,6 +38,21 @@ pub struct MarkDrawing {
     pub dimmed: bool,
 }
 
+/// Qual perninha da marca acende para cada computador da tecla Yggi (índices de `yggi_mark`):
+/// o 1º é o braço da esquerda, o 2º o da direita e o 3º a haste, na ordem de leitura.
+const HOST_LEGS: [usize; 3] = [1, 2, 0];
+
+/// A legenda da tecla Yggi: a marca com a perninha do computador ativo acesa.
+/// `true` na posição de cada cápsula de `yggi_mark` que deve acender.
+#[uniffi::export]
+pub fn yggi_key_lit_legs(active_host: Option<u8>) -> Vec<bool> {
+    let mut lit = vec![false; 3];
+    if let Some(leg) = active_host.and_then(|h| HOST_LEGS.get(h as usize)) {
+        lit[*leg] = true;
+    }
+    lit
+}
+
 /// A marca do Yggi: três barrinhas iguais em Y.
 #[uniffi::export]
 pub fn yggi_mark() -> MarkDrawing {
@@ -197,6 +212,22 @@ mod tests {
         assert_eq!(keyboard_glyph_frame(100.0, 1.0), aberto);
         // Fora da faixa não sai da caixa.
         assert_eq!(keyboard_glyph_frame(130.0, 1.4), aberto);
+    }
+
+    #[test]
+    fn cada_computador_acende_uma_perninha() {
+        let mark = yggi_mark();
+        let lit_capsule = |h| {
+            let lit = yggi_key_lit_legs(Some(h));
+            assert_eq!(lit.iter().filter(|&&on| on).count(), 1);
+            mark.capsules[lit.iter().position(|&on| on).unwrap()]
+        };
+        // 1º braço esquerdo, 2º braço direito, 3º haste.
+        assert!(lit_capsule(0).cx < mark.width / 2.0 && lit_capsule(0).cy < 30.0);
+        assert!(lit_capsule(1).cx > mark.width / 2.0 && lit_capsule(1).cy < 30.0);
+        assert!((lit_capsule(2).cx - mark.width / 2.0).abs() < 0.1 && lit_capsule(2).cy > 50.0);
+        assert_eq!(yggi_key_lit_legs(None), vec![false; 3]);
+        assert_eq!(yggi_key_lit_legs(Some(4)), vec![false; 3], "vagas 4 e 5 não têm perninha");
     }
 
     #[test]
