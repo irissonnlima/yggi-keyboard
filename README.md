@@ -8,7 +8,7 @@ Em ortholinear, as duas metades formam um retângulo perfeito, como um teclado c
 
 O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitologia nórdica. O objetivo de longo prazo é que o Yggi seja o centro que liga os seus computadores e periféricos.
 
-**[▶ Abrir a simulação interativa](https://htmlpreview.github.io/?https://github.com/irissonnlima/yggi-keyboard/blob/main/docs/simulacao.html)** ([arquivo](docs/simulacao.html)): vista de cima com antes e depois, corte lateral, **raio-x com MCU, bateria, USB-C, ímãs, pogo, fios, mola e trava**, e o ciclo da mola em corte.
+**[▶ Abrir a simulação interativa](https://htmlpreview.github.io/?https://github.com/irissonnlima/yggi-keyboard/blob/main/docs/simulacao.html)** ([arquivo](docs/simulacao.html)): vista de cima com antes e depois, corte lateral, **raio-x dos circuitos** (placa-mãe, placas das colunas, cabos flat, MCU, bateria, USB-C, ímãs e pogo), diagrama das ligações e o ciclo da mola em corte.
 
 ---
 
@@ -53,11 +53,11 @@ Split 7 + 7 colunas com layout Mac, 79 teclas, mais uma baia para um e-reader de
 
 Cada metade, de baixo para cima:
 
-1. **Cunha** (impressa): cria a inclinação de 5° e guarda a **bateria**, o **microcontrolador**, o tambor da **mola** e o curso da **trava**.
+1. **Cunha** (impressa): cria a inclinação de 5° e guarda a **bateria**, o tambor da **mola** e o curso da **trava**.
 2. **Bandeja**: bolsão da placa-came, canal da fita da mola e dos fios, lingueta da trava e furos do batente.
 3. **Placa-came** (chapa de 1,2 mm): tem 8 rasgos inclinados, 2 por coluna móvel. Ao deslizar 24 mm em X, empurra cada coluna em Y na proporção do rasgo. A posição dos pinos foi escolhida por busca para os rasgos nunca se cruzarem (folga mínima de 9 mm).
-4. **Chassi imutável** (chapa de 1,6 mm): rasgos-guia em Y. Fica sempre escondido embaixo das colunas.
-5. **Gavetas**: cada coluna móvel é um trenó impresso com a placa de circuito em cima (switches Choc montados direto na placa, com soquetes hot-swap). Dois pinos-parafuso por gaveta fazem o papel de guia, came e trava contra levantar. A **saia** da frente sai de baixo da barra do polegar e tampa o vão quando a coluna sobe.
+4. **Chassi = placa-mãe** (FR4 de 1,6 mm, fixa): tem os rasgos-guia em Y e é também a placa de circuito principal, com microcontrolador, carregador, USB-C e contatos pogo. Fica sempre escondida embaixo das colunas.
+5. **Gavetas**: cada coluna móvel é um trenó impresso com **a sua própria placa de circuito** em cima (switches Choc montados direto na placa, com soquetes hot-swap). Um **cabo flat em laço rolante**, dentro da coluna, liga essa placa à placa-mãe logo abaixo. Dois pinos-parafuso por gaveta fazem o papel de guia, came e trava contra levantar. A **saia** da frente sai de baixo da barra do polegar e tampa o vão quando a coluna sobe.
 6. **Bloco fixo** e **barra do polegar**: não se movem.
 
 **Mola e trava:**
@@ -74,11 +74,13 @@ Cada metade, de baixo para cima:
 
 | | |
 |---|---|
-| **Microcontrolador** | um **nRF52840** por metade (placa tipo Pro Micro / nice!nano, 18 × 34 mm), na **parte fixa**, dentro da cunha, embaixo do bloco fixo. USB-C na borda de trás. |
+| **Placas por metade** | **7**: a placa-mãe (o chassi), **uma por coluna móvel** (4, sendo 3 iguais de 1u e 1 de 2u), a do bloco fixo e a da barra do polegar. |
+| **Microcontrolador** | um **nRF52840** por metade (módulo de 13 × 18 mm), **soldado na placa-mãe, embaixo do bloco fixo**, junto com o carregador e o USB-C na borda de trás. |
 | **Por que nRF52840** | é o chip mais bem suportado pelo ZMK. Tem 21 GPIO, o suficiente para a matriz 6 × 7 mais os 3 LEDs. |
 | **Firmware** | [ZMK](https://zmk.dev) (Zephyr, MIT): Bluetooth, split sem fio, 5 perfis de computador, bateria. Funções do Yggi (tecla de troca, LEDs, conversa com o e-reader) entram como **módulos ZMK** próprios. |
 | **Bateria** | LiPo de 4 mm na cunha, ~1800 mAh por metade (76 × 46 mm). A cunha comporta células maiores se a inclinação aumentar. |
-| **Ligação das colunas** | protótipo: fios de silicone com folga em laço pelo canal da bandeja. Versão 1: uma placa de circuito por gaveta, ligada por cabo flat (FFC) de 8 vias. |
+| **Ligação das colunas** | cada placa de coluna leva só as 5 linhas e 1 ou 2 colunas da matriz: **cabo flat de 8 vias em laço rolante** até a placa-mãe. Como o stagger muda poucas vezes por dia, o cabo dobra pouco. No protótipo impresso, fios de silicone com folga. |
+| **Partes fixas** | bloco fixo e barra do polegar se ligam à placa-mãe por conectores placa-a-placa, sem nenhum movimento. |
 
 O **e-reader** (fase 2) tem cérebro próprio. A base sugerida é o firmware open source [CrossPoint](https://github.com/crosspoint-reader/crosspoint-reader) (ESP32). Encaixado, ele mostra o estado do teclado. Solto, é um leitor.
 
