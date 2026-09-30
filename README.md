@@ -6,12 +6,28 @@
 
 O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitologia nórdica. O objetivo de longo prazo é que o Yggi seja o centro que liga os seus computadores e periféricos.
 
+## Conceito de design
+
+> Imagens de conceito para guiar o visual do produto. O projeto técnico (medidas, mecanismo, placas) está em [`hardware/`](hardware/).
+
+**Ortholinear e column stagger.** Em cima, o teclado fechado: um retângulo perfeito, com a baia do e-reader à esquerda. Embaixo, as colunas destravadas e deslizadas no stagger: as colunas externas e a fileira do polegar ficam fixas.
+
+![Yggi em ortholinear e em column stagger](docs/media/conceito/ortho-e-stagger.webp)
+
+**Colunas que deslizam inteiras.** Cada coluna corre sobre trilhos, e o vão que ela deixa fica aparente e acabado, sem moldura solta.
+
+![Colunas deslizantes sobre trilhos](docs/media/conceito/colunas-deslizantes.webp)
+
+**E-reader destacável e conectores.** O e-reader tem tela e-ink, três botões, apoio de mesa e USB-C próprio. Ele encaixa na lateral do teclado por uma fileira de contatos pogo, com ímãs acima e abaixo.
+
+![E-reader destacável e conectores pogo](docs/media/conceito/e-reader-e-conectores.webp)
+
 ## Onde está cada coisa
 
 | Pasta | O que tem |
 |---|---|
 | [`hardware/`](hardware/) | mecanismo de stagger (CAD), placas de circuito, layout das teclas, simulação interativa |
-| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md) |
+| [`docs/`](docs/) | documentação do produto: [funcionalidades](docs/funcionalidades.md) e imagens de conceito |
 
 Ainda virão `firmware/` (ZMK + módulos Yggi) e o app do computador.
 
