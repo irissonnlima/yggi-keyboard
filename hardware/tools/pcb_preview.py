@@ -10,7 +10,7 @@ import re
 import sys
 
 COL = {"switch": "#3b7dd8", "diode": "#e39a2d", "pad": "#c9a227", "hole": "#1b1a18", "edge": "#2e8b57",
-       "led": "#d6336c", "F.Cu": "#c0392b", "B.Cu": "#5b8fd6", "via": "#6b6860"}
+       "led": "#d6336c", "rgb": "#8e44ad", "tact": "#16a085", "F.Cu": "#c0392b", "B.Cu": "#5b8fd6", "via": "#6b6860"}
 
 
 def dxf_shapes(path):
@@ -123,7 +123,8 @@ def main():
                        f'stroke-width="{w * S:.1f}" stroke-linecap="round" opacity="0.8"/>')
         for fp, x, y, w, h, circ, npth in P:
             c = (COL["hole"] if npth else COL["switch"] if fp == "PG1350" else COL["diode"] if "Diode" in fp or "SOD" in fp
-                 else COL["led"] if fp.startswith(("LED", "R_")) else COL["pad"])
+                 else COL["rgb"] if "SK6812" in fp else COL["tact"] if "TS-1187" in fp
+                 else COL["led"] if fp.startswith(("LED", "R_", "C_")) else COL["pad"])
             if circ:
                 svg.append(f'<circle cx="{tx(x):.1f}" cy="{ty(y):.1f}" r="{w / 2 * S:.1f}" fill="{c}" opacity="{0.85 if npth else 0.9}"/>')
             else:
@@ -132,10 +133,11 @@ def main():
             svg.append(f'<circle cx="{tx(x):.1f}" cy="{ty(y):.1f}" r="{d / 2 * S:.1f}" fill="{COL["via"]}"/>')
         svg.append(f'<text x="{tx((bx0 + bx1) / 2):.1f}" y="{ty(by0) + 7 * S:.1f}" font-size="{3.2 * S:.0f}" text-anchor="middle" fill="#3a3834">{name.replace("_", " ")}</text>')
         x0 += bx1 - bx0 + gap
-    legend = [("contorno", COL["edge"]), ("pinos do switch Choc", COL["switch"]), ("diodo", COL["diode"]), ("LEDs e resistores", COL["led"]), ("pads da cadeia / MCU", COL["pad"]),
+    legend = [("contorno", COL["edge"]), ("pinos do switch Choc", COL["switch"]), ("diodo", COL["diode"]), ("LED RGB por tecla", COL["rgb"]), ("setas táteis", COL["tact"]),
+              ("LEDs Yggi, resistores e capacitor", COL["led"]), ("pads da cadeia / MCU", COL["pad"]),
               ("trilha em cima", COL["F.Cu"]), ("trilha embaixo", COL["B.Cu"]), ("furos", COL["hole"])]
-    for i, (label, c) in enumerate(legend):          # duas linhas de 4
-        lx, ly = (10 + (i % 4) * (W / S - 20) / 4) * S, H - (9 - (i // 4) * 4.5) * S
+    for i, (label, c) in enumerate(legend):          # duas linhas de 5
+        lx, ly = (10 + (i % 5) * (W / S - 20) / 5) * S, H - (9 - (i // 5) * 4.5) * S
         svg.append(f'<rect x="{lx:.0f}" y="{ly:.0f}" width="{2.5 * S}" height="{2.5 * S}" fill="{c}"/><text x="{lx + 3.5 * S:.0f}" y="{ly + 2 * S:.0f}" font-size="{2.6 * S:.0f}" fill="#3a3834">{label}</text>')
     svg.append("</svg>")
     pathlib.Path(out).write_text("\n".join(svg))

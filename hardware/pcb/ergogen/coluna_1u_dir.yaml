@@ -1,6 +1,6 @@
 meta:
   engine: 4.1.0
-  name: yggi_coluna_1u
+  name: yggi_coluna_1u_dir
   author: Yggi Keyboard
   version: rev0
 units:
@@ -40,7 +40,7 @@ outlines:
       where: true
       size: [kx-0.5, ky-0.5]
 pcbs:
-  coluna_1u:
+  coluna_1u_dir:
     outlines:
       main:
         outline: board
@@ -66,7 +66,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-7.4, 63.985]
+          shift: [7.4, 63.985]
         params:
           front: false
           back: true
@@ -78,7 +78,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-6.13, 63.985]
+          shift: [6.13, 63.985]
         params:
           front: false
           back: true
@@ -90,7 +90,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-4.86, 63.985]
+          shift: [4.86, 63.985]
         params:
           front: false
           back: true
@@ -102,7 +102,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-3.59, 63.985]
+          shift: [3.59, 63.985]
         params:
           front: false
           back: true
@@ -114,7 +114,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-2.32, 63.985]
+          shift: [2.32, 63.985]
         params:
           front: false
           back: true
@@ -126,7 +126,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-1.05, 63.985]
+          shift: [1.05, 63.985]
         params:
           front: false
           back: true
@@ -138,7 +138,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [0.22, 63.985]
+          shift: [-0.22, 63.985]
         params:
           front: false
           back: true
@@ -150,7 +150,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-7.4, 62.715]
+          shift: [7.4, 62.715]
         params:
           front: false
           back: true
@@ -162,7 +162,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-6.13, 62.715]
+          shift: [6.13, 62.715]
         params:
           front: false
           back: true
@@ -174,7 +174,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-4.86, 62.715]
+          shift: [4.86, 62.715]
         params:
           front: false
           back: true
@@ -186,7 +186,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-3.59, 62.715]
+          shift: [3.59, 62.715]
         params:
           front: false
           back: true
@@ -198,7 +198,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-2.32, 62.715]
+          shift: [2.32, 62.715]
         params:
           front: false
           back: true
@@ -210,7 +210,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-1.05, 62.715]
+          shift: [1.05, 62.715]
         params:
           front: false
           back: true
@@ -222,7 +222,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-0.22, 60.785]
+          shift: [0.22, 60.785]
         params:
           front: false
           back: true
@@ -234,7 +234,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [1.05, 60.785]
+          shift: [-1.05, 60.785]
         params:
           front: false
           back: true
@@ -246,7 +246,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [2.32, 60.785]
+          shift: [-2.32, 60.785]
         params:
           front: false
           back: true
@@ -258,7 +258,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [3.59, 60.785]
+          shift: [-3.59, 60.785]
         params:
           front: false
           back: true
@@ -270,7 +270,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [4.86, 60.785]
+          shift: [-4.86, 60.785]
         params:
           front: false
           back: true
@@ -282,7 +282,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [6.13, 60.785]
+          shift: [-6.13, 60.785]
         params:
           front: false
           back: true
@@ -294,7 +294,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [7.4, 60.785]
+          shift: [-7.4, 60.785]
         params:
           front: false
           back: true
@@ -306,7 +306,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [-0.22, 59.515]
+          shift: [0.22, 59.515]
         params:
           front: false
           back: true
@@ -318,7 +318,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [1.05, 59.515]
+          shift: [-1.05, 59.515]
         params:
           front: false
           back: true
@@ -330,7 +330,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [2.32, 59.515]
+          shift: [-2.32, 59.515]
         params:
           front: false
           back: true
@@ -342,7 +342,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [3.59, 59.515]
+          shift: [-3.59, 59.515]
         params:
           front: false
           back: true
@@ -354,7 +354,7 @@ pcbs:
         what: pad
         where: matrix_c1_r4
         adjust:
-          shift: [6.13, 59.515]
+          shift: [-6.13, 59.515]
         params:
           front: false
           back: true

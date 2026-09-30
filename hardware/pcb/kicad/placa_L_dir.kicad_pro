@@ -143,7 +143,7 @@
         "max_error": 0.005,
         "min_clearance": 0.15,
         "min_connection": 0.0,
-        "min_copper_edge_clearance": 0.5,
+        "min_copper_edge_clearance": 0.2,
         "min_groove_width": 0.0,
         "min_hole_clearance": 0.25,
         "min_hole_to_hole": 0.25,
@@ -265,7 +265,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "metade_esquerda.kicad_pro",
+    "filename": "placa_L_dir.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -330,6 +330,14 @@
       },
       {
         "netclass": "Default",
+        "pattern": "c1_r3"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c1_r2"
+      },
+      {
+        "netclass": "Default",
         "pattern": "c1_r1"
       },
       {
@@ -358,23 +366,7 @@
       },
       {
         "netclass": "Default",
-        "pattern": "fn_r5"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "ctl_r5"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "COL2"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "opt_r5"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "COL3"
+        "pattern": "COL4"
       },
       {
         "netclass": "Default",
@@ -382,15 +374,15 @@
       },
       {
         "netclass": "Default",
-        "pattern": "COL4"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "del_r5"
-      },
-      {
-        "netclass": "Default",
         "pattern": "COL5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "ret_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "COL6"
       },
       {
         "netclass": "Default",
@@ -402,7 +394,7 @@
       },
       {
         "netclass": "Default",
-        "pattern": "COL6"
+        "pattern": "VLED"
       },
       {
         "netclass": "Default",
@@ -410,15 +402,19 @@
       },
       {
         "netclass": "Default",
-        "pattern": "LED1"
+        "pattern": "COL2"
       },
       {
         "netclass": "Default",
-        "pattern": "LED2"
+        "pattern": "COL3"
       },
       {
         "netclass": "Default",
-        "pattern": "LED3"
+        "pattern": "DOUT"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "DIN"
       }
     ]
   },
@@ -437,13 +433,7 @@
     "bus_aliases": {},
     "legacy_lib_dir": "",
     "legacy_lib_list": [],
-    "top_level_sheets": [
-      {
-        "filename": "metade_esquerda.kicad_sch",
-        "name": "metade_esquerda",
-        "uuid": "00000000-0000-0000-0000-000000000000"
-      }
-    ]
+    "top_level_sheets": []
   },
   "sheets": [],
   "text_variables": {},

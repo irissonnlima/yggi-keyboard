@@ -265,7 +265,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "coluna_1u.kicad_pro",
+    "filename": "coluna_2u_dir.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -326,6 +326,30 @@
       },
       {
         "netclass": "Default",
+        "pattern": "C2"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c2_r4"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c2_r3"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c2_r2"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c2_r1"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c2_r0"
+      },
+      {
+        "netclass": "Default",
         "pattern": "R4"
       },
       {
@@ -354,10 +378,6 @@
       },
       {
         "netclass": "Default",
-        "pattern": "C2"
-      },
-      {
-        "netclass": "Default",
         "pattern": "C3"
       },
       {
@@ -371,10 +391,6 @@
       {
         "netclass": "Default",
         "pattern": "DIN"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "DOUT"
       }
     ]
   },

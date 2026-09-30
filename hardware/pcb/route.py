@@ -13,11 +13,15 @@ Passos:
  1. Regras da JLCPCB (trilha 0,25, isolamento 0,2, via 0,6/0,3, vias cobertas) e espessura de
     1,2 mm (a do CAD).
  2. Troca o diodo "ComboDiode" do Ergogen (pads SMD nas duas faces + furos passantes, que o
-    KiCad exige ligar entre si) por um SOD-123 só na face de baixo.
- 3. Placa L: 3 LEDs 0805 (face de cima) + 3 resistores 0805 (face de baixo) na faixa entre a
-    fileira F e a dos números, acima da tecla Yggi (CAD x = 4, 9 e 14 mm).
- 4. Roteia com o Freerouting (sem interface) e importa as trilhas.
- 5. Roda o DRC com o kicad-cli.
+    KiCad exige ligar entre si) por um SOD-123 só na face de baixo, no canto noroeste da tecla
+    (o lugar antigo, ao sul do centro, é a janela do LED do Choc).
+ 3. LED RGB por tecla Choc: SK6812MINI-E montado por baixo (brilha pelo recorte, na janela do
+    switch, 4,7 mm ao sul do centro), encadeado de DIN até DOUT; um capacitor de 4,7 µF por placa.
+ 4. Placa L esquerda: 3 LEDs 0805 da tecla Yggi (face de cima) + 3 resistores 0805 (face de baixo)
+    na faixa entre a fileira F e a dos números (CAD x = 4, 9 e 14 mm).
+ 5. Placa L direita: 4 setas de meia altura com chave tátil SMD (XKB TS-1187A) e diodos.
+ 6. Roteia com o Freerouting (sem interface) e importa as trilhas.
+ 7. Roda o DRC com o kicad-cli.
 """
 import json
 import os
@@ -45,6 +49,14 @@ mm = pcbnew.FromMM
 # Coordenadas do KiCad (y para baixo) -> CAD da placa L: x_cad = x + 9, y_cad = 25,5 - y.
 BAND_Y = -61.75                       # centro da faixa entre F e números
 LED_X = [-5.0, 0.0, 5.0]              # CAD x = 4, 9, 14 mm
+DIODE_AT = (-3.6, -4.5)               # diodo em relação ao centro do switch (noroeste, na vertical)
+RGB_AT = (0.0, 4.7)                   # janela do LED do Choc V1 (ao sul do centro)
+CAP_AT = {"coluna_1u": (6.3, -8.5), "coluna_1u_dir": (-6.3, -8.5), "coluna_2u": (9, -8.5),
+          "coluna_2u_dir": (-9, -8.5), "placa_L": (-4.6, -8.5), "placa_L_dir": (4.6, -8.5)}
+# setas da barra direita (meia altura): (nome, x, y, coluna, diodo x, diodo y, diodo na vertical)
+ARROWS = [("left", -36, 21.25, "COL3", -36, 12.75, False), ("up", -18, 12.75, "COL2", -12, 12.75, True),
+          ("down", -18, 21.25, "COL1", -12, 21.25, True), ("right", 0, 21.25, "COL0", 0, 12.75, False)]
+BOARDS = ["coluna_1u", "coluna_2u", "placa_L", "coluna_1u_dir", "coluna_2u_dir", "placa_L_dir"]
 
 
 def rules(board):
@@ -54,7 +66,7 @@ def rules(board):
     ds.m_MinClearance = mm(0.15)
     ds.m_ViasMinSize = mm(0.5)
     ds.m_MinThroughDrill = mm(0.3)
-    ds.m_CopperEdgeClearance = mm(0.5)
+    ds.m_CopperEdgeClearance = mm(0.2)          # piso; o 0,5 mm vem da regra em DRU
     ds.m_TentViasFront = ds.m_TentViasBack = True   # vias cobertas: a solda dos fios não escorre
     nc = ds.m_NetSettings.GetDefaultNetclass()
     nc.SetTrackWidth(mm(0.25))
@@ -92,19 +104,82 @@ def set_nets(fp, nets):
             p.SetNet(nets[p.GetNumber()])
 
 
+def xy(fp):
+    p = fp.GetPosition()
+    return p.x / 1e6, p.y / 1e6
+
+
+def switches(board):
+    """Switches Choc: (footprint, x, y, sinal da rotação: 1 normal, -1 girado 180°)."""
+    out = []
+    for f in board.GetFootprints():
+        if f.GetFPIDAsString().endswith("PG1350"):
+            x, y = xy(f)
+            out.append((f, x, y, -1 if round(f.GetOrientationDegrees()) % 360 == 180 else 1))
+    return out
+
+
 def replace_diodes(board):
-    """ComboDiode -> SOD-123 na face de baixo, mesmo lugar e mesmo sentido (catodo = pad 1 = linha)."""
+    """ComboDiode -> SOD-123 na face de baixo, no canto noroeste do seu switch (catodo = pad 1 = linha)."""
+    by_colrow = {f.FindPadByNumber("2").GetNetname(): (x, y, s) for f, x, y, s in switches(board)}
     for old in [f for f in board.GetFootprints() if f.GetFPIDAsString().endswith("ComboDiode")]:
         pads = {p.GetNumber(): p.GetNet() for p in old.Pads()}
-        pos, ref = old.GetPosition(), old.GetReference()
+        x, y, s = by_colrow[old.FindPadByNumber("2").GetNetname()]
+        ref = old.GetReference()
         board.Delete(old)
-        new = load_fp("Diode_SMD", "D_SOD-123")
-        place(board, new, ref, pos.x / 1e6, pos.y / 1e6, back=True)
-        # na face de baixo o footprint fica espelhado; gira para o catodo ficar à esquerda (-x)
-        if new.FindPadByNumber("1").GetPosition().x > pos.x:
-            new.SetOrientationDegrees(180)
+        new = place(board, load_fp("Diode_SMD", "D_SOD-123"), ref,
+                    x + s * DIODE_AT[0], y + s * DIODE_AT[1], back=True, rot=90)
         set_nets(new, pads)
         new.SetValue("1N4148W")
+
+
+def add_rgb(board):
+    """Um SK6812MINI-E por switch Choc, encadeado a partir do pad DIN (J_IN ou cabeçalho do MCU)
+    pelo vizinho mais próximo; o último liga no DOUT (J_OUT), se a placa tiver saída."""
+    pads = {p.GetNetname(): p for p in board.GetPads() if p.GetNetname() in ("DIN", "DOUT")}
+    din = pads["DIN"].GetPosition()
+    here = (din.x / 1e6, din.y / 1e6)
+    todo = [(x + s * RGB_AT[0], y + s * RGB_AT[1], s) for f, x, y, s in switches(board)]
+    order = []
+    while todo:
+        nxt = min(todo, key=lambda t: (t[0] - here[0]) ** 2 + (t[1] - here[1]) ** 2)
+        todo.remove(nxt)
+        order.append(nxt)
+        here = nxt[:2]
+    vled, gnd = net(board, "VLED"), net(board, "GND")
+    data_in = net(board, "DIN")
+    for i, (x, y, s) in enumerate(order, 1):
+        led = place(board, load_fp("LED_SMD", "LED_SK6812MINI-E_3.2x2.8mm_P1.5mm_ReverseMount"),
+                    f"L{i}", x, y, back=True, rot=0 if s > 0 else 180)
+        last = i == len(order)
+        data_out = net(board, "DOUT") if last and "DOUT" in pads else None if last else net(board, f"rgb{i}")
+        nets = {"1": gnd, "2": data_in, "3": vled}
+        if data_out:
+            nets["4"] = data_out
+        set_nets(led, nets)
+        led.SetValue("SK6812MINI-E")
+        led.Reference().SetVisible(False)            # 38 códigos não cabem na serigrafia da coluna
+        # o Freerouting não aplica a folga de borda aos recortes internos: área proibida em volta
+        keepout_rect(board, x, y, 2.0, 1.9)
+        data_in = data_out
+    cx, cy = CAP_AT[board.GetTitleBlock().GetTitle()]
+    c = place(board, load_fp("Capacitor_SMD", "C_0805_2012Metric"), "C1", cx, cy, back=True, rot=90)
+    set_nets(c, {"1": vled, "2": gnd})
+    c.SetValue("4.7uF")
+    c.Reference().SetVisible(False)
+
+
+def add_arrows(board):
+    """Setas de meia altura da barra direita: chave tátil SMD (face de cima) + diodo embaixo."""
+    r5 = net(board, "R5")
+    for i, (name, x, y, col, dx, dy, vert) in enumerate(ARROWS, 1):
+        cr = net(board, f"arw_{name}")
+        sw = place(board, load_fp("Button_Switch_SMD", "SW_Push_1P1T_XKB_TS-1187A"), f"SA{i}", x, y)
+        set_nets(sw, {"1": net(board, col), "2": cr})
+        sw.SetValue("TS-1187A")
+        d = place(board, load_fp("Diode_SMD", "D_SOD-123"), f"DA{i}", dx, dy, back=True, rot=90 if vert else 0)
+        set_nets(d, {"1": r5, "2": cr})
+        d.SetValue("1N4148W")
 
 
 def add_leds(board):
@@ -123,6 +198,15 @@ def keepout(board, x, y, r, n=24):
     """Área proibida (sem trilhas nem vias) circular nas duas faces. O Freerouting não aplica a
     folga de borda aos furos internos do contorno, então o furo do botão da trava precisa dela."""
     import math
+    keepout_poly(board, [(x + r * math.cos(2 * math.pi * i / n), y + r * math.sin(2 * math.pi * i / n))
+                         for i in range(n)])
+
+
+def keepout_rect(board, x, y, hw, hh):
+    keepout_poly(board, [(x - hw, y - hh), (x + hw, y - hh), (x + hw, y + hh), (x - hw, y + hh)])
+
+
+def keepout_poly(board, pts):
     z = pcbnew.ZONE(board)
     z.SetIsRuleArea(True)
     z.SetDoNotAllowTracks(True)
@@ -136,9 +220,8 @@ def keepout(board, x, y, r, n=24):
     z.SetLayerSet(ls)
     poly = z.Outline()
     poly.NewOutline()
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        poly.Append(mm(x + r * math.cos(a)), mm(y + r * math.sin(a)))
+    for px, py in pts:
+        poly.Append(mm(px), mm(py))
     z.thisown = False
     board.Add(z)
 
@@ -164,6 +247,18 @@ def freeroute(board, work):
         sys.exit("falha ao importar o SES")
 
 
+# O SK6812MINI-E da biblioteca do KiCad tem os pads a 0,25 mm do canto do próprio recorte (o corpo
+# do LED fica dentro dele). O mínimo da placa (um piso que regra nenhuma fura) fica em 0,2 mm, e
+# as regras abaixo voltam a exigir 0,5 mm de tudo, menos dos LEDs RGB (a regra de baixo vence).
+DRU = """(version 1)
+(rule "borda: 0,5 mm"
+  (constraint edge_clearance (min 0.5mm)))
+(rule "borda: LED RGB junto do próprio recorte"
+  (constraint edge_clearance (min 0.2mm))
+  (condition "A.memberOfFootprint('L*') || B.memberOfFootprint('L*')"))
+"""
+
+
 def drc(path):
     rpt = path.with_suffix(".drc.json")
     subprocess.run([str(KICAD_CLI), "pcb", "drc", "--format", "json", "-o", str(rpt), str(path)],
@@ -178,9 +273,14 @@ def finish(name):
     board = pcbnew.LoadBoard(str(src))
     rules(board)
     replace_diodes(board)
+    add_rgb(board)
     if name == "placa_L":
         add_leds(board)
-        keepout(board, 13, BAND_Y, 1.4 + 0.7)        # furo do botão da trava (CAD 22; 87,25)
+    if name == "placa_L_dir":
+        add_arrows(board)
+    if name.startswith("placa_L"):
+        side = -1 if name.endswith("_dir") else 1
+        keepout(board, side * 13, BAND_Y, 1.4 + 0.7)  # furo do botão da trava (CAD 22; 87,25)
     center_on_page(board)
     work = BUILD / name / "route"
     work.mkdir(exist_ok=True)
@@ -191,6 +291,7 @@ def finish(name):
         p = out.with_suffix(extra)
         if extra == ".kicad_prl" and p.exists():
             p.unlink()
+    out.with_suffix(".kicad_dru").write_text(DRU)
     v, u = drc(out)
     txt = out.read_text()                          # (a lista de trilhas do SWIG não itera no KiCad 10)
     n_tracks = txt.count("(segment") + txt.count("(via")
@@ -201,6 +302,6 @@ def finish(name):
 
 
 if __name__ == "__main__":
-    names = sys.argv[1:] or ["coluna_1u", "coluna_2u", "placa_L"]
+    names = sys.argv[1:] or BOARDS
     ok = all([finish(n) for n in names])
     sys.exit(0 if ok else 1)

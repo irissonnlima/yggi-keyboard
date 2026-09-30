@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""Junta as 5 placas de uma metade num único arquivo do KiCad, na posição do CAD (só para ver).
+"""Monta o teclado inteiro (as 10 placas das duas mãos) num único arquivo do KiCad, na posição do
+CAD, só para ver o circuito todo de uma vez.
 
-    python3 hardware/pcb/assemble.py [stagger_pct]      # 0 (ortho, padrão) … 150
+    python3 hardware/pcb/assemble.py [stagger_pct]      # 150 (padrão) … 0 (ortho)
 
-As placas ficam separadas por GAP mm (a mais do que no teclado) para ver onde cada uma acaba.
+Lê as placas roteadas em hardware/pcb/kicad/ e grava hardware/pcb/kicad/teclado_<pct>.kicad_pcb.
 
-Lê as placas roteadas em hardware/pcb/kicad/ e grava hardware/pcb/kicad/metade_esquerda.kicad_pcb
-(com stagger diferente de 0: metade_esquerda_<pct>.kicad_pcb).
-
-As redes de cada placa são renomeadas para os nomes reais da matriz. O barramento rotativo faz o
-"C1" de cada coluna ser uma coluna diferente: na 1ª placa de 1u, C1 = COL2 e C2 = COL3; na 2ª,
-C1 = COL3; e assim por diante. Com isso o KiCad desenha os jumpers como linhas de ligação
-(ratsnest) entre J_OUT de uma placa e J_IN da seguinte. As redes internas de cada placa (switch →
-diodo) ganham o prefixo da placa. Este arquivo não vai para fabricação: cada placa é feita à parte.
-Não usa o pcbnew, só Python.
+As redes de cada placa são renomeadas para os nomes reais da matriz, com o prefixo da mão (E. ou
+D.: cada metade tem o próprio MCU). O barramento rotativo faz o "C1" de cada coluna ser uma coluna
+diferente: na 1ª placa de 1u, C1 = COL2 e C2 = COL3; na 2ª, C1 = COL3; e assim por diante. O DAT
+dos LEDs RGB sai de uma placa (DOUT) e entra na seguinte (DIN). Com isso o KiCad desenha os jumpers
+como linhas de ligação (ratsnest) entre J_OUT de uma placa e J_IN da seguinte.
+As placas ficam afastadas GAP mm (a mais do que no teclado) para ver onde cada uma acaba.
+Este arquivo não vai para fabricação: cada placa é feita à parte. Não usa o pcbnew, só Python.
 """
 import pathlib
 import re
@@ -22,20 +21,20 @@ import uuid
 
 HERE = pathlib.Path(__file__).resolve().parent / "kicad"
 
-# Quadro do CAD (x entre colunas, y ao longo da coluna, mm) -> folha A3 do KiCad (y para baixo)
-OX, OY = 147.0, 201.5
+KB_W = 126                           # largura de uma metade (7u)
 STAGGER = {"MI": 0, "AN": 9, "ME": 15, "IN": 9}         # stagger de cada coluna em 150% (GAV no CAD)
-
-# (prefixo, arquivo, x do CAD do switch S1, deslocamento no barramento: C1 = COL(2 + k))
-BOARDS = [
-    ("L", "placa_L", 18, None),
-    ("MI", "coluna_1u", 45, 0),     # mindinho
-    ("AN", "coluna_1u", 63, 1),     # anelar
-    ("ME", "coluna_1u", 81, 2),     # médio
-    ("IN", "coluna_2u", 99, 3),     # indicador (S1 = coluna externa da placa dupla)
-]
 S1_Y = 25.5                          # centro da fileira de baixo (r4) no CAD
-GAP = 8.0                            # espaço extra entre placas vizinhas (em x), para ver onde cada uma acaba
+GAP = 8.0                            # espaço extra entre placas vizinhas
+MID = 24.0                           # espaço extra entre as duas mãos
+
+# (mão, prefixo, arquivo, x do switch S1 no quadro da metade esquerda do CAD, k: C1 = COL(2 + k))
+# A mão direita é o espelho: x no mundo = 2 × KB_W - x (e as placas _dir já têm a posição espelhada).
+BOARDS = [
+    ("E", "L", "placa_L", 18, None), ("E", "MI", "coluna_1u", 45, 0), ("E", "AN", "coluna_1u", 63, 1),
+    ("E", "ME", "coluna_1u", 81, 2), ("E", "IN", "coluna_2u", 99, 3),
+    ("D", "L", "placa_L_dir", 18, None), ("D", "MI", "coluna_1u_dir", 45, 0), ("D", "AN", "coluna_1u_dir", 63, 1),
+    ("D", "ME", "coluna_1u_dir", 81, 2), ("D", "IN", "coluna_2u_dir", 99, 3),
+]
 
 
 def tokenize(text):
@@ -69,17 +68,24 @@ def unq(s):
     return s[1:-1] if s.startswith('"') else s
 
 
-def net_map(prefix, k):
+def net_map(side, prefix, k, n_board):
+    """Nome real de cada rede no teclado. n_board = posição da placa na cadeia (0 = placa L)."""
     def m(name):
         if name == "":
             return name
+        if name in ("VLED", "GND"):
+            return f"{side}.{name}"
+        if name == "DIN":                     # dados que chegam da placa anterior (ou do MCU)
+            return f"{side}.DAT{n_board}"
+        if name == "DOUT":
+            return f"{side}.DAT{n_board + 1}"
         if prefix == "L":
-            return name if re.fullmatch(r"(R\d|COL\d|GND|LED\d)", name) else f"L.{name}"
+            return f"{side}.{name}" if re.fullmatch(r"(R\d|COL\d|LED\d)", name) else f"{side}.L.{name}"
         g = re.fullmatch(r"C(\d)", name)
         if g:
             col = 1 + k + int(g.group(1))
-            return f"COL{col}" if col <= 6 else f"{prefix}.livre.C{g.group(1)}"
-        return name if re.fullmatch(r"R\d", name) else f"{prefix}.{name}"
+            return f"{side}.COL{col}" if col <= 6 else f"{side}.{prefix}.livre.C{g.group(1)}"
+        return f"{side}.{name}" if re.fullmatch(r"R\d", name) else f"{side}.{prefix}.{name}"
     return m
 
 
@@ -109,25 +115,30 @@ def s1_position(root):
 
 
 def main():
-    pct = float(sys.argv[1]) if len(sys.argv) > 1 else 0
+    pct = float(sys.argv[1]) if len(sys.argv) > 1 else 150
     header, items = None, []
-    for i, (prefix, fname, cad_x, k) in enumerate(BOARDS):
+    for side, prefix, fname, cad_x, k in BOARDS:
+        n_board = 0 if k is None else k + 1
         root = parse(tokenize((HERE / f"{fname}.kicad_pcb").read_text()))
         if header is None:
             header = [c for c in root[1:] if isinstance(c, list) and c[0] in
                       ("version", "generator", "generator_version", "general", "paper", "layers", "setup")]
         sx, sy = s1_position(root)
-        cad_y = S1_Y + STAGGER.get(prefix, 0) * pct / 150
-        dx, dy = OX + cad_x + i * GAP - sx, OY - cad_y - (GAP / 2 if i else 0) - sy   # colunas sobem, longe da barra
-        rename = net_map(prefix, k)
+        # afastamento: as placas de fora vão para fora, as colunas sobem um pouco (longe da barra)
+        spread = (n_board - 4) * GAP - MID / 2
+        wx = cad_x + spread if side == "E" else 2 * KB_W - cad_x - spread
+        cad_y = S1_Y + STAGGER.get(prefix, 0) * pct / 150 + (GAP / 2 if n_board else 0)
+        ox, oy = 210 - KB_W, 148.5 + 60        # centro da folha A3 no centro do teclado
+        dx, dy = ox + wx - sx, oy - cad_y - sy
+        rename = net_map(side, prefix, k, n_board)
 
         def fix(n):
             if n[0] == "net" and len(n) == 2:
                 n[1] = f'"{rename(unq(n[1]))}"'
-            elif n[0] == "uuid":                      # as 3 colunas de 1u são cópias: uuids novos
+            elif n[0] == "uuid":                      # as colunas de 1u são cópias: uuids novos
                 n[1] = f'"{uuid.uuid4()}"'
             elif n[0] == "property" and n[1] == '"Reference"':
-                n[2] = f'"{prefix}.{unq(n[2])}"'
+                n[2] = f'"{side}.{prefix}.{unq(n[2])}"'
 
         for c in root[1:]:
             if not isinstance(c, list) or c[0] not in ("footprint", "segment", "via", "gr_line", "gr_circle",
@@ -139,15 +150,17 @@ def main():
             else:
                 move(c, dx, dy)
             items.append(c)
-    title = ["title_block", ["title", f'"Yggi · metade esquerda (visão, stagger {pct:g}%)"'], ["rev", '"rev0"'],
+    title = ["title_block", ["title", f'"Yggi · teclado inteiro (visão, stagger {pct:g}%)"'], ["rev", '"rev0"'],
              ["company", '"Yggi Keyboard"'],
-             ["comment", "1", '"Só para ver: cada placa é fabricada à parte (placa_L, coluna_1u ×3, coluna_2u)."']]
+             ["comment", "1", '"Só para ver: cada placa é fabricada à parte. E. = mão esquerda, D. = mão direita."']]
     board = ["kicad_pcb"] + header + [title] + items
-    name = "metade_esquerda" if pct == 0 else f"metade_esquerda_{pct:g}"
+    name = f"teclado_{pct:g}"
     out = HERE / f"{name}.kicad_pcb"
     out.write_text(dump(board) + "\n")
     pro = (HERE / "placa_L.kicad_pro").read_text().replace('"placa_L', f'"{name}')
     out.with_suffix(".kicad_pro").write_text(pro)
+    # mesma regra de borda das placas; os LEDs agora se chamam E.MI.L3 etc.
+    out.with_suffix(".kicad_dru").write_text((HERE / "placa_L.kicad_dru").read_text().replace("'L*'", "'*.L*'"))
     print("gravado:", out)
 
 

@@ -265,7 +265,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "coluna_1u.kicad_pro",
+    "filename": "teclado_150.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -302,19 +302,31 @@
       },
       {
         "netclass": "Default",
-        "pattern": "C1"
+        "pattern": "COL0"
       },
       {
         "netclass": "Default",
-        "pattern": "c1_r4"
+        "pattern": "c0_r4"
       },
       {
         "netclass": "Default",
-        "pattern": "c1_r3"
+        "pattern": "c0_r3"
       },
       {
         "netclass": "Default",
-        "pattern": "c1_r2"
+        "pattern": "c0_r2"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c0_r1"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "c0_r0"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "COL1"
       },
       {
         "netclass": "Default",
@@ -346,6 +358,50 @@
       },
       {
         "netclass": "Default",
+        "pattern": "fn_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "ctl_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "COL2"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "opt_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "COL3"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "cmd_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "COL4"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "del_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "COL5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "spc_r5"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "R5"
+      },
+      {
+        "netclass": "Default",
         "pattern": "VLED"
       },
       {
@@ -354,19 +410,11 @@
       },
       {
         "netclass": "Default",
-        "pattern": "C2"
+        "pattern": "COL6"
       },
       {
         "netclass": "Default",
-        "pattern": "C3"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "C4"
-      },
-      {
-        "netclass": "Default",
-        "pattern": "C5"
+        "pattern": "DOUT"
       },
       {
         "netclass": "Default",
@@ -374,7 +422,15 @@
       },
       {
         "netclass": "Default",
-        "pattern": "DOUT"
+        "pattern": "LED1"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "LED2"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "LED3"
       }
     ]
   },

@@ -11,7 +11,7 @@
 //  - MÓDULOS: faces de encaixe retas (ímãs + pogo), bordas externas arredondadas.
 //  - CIRCUITOS EM CADEIA (5 placas por metade): placa L (bloco fixo + barra do polegar, com MCU,
 //    carregador e USB-C) -> coluna 1u -> coluna 1u -> coluna 1u -> coluna dupla. Cada placa se liga
-//    à vizinha por um jumper flexível de 10 vias que atravessa as paredes na faixa livre entre a
+//    à vizinha por um jumper flexível de 13 vias que atravessa as paredes na faixa livre entre a
 //    fileira F e a dos números. Barramento rotativo: as 3 placas de 1u são idênticas.
 //    Placas geradas com Ergogen em hardware/pcb/.
 //
@@ -67,9 +67,10 @@ BCON = [1.5, 68, 6, 4, 1.8];           // conector da bateria (fios descem para 
 USBC = [1.5, -0.6, 9, 7.6, 3.2];     // USB-C mid-mount na frente da barra, canto externo
 BATT_HOLE = [4, 70];                 // passagem dos fios da bateria
 POGO_Y = 26;                         // 4 pogo na face da baia (bloco fixo), longe do MCU
-// Cadeia de placas: pads de 10 vias na faixa entre F e números (y = 87,25)
+// Cadeia de placas: pads de 13 vias na faixa entre F e números (y = 87,25)
 BAND_Y = (ROW_Y[1] + P + ROW_Y[0]) / 2;
-JPAD = [5.1, 2.5];                   // tamanho do bloco de pads 2 × 5 (passo 1,27)
+JPAD = [8.62, 2.17];                 // bloco de pads 2 × 7 (passo 1,27): 13 vias (5 linhas, 5 colunas, VLED, GND, DAT)
+J_IN_DY = 1.6; J_OUT_DY = -1.6;      // J_IN mais para trás e J_OUT mais para a frente (lado a lado não cabem)
 LINK_SLOT = [78, 97];                // rasgo nas paredes para o jumper atravessar
 led_d = 1.8;
 latch = [22, 87.25];                 // trava + botão (no bloco fixo, entre F e números)
@@ -154,8 +155,8 @@ module gaveta(g) {
         link_slots(x0, n, true, !is_last(g));
     }
     pcb(x0, n);
-    link_pads(x0 + 2, true);                                  // entrada (J_IN)
-    if (!is_last(g)) link_pads(x0 + n * U - 7.1, true);       // saída (J_OUT)
+    link_pads(x0 + 1.1, J_IN_DY);                             // entrada (J_IN)
+    if (!is_last(g)) link_pads(x0 + n * U - 9.72, J_OUT_DY);  // saída (J_OUT)
 }
 function is_last(g) = g[0] == GAV[len(GAV) - 1][0];
 // rasgos nas paredes laterais para o jumper da cadeia
@@ -165,12 +166,12 @@ module link_slots(x0, n, left, right) {
             cube([side_gap + sled_wall + 1.5, LINK_SLOT[1] - LINK_SLOT[0], sock_h + 1]);
 }
 // bloco de pads (2 × 5) embaixo da placa, local = z da gaveta
-module link_pads(x, local = true) {
-    color("gold") translate([x, BAND_Y - JPAD[1] / 2, sled_floor + sock_h - 0.1]) cube([JPAD[0], JPAD[1], 0.1]);
+module link_pads(x, dy) {
+    color("gold") translate([x, BAND_Y + dy - JPAD[1] / 2, sled_floor + sock_h - 0.1]) cube([JPAD[0], JPAD[1], 0.1]);
 }
 // jumper flexível entre duas placas vizinhas (visual), em S na horizontal, de pé (1,6 mm de altura)
 module link_jumper(xa, sa, xb, sb) {
-    ya = BAND_Y + sa; yb = BAND_Y + sb; n = 16;
+    ya = BAND_Y + J_OUT_DY + sa; yb = BAND_Y + J_IN_DY + sb; n = 16;     // de J_OUT para o J_IN seguinte
     pts = [for (i = [0:n]) let(k = i / n, x = xa + (xb - xa) * k, y = ya + (yb - ya) * (3 * k * k - 2 * k * k * k)) [x, y]];
     color("gold") for (i = [0:n - 1]) hull() {
         translate([pts[i][0], pts[i][1], Z_G + sled_floor + 0.1]) cylinder(d = 0.3, h = 1.6, $fn = 6);
@@ -189,7 +190,7 @@ module fixed_block(round_left, leds, pogo = false) {
         link_slots(0, 2, false, true);
         if (pogo) for (i = [0:3]) translate([-0.01, POGO_Y + i * 2.5, sled_floor + sock_h / 2]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 2);
     }
-    link_pads(28.5, true);                                    // saída da placa L (J_OUT)
+    link_pads(26.28, J_OUT_DY);                               // saída da placa L (J_OUT)
     // LEDs 0805 em cima da placa (x = 4, 9, 14); os resistores 0805 ficam embaixo, no mesmo lugar
     if (leds) for (i = [-1:1]) color("lime") translate([U / 2 + i * 5 - 1, latch[1] - 0.625, gav_h]) cube([2, 1.25, 0.8]);
 }
@@ -387,8 +388,8 @@ module mech_flat(round_left, faces, leds, e) {
     translate([0, 0, 3.5 * e]) { lboard_pcb(round_left); lboard_parts(); }
     // jumpers da cadeia: placa L -> coluna -> coluna -> coluna -> coluna dupla
     translate([0, 0, 3 * e]) {
-        link_jumper(31.05, 0, GAV[0][0] + 4.55, gstag(0));
-        for (i = [0:len(GAV) - 2]) link_jumper(GAV[i][0] + GAV[i][1] * U - 4.55, gstag(i), GAV[i + 1][0] + 4.55, gstag(i + 1));
+        link_jumper(30.59, 0, GAV[0][0] + 5.41, gstag(0));        // centros dos blocos J_OUT -> J_IN
+        for (i = [0:len(GAV) - 2]) link_jumper(GAV[i][0] + GAV[i][1] * U - 5.41, gstag(i), GAV[i + 1][0] + 5.41, gstag(i + 1));
     }
     translate([0, 0, 3 * e]) plunger(false);
 }
