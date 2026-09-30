@@ -221,9 +221,9 @@ g+=box(270,90,190,150,'Placa-mãe (chassi)',['FR4 1,6 mm · fixa','MCU nRF52840'
 g+=box(520,20,140,76,'Bateria',['LiPo ~1800 mAh','na cunha traseira'],'var(--green-bg)','var(--green)');
 g+=box(520,130,140,76,'Outra metade',['pogo: VBUS, GND,','TX, RX + ímãs'],'var(--acc-bg)','var(--acc)');
 g+=box(520,224,140,70,'Baia / e-reader',['pogo 5 vias + ímãs'],'var(--acc-bg)','var(--acc)');
-g+=ar(210,66,270,120,true,'cabo flat 8 vias','235',82)+ar(210,168,270,165,false,'placa-a-placa','240',158)+ar(210,259,270,215,false,'conector','238',250);
-g+=ar(520,58,460,120,false,'fios','492',80)+ar(460,165,520,168,false,'','','')+ar(460,215,520,259,false,'','','');
-g+=`<text x="365" y="265" font-size="11" fill="var(--t2)" text-anchor="middle">sem as metades encaixadas: Bluetooth (ZMK split)</text>`;
+g+=ar(210,66,270,120,true)+ar(210,168,270,165,false)+ar(210,259,270,215,false);
+g+=ar(520,58,460,120,false)+ar(460,165,520,168,false)+ar(460,215,520,259,false);
+g+=`<text x="20" y="314" font-size="11" fill="var(--t2)">colunas → <tspan fill="var(--t1)">cabo flat 8 vias (tracejado, rola)</tspan> · bloco fixo → placa-a-placa · barra → conector · bateria → fios · metades separadas → Bluetooth (ZMK split)</text>`;
 $('#blk').innerHTML=g}
 
 /* ---------- 4. mola (corte lateral) ---------- */
