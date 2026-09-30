@@ -32,9 +32,6 @@ struct MenuBarEditorScreen: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            WidgetLibrary(tab: tab, dragging: $dragging, removeDragged: removeDragged)
-                .frame(width: 340)
-            Divider()
             ScrollView {
                 preview
                     .padding(24)
@@ -42,23 +39,18 @@ struct MenuBarEditorScreen: View {
             }
             .background(Color(nsColor: .underPageBackgroundColor))
             Divider()
+            // Coluna da direita: abas, ajustes do widget selecionado e a biblioteca.
             VStack(spacing: 0) {
                 TabsPanel(editingTab: $editingTab)
-                    .frame(height: 300)
+                    .frame(height: 250)
                 Divider()
                 if let slot = selectedSlot {
                     WidgetInspector(slot: slot, deselect: { selected = nil })
-                } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Ajustes do widget").font(.headline)
-                        Text("Clique num widget da prévia para mudar o tamanho, o título ou a aba.")
-                            .font(.callout).foregroundStyle(.secondary)
-                    }
-                    .padding(14)
+                    Divider()
                 }
-                Spacer(minLength: 0)
+                WidgetLibrary(tab: tab, dragging: $dragging, removeDragged: removeDragged)
             }
-            .frame(width: 270)
+            .frame(width: 340)
         }
         .navigationTitle("Barra de menus")
         .onAppear { if editingTab == nil { editingTab = store.menuBar.tabs.first?.id } }
