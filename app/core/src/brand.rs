@@ -6,9 +6,16 @@
 use crate::layout::{Half, MAX_STAGGER_PERCENT, yggi_layout};
 use crate::model::KeyboardState;
 
-/// Caixa da marca.
-pub const MARK_WIDTH: f32 = 80.0;
-pub const MARK_HEIGHT: f32 = 98.0;
+// Marca isométrica: três cápsulas iguais a 120° (a haste em pé, os braços a 30° da horizontal,
+// como os eixos de um desenho isométrico), todas à mesma distância do centro.
+const MARK_BAR_LENGTH: f32 = 44.0;
+const MARK_BAR_WIDTH: f32 = 20.0;
+/// Do centro da marca até o centro da tampa de dentro de cada cápsula.
+const MARK_INNER: f32 = 18.0;
+
+/// Caixa da marca (bate com `docs/brand/yggi-marca.svg`).
+pub const MARK_WIDTH: f32 = 92.75;
+pub const MARK_HEIGHT: f32 = 83.0;
 
 /// Uma cápsula de um desenho.
 #[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
@@ -31,16 +38,26 @@ pub struct MarkDrawing {
     pub dimmed: bool,
 }
 
-/// A marca do Yggi: dois braços e a haste.
+/// A marca do Yggi: três barrinhas iguais em Y.
 #[uniffi::export]
 pub fn yggi_mark() -> MarkDrawing {
-    let arm = |cx: f32, angle: f32| MarkCapsule { cx, cy: 18.5, length: 40.8, width: 20.0, angle };
-    MarkDrawing {
-        width: MARK_WIDTH,
-        height: MARK_HEIGHT,
-        capsules: vec![arm(16.0, 55.0), arm(64.0, -55.0), MarkCapsule { cx: 40.0, cy: 69.0, length: 58.0, width: 18.0, angle: 90.0 }],
-        dimmed: false,
-    }
+    let r = MARK_INNER + (MARK_BAR_LENGTH - MARK_BAR_WIDTH) / 2.0;
+    // Centro da marca dentro da caixa: metade da largura; na altura, o topo dos braços em 0.
+    let (ox, oy) = (MARK_WIDTH / 2.0, MARK_HEIGHT - r - MARK_BAR_LENGTH / 2.0);
+    let capsules = [90.0f32, 210.0, 330.0]
+        .into_iter()
+        .map(|deg| {
+            let (sin, cos) = deg.to_radians().sin_cos();
+            MarkCapsule {
+                cx: ox + r * cos,
+                cy: oy + r * sin,
+                length: MARK_BAR_LENGTH,
+                width: MARK_BAR_WIDTH,
+                angle: deg % 180.0,
+            }
+        })
+        .collect();
+    MarkDrawing { width: MARK_WIDTH, height: MARK_HEIGHT, capsules, dimmed: false }
 }
 
 // Teclado em miniatura: uma barrinha por coluna de 1u das que andam (mindinho a indicador),
@@ -183,9 +200,16 @@ mod tests {
     }
 
     #[test]
-    fn marca_tem_tres_capsulas() {
+    fn marca_e_isometrica_e_cabe_na_caixa() {
         let d = yggi_mark();
         assert_eq!(d.capsules.len(), 3);
-        assert!(!d.dimmed);
+        assert!(d.capsules.iter().all(|c| c.length == MARK_BAR_LENGTH && c.width == MARK_BAR_WIDTH), "barrinhas iguais");
+        // Mesma distância entre as três (120°).
+        let dist = |a: &MarkCapsule, b: &MarkCapsule| ((a.cx - b.cx).powi(2) + (a.cy - b.cy).powi(2)).sqrt();
+        let (a, b, c) = (&d.capsules[0], &d.capsules[1], &d.capsules[2]);
+        assert!((dist(a, b) - dist(b, c)).abs() < 1e-3 && (dist(b, c) - dist(a, c)).abs() < 1e-3);
+        // Bate com o SVG: haste em (46,37; 61) e braços em y 16.
+        assert!((a.cx - 46.375).abs() < 0.02 && (a.cy - 61.0).abs() < 0.02, "{a:?}");
+        assert!((b.cy - 16.0).abs() < 0.02 && (c.cy - 16.0).abs() < 0.02);
     }
 }

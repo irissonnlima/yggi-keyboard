@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 98" width="80" height="98">
-<title>Yggi (desconectado)</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 92.75 83" width="92.75" height="83">
+<title>Yggi (contorno)</title>
 <g fill="none" stroke="#000" stroke-width="6">
-  <rect x="-17.4" y="-7" width="34.8" height="14" rx="7" transform="translate(16 18.5) rotate(55)"/>
-  <rect x="-17.4" y="-7" width="34.8" height="14" rx="7" transform="translate(64 18.5) rotate(-55)"/>
-  <rect x="34" y="43" width="12" height="52" rx="6"/>
+  <rect x="-19" y="-7" width="38" height="14" rx="7" transform="translate(46.37 61) rotate(90)"/>
+  <rect x="-19" y="-7" width="38" height="14" rx="7" transform="translate(20.39 16) rotate(30)"/>
+  <rect x="-19" y="-7" width="38" height="14" rx="7" transform="translate(72.35 16) rotate(150)"/>
 </g>
 </svg>

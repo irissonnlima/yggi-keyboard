@@ -26,7 +26,7 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 
 ## Marca
 
-Três cápsulas em Y: os dois braços são as metades do teclado e a haste é o tronco que liga tudo, como a Yggdrasil. Os arquivos estão em [`docs/brand/`](docs/brand/): [marca](docs/brand/yggi-marca.svg), [marca branca](docs/brand/yggi-marca-branca.svg), [assinatura](docs/brand/yggi-assinatura.svg) e [ícone do app](docs/brand/yggi-icone.svg).
+Três barrinhas iguais em Y, na simetria isométrica (120° entre elas): os dois braços são as metades do teclado e a haste é o tronco que liga tudo, como a Yggdrasil. Os arquivos estão em [`docs/brand/`](docs/brand/): [marca](docs/brand/yggi-marca.svg), [marca branca](docs/brand/yggi-marca-branca.svg), [assinatura](docs/brand/yggi-assinatura.svg) e [ícone do app](docs/brand/yggi-icone.svg).
 
 Na barra de menus do Mac, o ícone é o próprio teclado em miniatura, visto de cima: as colunas sobem conforme o stagger abre (de 0 a 100%), as metades se afastam quando estão separadas, e o ícone fica apagado quando o teclado está desconectado. Clicar nele abre o balão com os widgets.
 

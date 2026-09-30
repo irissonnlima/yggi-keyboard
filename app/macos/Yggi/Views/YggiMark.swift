@@ -29,8 +29,9 @@ struct MarkShape: Shape {
 /// A marca do Yggi.
 struct YggiMark: View {
     var body: some View {
-        MarkShape(drawing: yggiMark())
-            .aspectRatio(80.0 / 98.0, contentMode: .fit)
+        let drawing = yggiMark()
+        MarkShape(drawing: drawing)
+            .aspectRatio(CGFloat(drawing.width / drawing.height), contentMode: .fit)
             .accessibilityHidden(true)
     }
 }
