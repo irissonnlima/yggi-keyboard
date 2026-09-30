@@ -1,0 +1,27 @@
+[package]
+name = "yggi-core"
+version = "0.1.0"
+edition = "2024"
+description = "Núcleo do app Yggi: modelo do teclado, simulador e protocolos. Independente de plataforma."
+license = "MIT"
+publish = false
+
+[lib]
+name = "yggi_core"
+# lib: testes e uso em Rust · staticlib: app macOS · cdylib: gerar as pontes (UniFFI)
+crate-type = ["lib", "staticlib", "cdylib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["bindgen"]
+
+[features]
+bindgen = ["uniffi/cli"]
+
+[dependencies]
+thiserror = "2"
+uniffi = "0.32"
+
+[profile.release]
+lto = true
