@@ -45,13 +45,6 @@ struct MenuBarView: View {
             if let error = store.lastError {
                 Label(error, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.red)
             }
-
-            Divider()
-            VStack(alignment: .leading, spacing: 2) {
-                MenuRow(title: "Abrir Yggi…") { AppWindows.main() }
-                MenuRow(title: "Ajustes…") { AppWindows.settings() }
-                MenuRow(title: "Sair") { NSApp.terminate(nil) }
-            }
         }
         .padding(12)
         .frame(width: GridMetrics.popover.width + 24)
@@ -90,24 +83,5 @@ struct TabChips: View {
         }
         .padding(2)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.07)))
-    }
-}
-
-private struct MenuRow: View {
-    let title: String
-    let action: () -> Void
-    @State private var hover = false
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 8)
-                .frame(height: 26)
-                .background(RoundedRectangle(cornerRadius: 6).fill(hover ? Color.primary.opacity(0.08) : .clear))
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { hover = $0 }
     }
 }

@@ -123,7 +123,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     // MARK: balão
 
+    /// Clique abre o balão; clique direito (ou com control) mostra o menu com janela, ajustes e sair.
     @objc private func togglePopover(_ sender: NSStatusBarButton) {
+        if let event = NSApp.currentEvent, event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
+            closePopover()
+            let menu = NSMenu()
+            menu.addItem(withTitle: "Abrir Yggi…", action: #selector(menuOpenMain), keyEquivalent: "").target = self
+            menu.addItem(withTitle: "Ajustes…", action: #selector(menuOpenSettings), keyEquivalent: ",").target = self
+            menu.addItem(.separator())
+            menu.addItem(withTitle: "Sair do Yggi", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
+            return
+        }
         if popover.isShown {
             popover.performClose(sender)
         } else {
@@ -132,6 +143,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             sender.highlight(true)
         }
     }
+
+    @objc private func menuOpenMain() { showMain() }
+    @objc private func menuOpenSettings() { showSettings() }
 
     func popoverDidClose(_ notification: Notification) {
         statusItem?.button?.highlight(false)

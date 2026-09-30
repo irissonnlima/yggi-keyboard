@@ -87,11 +87,6 @@ struct MenuBarEditorScreen: View {
                 .onDrop(of: [.text], delegate: GridDrop(
                     tab: tab, metrics: metrics, dragging: $dragging, dropIndex: $dropIndex,
                     move: moveWidget, add: addWidget))
-
-                Divider()
-                ForEach(["Abrir Yggi…", "Ajustes…", "Sair"], id: \.self) { row in
-                    Text(row).padding(.horizontal, 8).frame(height: 22)
-                }
             }
             .padding(12)
             .frame(width: metrics.width + 24)
