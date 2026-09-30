@@ -9,15 +9,17 @@
 //    batente (50/100/150%). Para voltar, empurra-se as colunas até ouvir o clique.
 //  - INCLINAÇÃO: bateria, microcontrolador e mola ficam numa cunha na parte de trás (5°).
 //  - MÓDULOS: faces de encaixe retas (ímãs + pogo), bordas externas arredondadas.
-//  - CIRCUITOS: o chassi é a PLACA-MÃE (FR4). Cada coluna móvel tem a sua placa e se liga à
-//    placa-mãe por um cabo flat de 8 vias em laço rolante, dentro da própria coluna. MCU, USB-C e
-//    carregador ficam no lado de baixo da placa-mãe, na faixa fixa da borda (x < 12 mm).
+//  - CIRCUITOS EM CADEIA (5 placas por metade): placa L (bloco fixo + barra do polegar, com MCU,
+//    carregador e USB-C) -> coluna 1u -> coluna 1u -> coluna 1u -> coluna dupla. Cada placa se liga
+//    à vizinha por um jumper flexível de 10 vias que atravessa as paredes na faixa livre entre a
+//    fileira F e a dos números. Barramento rotativo: as 3 placas de 1u são idênticas.
+//    Placas geradas com Ergogen em hardware/pcb/.
 //
 // Eixos (mm): X = entre colunas, Y = ao longo da coluna (+Y = longe do usuário), Z = para cima.
 // Tudo é modelado num "quadro plano"; a inclinação é aplicada só na montagem.
 
 /* [Visualização] */
-part = "assembly"; // [assembly, left, right, front, tray, cam_plate, chassis, mainboard, gaveta, fixed_block, thumb_bar, wedge_left, bay, check]
+part = "assembly"; // [assembly, left, right, front, tray, cam_plate, chassis, lboard, gaveta, fixed_block, thumb_bar, wedge_left, bay, check]
 stagger_pct = 100;  // [0:1:150]
 stop_pct = 100;     // [50, 100, 150] batente escolhido
 explode = 0;        // [0:1:25]
@@ -25,7 +27,7 @@ joined = true;      // metades encostadas (true) ou separadas
 show_caps = true;
 show_ereader = true;
 show_internals = false; // mostra a bateria na cunha (use com explode)
-check = "gav_chassis"; // [gav_chassis, gav_bar, gav_fixed, gav_gav, cam_tray, cam_chassis, heads_tray, pins_cam, pawl_cam, stop_cam, strip_tray, plunger_cam, gav_board, bottom_parts, fixed_board, bar_board]
+check = "gav_chassis"; // [gav_chassis, gav_bar, gav_fixed, gav_gav, cam_tray, cam_chassis, heads_tray, pins_cam, pawl_cam, stop_cam, strip_tray, plunger_cam, lboard_parts, lboard_gav]
 
 /* [Grade] */
 U = 18;
@@ -50,7 +52,7 @@ head_t = 0.6;  head_d = 5;
 cam_t = 1.2;                         // FR4 1,2 mm ou aço
 chassis_t = 1.6;                     // FR4 1,6 mm
 sled_floor = 1.0; sled_wall = 1.0;
-sock_h = 1.8;                        // soquete hot-swap Choc
+sock_h = 1.8;                        // vão sob a placa: pinos do Choc (THT/Mill-Max), diodos SMD, jumper
 pcb_t = 1.2;
 skirt_t = 0.8; skirt_inset = 1.8;
 pin_d = 3;
@@ -58,18 +60,19 @@ corner_r = 6;
 
 /* [Bateria e eletrônica] */
 BATT = [76, 46, 4.0];                // ~1800 mAh (LiPo 4 mm); ajuste conforme o fornecedor
-// Eletrônica na placa-mãe (quadro plano da metade esquerda)
-MCU = [1, 62, 10, 15.5, 2.2];        // módulo nRF52840 (ex.: Raytac MDBT50Q), lado de baixo
-CHG = [2, 81, 8, 6, 1.2];            // carregador + regulador, lado de baixo
-BCON = [3, 89, 6, 4, 2.0];           // conector da bateria, lado de baixo
-USBC = [2.5, 99.5, 9, 7.2, 3.2];     // USB-C mid-mount na borda de trás
-B2B = [17, 86, 10, 2.5];             // conector placa-a-placa do bloco fixo (na faixa entre F e números)
-BARH = [14, 7, 10, 2];               // conector da barra do polegar
-LANE = [47, 56, 74, 115];            // corredor do cabo flat de cada gaveta (x)
-FFC_Y = 33.5;                        // conectores do cabo flat (placa-mãe e coluna)
-ffc_con = [6, 2.5, 1.0];
+// Eletrônica na placa L (quadro plano da metade esquerda), pendurada embaixo da placa
+MCU  = [1.5, 42, 10, 15.5, 2.2];       // módulo nRF52840 (ex.: Raytac MDBT50Q), ao lado das teclas de 2u
+CHG  = [1.5, 60, 8, 6, 1.2];           // carregador + regulador
+BCON = [1.5, 68, 6, 4, 1.8];           // conector da bateria (fios descem para a cunha)
+USBC = [1.5, -0.6, 9, 7.6, 3.2];     // USB-C mid-mount na frente da barra, canto externo
+BATT_HOLE = [4, 70];                 // passagem dos fios da bateria
+POGO_Y = 26;                         // 4 pogo na face da baia (bloco fixo), longe do MCU
+// Cadeia de placas: pads de 10 vias na faixa entre F e números (y = 87,25)
+BAND_Y = (ROW_Y[1] + P + ROW_Y[0]) / 2;
+JPAD = [5.1, 2.5];                   // tamanho do bloco de pads 2 × 5 (passo 1,27)
+LINK_SLOT = [78, 97];                // rasgo nas paredes para o jumper atravessar
 led_d = 1.8;
-latch = [30, 87.25];                 // trava + botão (no bloco fixo, entre F e números)
+latch = [22, 87.25];                 // trava + botão (no bloco fixo, entre F e números)
 
 $fn = 32;
 
@@ -148,36 +151,62 @@ module gaveta(g) {
                     cube([U - 2 * skirt_inset, skirt_len + sled_wall, skirt_t]);
             for (py = g[4]) translate([g[3], py, -pin_len]) cylinder(d = pin_d, h = pin_len + 0.01);
         }
-        translate([lane_of(g) - 1, ROW_Y[4] + 1, -1]) cube([ffc_con[0] + 1, 61 - ROW_Y[4] - 1, sled_floor + 2]); // janela do cabo flat
+        link_slots(x0, n, true, !is_last(g));
     }
     pcb(x0, n);
-    color("orange") translate([lane_of(g) - 0.5, FFC_Y, sled_floor + sock_h - ffc_con[2]]) cube(ffc_con);         // conector da coluna
+    link_pads(x0 + 2, true);                                  // entrada (J_IN)
+    if (!is_last(g)) link_pads(x0 + n * U - 7.1, true);       // saída (J_OUT)
 }
-function lane_of(g) = LANE[search([g[0]], [for (h = GAV) h[0]])[0]];
+function is_last(g) = g[0] == GAV[len(GAV) - 1][0];
+// rasgos nas paredes laterais para o jumper da cadeia
+module link_slots(x0, n, left, right) {
+    for (side = [left ? 0 : -1, right ? 1 : -1]) if (side >= 0)
+        translate([side == 0 ? x0 - 1 : x0 + n * U - side_gap - sled_wall - 0.5, LINK_SLOT[0], sled_floor])
+            cube([side_gap + sled_wall + 1.5, LINK_SLOT[1] - LINK_SLOT[0], sock_h + 1]);
+}
+// bloco de pads (2 × 5) embaixo da placa, local = z da gaveta
+module link_pads(x, local = true) {
+    color("gold") translate([x, BAND_Y - JPAD[1] / 2, sled_floor + sock_h - 0.1]) cube([JPAD[0], JPAD[1], 0.1]);
+}
+// jumper flexível entre duas placas vizinhas (visual), em S na horizontal, de pé (1,6 mm de altura)
+module link_jumper(xa, sa, xb, sb) {
+    ya = BAND_Y + sa; yb = BAND_Y + sb; n = 16;
+    pts = [for (i = [0:n]) let(k = i / n, x = xa + (xb - xa) * k, y = ya + (yb - ya) * (3 * k * k - 2 * k * k * k)) [x, y]];
+    color("gold") for (i = [0:n - 1]) hull() {
+        translate([pts[i][0], pts[i][1], Z_G + sled_floor + 0.1]) cylinder(d = 0.3, h = 1.6, $fn = 6);
+        translate([pts[i + 1][0], pts[i + 1][1], Z_G + sled_floor + 0.1]) cylinder(d = 0.3, h = 1.6, $fn = 6);
+    }
+}
+function gstag(i) = GAV[i][2] * u;
 module gaveta_heads(g) { for (py = g[4]) translate([g[3], py, -pin_len - head_t]) cylinder(d = head_d, h = head_t); }
 
-module fixed_block(round_left, leds) {
+module fixed_block(round_left, leds, pogo = false) {
     clip(round_left) difference() {
-        union() { color("slategray") sled(0, 2); pcb(0, 2); }
+        color("slategray") sled(0, 2);
         translate([latch[0], latch[1], -1]) cylinder(d = 2.8, h = 20);           // botão da trava
-        translate([B2B[0] - 0.5, B2B[1] - 0.5, -1]) cube([B2B[2] + 1, B2B[3] + 1, sled_floor + 1.5]);
+        for (c = [MCU, BCON]) translate([c[0] - 0.4, c[1] - 0.4, -1]) cube([c[2] + 0.8, c[3] + 0.8, sled_floor + 1.01]);
+        translate([BATT_HOLE[0], BATT_HOLE[1], -1]) cylinder(d = 3, h = 5);
+        link_slots(0, 2, false, true);
+        if (pogo) for (i = [0:3]) translate([-0.01, POGO_Y + i * 2.5, sled_floor + sock_h / 2]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 2);
     }
+    link_pads(28.5, true);                                    // saída da placa L (J_OUT)
     if (leds) for (i = [-1:1]) color("lime") translate([U / 2 + i * 5 - 0.8, latch[1] - 0.5, gav_h]) cube([1.6, 1, 0.6]);
 }
 
 // ---------- Barra do polegar (fixa, apoiada em pernas entre as saias) ----------
-module thumb_bar(round_left) {
+module thumb_bar(round_left, pogo = true) {
     depth = ROW_Y[4] - side_gap;
     clip(round_left) {
         translate([0, 0, bar_z]) difference() {
             cube([KB_W, depth, TOP - bar_z]);
             translate([1, 1, -1]) cube([KB_W - 2, depth - 2, TOP - bar_z + 2]);
+            translate([USBC[0] - 0.3, -1, -1]) cube([USBC[2] + 0.6, 3, TOP - bar_z + 2]);   // boca do USB-C
+            if (pogo) for (i = [0:3]) translate([KB_W - 2, 6 + i * 2.5, 1.5]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 3);
         }
-        color("darkgreen") translate([1, 1, TOP - pcb_t]) cube([KB_W - 2, depth - 2, pcb_t]);
         // pernas: bloco sob as colunas fixas + uma perna em cada divisa entre saias
         translate([0, 0.5, Z_G]) difference() {
             cube([2 * U + skirt_inset - 0.6, depth - 1, bar_z - Z_G + 0.01]);
-            translate([BARH[0] - 0.5, BARH[1] - 1, -1]) cube([BARH[2] + 1, BARH[3] + 1, 5]);
+            translate([USBC[0] - 0.5, -1, -1]) cube([USBC[2] + 1, USBC[3] + 1.5, 5]);   // espaço do USB-C
         }
         for (g = GAV, c = [1:g[1]]) {
             x = g[0] + c * U;
@@ -195,34 +224,27 @@ module chassis(round_left) {
             translate([g[3], py + g[2], -1]) cylinder(d = slot_w, h = chassis_t + 2);
         }
         translate([latch[0], latch[1], -1]) cylinder(d = 2.8, h = chassis_t + 2);
-        translate([USBC[0], USBC[1], -1]) cube([USBC[2], KB_H, chassis_t + 2]);          // recorte do USB-C
+        translate([BATT_HOLE[0], BATT_HOLE[1], -1]) cylinder(d = 3, h = chassis_t + 2);     // fios da bateria
     }
 }
 
-// Componentes da placa-mãe (no quadro plano, z absoluto)
-module board_top_parts(bar = true) {
-    color("orange") for (x = LANE) translate([x - 0.5, FFC_Y, Z_G]) cube(ffc_con);             // conectores dos cabos flat
-    color("goldenrod") translate([B2B[0], B2B[1], Z_G]) cube([B2B[2], B2B[3], TOP - pcb_t - Z_G - 0.01]);
-    if (bar) color("goldenrod") translate([BARH[0], BARH[1], Z_G]) cube([BARH[2], BARH[3], TOP - pcb_t - Z_G - 0.01]);
-}
-module board_bottom_parts() {
-    color("royalblue") translate([MCU[0], MCU[1], Z_CH - MCU[4]]) cube([MCU[2], MCU[3], MCU[4]]);
-    color("royalblue") translate([CHG[0], CHG[1], Z_CH - CHG[4]]) cube([CHG[2], CHG[3], CHG[4]]);
-    color("black") translate([BCON[0], BCON[1], Z_CH - BCON[4]]) cube([BCON[2], BCON[3], BCON[4]]);
-    color("silver") translate([USBC[0], USBC[1], Z_CH - 2.4]) cube([USBC[2], USBC[3], USBC[4]]);
-}
-// Cabo flat em laço rolante (visual; muda de forma com o stagger)
-module ffc_loop(g, s) {
-    x = lane_of(g); zb = Z_G + 0.05; zt = Z_G + sled_floor + sock_h - 0.15; rr = (zt - zb) / 2;
-    ya = 51 + s / 2;
-    color("gold") {
-        translate([x, FFC_Y + ffc_con[1], zb]) cube([5, ya - FFC_Y - ffc_con[1], 0.1]);
-        translate([x, FFC_Y + ffc_con[1] + s, zt]) cube([5, ya - FFC_Y - ffc_con[1] - s, 0.1]);
-        translate([x, ya, zb + rr + 0.05]) rotate([0, 90, 0]) difference() {
-            cylinder(r = rr + 0.05, h = 5); translate([0, 0, -1]) cylinder(r = rr - 0.05, h = 7);
-            translate([-5, -10, -1]) cube([10, 10, 7]);
+// Placa L: bloco fixo + barra do polegar numa peça só (mesmo plano), com a eletrônica embaixo
+module lboard_pcb(round_left) {
+    clip(round_left) color("darkgreen") translate([0, 0, TOP - pcb_t]) linear_extrude(pcb_t) difference() {
+        union() {
+            translate([side_gap, ROW_Y[4]]) square([2 * U - 2 * side_gap, KB_H - ROW_Y[4]]);
+            translate([1, 1]) square([KB_W - 2, ROW_Y[4] - side_gap - 2]);
+            translate([1, 15.6]) square([2 * U - side_gap - 1, 1.5]);
         }
+        translate([USBC[0], -1]) square([USBC[2], USBC[3] + 1]);   // recorte do USB-C mid-mount
+        translate([latch[0], latch[1]]) circle(d = 2.8);
     }
+}
+module lboard_parts() {
+    zb = TOP - pcb_t;
+    color("royalblue") for (c = [MCU, CHG]) translate([c[0], c[1], zb - c[4]]) cube([c[2], c[3], c[4]]);
+    color("black") translate([BCON[0], BCON[1], zb - BCON[4]]) cube([BCON[2], BCON[3], BCON[4]]);
+    color("silver") translate([USBC[0], USBC[1], zb - 2.6]) cube([USBC[2], USBC[3], USBC[4]]);
 }
 
 // ---------- Placa-came (chapa) ----------
@@ -273,26 +295,23 @@ module tray(round_left, faces, released = false) {
         translate([latch[0] - 2.5, latch[1] - 2, -1]) cube([46 - latch[0] + 2.5, 4, tray_floor + 2]); // janela da trava
         for (p = [50, 100]) translate([stop_x(p), 45, -1]) cylinder(d = 3.2, h = tray_floor + 2);
         connectors(faces, tray_h);
-        for (c = [MCU, CHG, BCON]) translate([c[0] - 0.4, c[1] - 0.4, -1]) cube([c[2] + 0.8, c[3] + 0.8, tray_h + 2]);
-        translate([USBC[0] - 0.4, USBC[1] - 0.4, Z_CH - 2.6]) cube([USBC[2] + 0.8, KB_H, 5]);   // saída do USB-C
+        translate([BATT_HOLE[0], BATT_HOLE[1], -1]) cylinder(d = 3, h = tray_h + 2);           // fios da bateria
     }
     pawl(released);
 }
 
-// ímãs 4×2 mm e 4 contatos pogo nas faces de encaixe (x = 0 e/ou x = KB_W)
+// ímãs 4×2 mm nas faces de encaixe (os pogo ficam na placa L: bloco fixo e ponta da barra)
 module connectors(faces, h) {
     for (f = faces) {
         x = f == "L" ? -0.01 : KB_W - 2.2;
         for (y = [20, 88]) translate([x, y, h / 2 + 0.3]) rotate([0, 90, 0]) cylinder(d = 4.1, h = 2.21);
-        for (i = [0:3]) translate([f == "L" ? -0.01 : KB_W - 3, 45 + i * 2.5, 1.8]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 3.01);
     }
 }
 
 // ---------- Cunha traseira (bateria, mola, trava) — no quadro do mundo ----------
 module wedge_pockets() {                              // no quadro plano, abaixo da bandeja (bateria, mola, trava)
     translate([48, 54, -BATT[2] - 0.2]) cube([BATT[0], BATT[1], BATT[2] + 0.21]);
-    translate([0.4, 60, -1.2]) cube([12, 48, 1.21]);                                 // folga dos componentes de baixo
-    translate([BCON[0] + 3, BCON[1] + 0.5, -1.6]) cube([48 - BCON[0] - 3, 3, 1.61]);  // fios da bateria
+    translate([BATT_HOLE[0] - 1.5, BATT_HOLE[1] - 1.5, -1.6]) cube([48 - BATT_HOLE[0] + 1.5, 3, 1.61]);  // fios da bateria
     translate([latch[0] - 2.5, latch[1] - 2, -2.2]) cube([46 - latch[0] + 2.5, 4, 2.21]);  // curso da lingueta
     translate([drum[0] - 5, ch_y0, -drum[2] - 0.5]) cube([10, ch_y1 - ch_y0, drum[2] + 0.51]);
     for (p = [50, 100]) translate([stop_x(p), 45, -20]) cylinder(d = 3.2, h = 20.1);
@@ -324,6 +343,7 @@ module bay_body() {
         for (i = [-2:2]) translate([BAY_W - 8, BAY_H / 2 + i * 2.54, top - pd - 2]) cylinder(d = 1.5, h = 3);
         translate([BAY_W / 2, -1, top]) rotate([-90, 0, 0]) cylinder(r = 8, h = 8);
         translate([BAY_W - KB_W, -Y_PIV, 0]) connectors(["R"], tray_h);
+        for (i = [0:3]) translate([BAY_W - 2, POGO_Y - Y_PIV + i * 2.5, Z_G + sled_floor + sock_h / 2]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 3);
     }
 }
 module bay_wedge() {
@@ -356,18 +376,19 @@ module mech_flat(round_left, faces, leds, e) {
     color("orange") translate([t, 0, Z_CAM + e]) cam_plate();
     translate([0, 0, e]) spring_ribbon();
     stop_pin(stop_pct);
-    translate([0, 0, 2 * e]) {
-        color("seagreen", 0.95) translate([0, 0, Z_CH]) chassis(round_left);
-        board_top_parts();
-        board_bottom_parts();
-    }
-    for (g = GAV) translate([0, 0, 2.5 * e]) ffc_loop(g, g[2] * u);
+    color("silver", 0.95) translate([0, 0, Z_CH + 2 * e]) chassis(round_left);
     for (g = GAV) translate([0, g[2] * u, Z_G + 3 * e]) {
         gaveta(g);
         color("dimgray") gaveta_heads(g);
         if (show_caps) caps(g[0], g[1]);
     }
-    translate([0, 0, Z_G + 3 * e]) { fixed_block(round_left, leds); if (show_caps) caps(0, 2); }
+    translate([0, 0, Z_G + 3 * e]) { fixed_block(round_left, leds, round_left == false); if (show_caps) caps(0, 2); }
+    translate([0, 0, 3.5 * e]) { lboard_pcb(round_left); lboard_parts(); }
+    // jumpers da cadeia: placa L -> coluna -> coluna -> coluna -> coluna dupla
+    translate([0, 0, 3 * e]) {
+        link_jumper(31.05, 0, GAV[0][0] + 4.55, gstag(0));
+        for (i = [0:len(GAV) - 2]) link_jumper(GAV[i][0] + GAV[i][1] * U - 4.55, gstag(i), GAV[i + 1][0] + 4.55, gstag(i + 1));
+    }
     translate([0, 0, 3 * e]) plunger(false);
 }
 
@@ -435,14 +456,12 @@ module check_pair() {
     if (check == "pawl_cam") intersection() { pawl(released); translate([t, 0, Z_CAM]) cam_plate(); }
     if (check == "stop_cam") intersection() { stop_pin(stop_pct); translate([t, 0, Z_CAM]) cam_plate(); }
     if (check == "strip_tray") intersection() { spring_ribbon(); difference() { tray(false, LEFT_FACES); pawl(false); } }
-    if (check == "gav_board") intersection() {
-        for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g);
-        board_top_parts(); }
-    if (check == "bottom_parts") intersection() {
-        board_bottom_parts();
-        union() { difference() { tray(false, LEFT_FACES); pawl(false); } translate([t, 0, Z_CAM]) cam_plate(); spring_ribbon(); } }
-    if (check == "fixed_board") intersection() { translate([0, 0, Z_G]) fixed_block(false, true); board_top_parts(false); }
-    if (check == "bar_board") intersection() { thumb_bar(false); board_top_parts(); }
+    if (check == "lboard_parts") intersection() {
+        lboard_parts();
+        union() { translate([0, 0, Z_G]) fixed_block(false, true, true); thumb_bar(false); translate([0, 0, Z_CH]) chassis(false); plunger(false); } }
+    if (check == "lboard_gav") intersection() {
+        union() { lboard_pcb(false); lboard_parts(); }
+        for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g); }
     if (check == "plunger_cam") intersection() { plunger(false); union() { translate([t, 0, Z_CAM]) cam_plate(); for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g); } }
 }
 
@@ -453,7 +472,7 @@ else if (part == "front") keyboard();
 else if (part == "tray") tray(false, LEFT_FACES);
 else if (part == "cam_plate") cam_plate();
 else if (part == "chassis") chassis(false);
-else if (part == "mainboard") { color("seagreen") translate([0, 0, Z_CH]) chassis(false); board_top_parts(); board_bottom_parts(); }
+else if (part == "lboard") { lboard_pcb(false); lboard_parts(); }
 else if (part == "gaveta") gaveta(GAV[2]);
 else if (part == "fixed_block") fixed_block(false, true);
 else if (part == "thumb_bar") thumb_bar(false);

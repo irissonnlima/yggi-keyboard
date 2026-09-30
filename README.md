@@ -8,7 +8,7 @@ Em ortholinear, as duas metades formam um retângulo perfeito, como um teclado c
 
 O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitologia nórdica. O objetivo de longo prazo é que o Yggi seja o centro que liga os seus computadores e periféricos.
 
-**[▶ Abrir a simulação interativa](https://htmlpreview.github.io/?https://github.com/irissonnlima/yggi-keyboard/blob/main/docs/simulacao.html)** ([arquivo](docs/simulacao.html)): vista de cima com antes e depois, corte lateral, **raio-x dos circuitos** (placa-mãe, placas das colunas, cabos flat, MCU, bateria, USB-C, ímãs e pogo), diagrama das ligações e o ciclo da mola em corte.
+**[▶ Abrir a simulação interativa](https://htmlpreview.github.io/?https://github.com/irissonnlima/yggi-keyboard/blob/main/docs/simulacao.html)** ([arquivo](docs/simulacao.html)): vista de cima com antes e depois, corte lateral, **raio-x dos circuitos** (as 5 placas em cadeia, jumpers, MCU, bateria, USB-C, ímãs e pogo), diagrama das ligações e o ciclo da mola em corte.
 
 ---
 
@@ -30,13 +30,13 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 
 ![lateral](docs/media/v3-lateral.png)
 
-**Metade esquerda explodida** (cunha com bateria, bandeja, placa-came, placa-mãe com os cabos flat, colunas, bloco fixo e barra do polegar):
+**Metade esquerda explodida** (cunha com bateria, bandeja, placa-came, chassi, colunas com as suas placas, bloco fixo, placa L e barra do polegar):
 
 ![explodida](docs/media/v3-explodida.png)
 
-**Placa-mãe** (o chassi): conectores dos cabos flat das colunas, conector do bloco fixo, conector da barra e os rasgos-guia. Por baixo, na borda, ficam o MCU, o carregador e o USB-C:
+**Placas de circuito** ([detalhes](hardware/pcb/README.md)): a placa L (bloco fixo + barra do polegar, com o MCU) e as placas das colunas, geradas com Ergogen para o KiCad:
 
-![placa-mãe](docs/media/v3-placa-mae.png)
+![placas](hardware/pcb/preview.svg)
 
 ---
 
@@ -60,8 +60,8 @@ Cada metade, de baixo para cima:
 1. **Cunha** (impressa): cria a inclinação de 5° e guarda a **bateria**, o tambor da **mola** e o curso da **trava**.
 2. **Bandeja**: bolsão da placa-came, canal da fita da mola e dos fios, lingueta da trava e furos do batente.
 3. **Placa-came** (chapa de 1,2 mm): tem 8 rasgos inclinados, 2 por coluna móvel. Ao deslizar 24 mm em X, empurra cada coluna em Y na proporção do rasgo. A posição dos pinos foi escolhida por busca para os rasgos nunca se cruzarem (folga mínima de 9 mm).
-4. **Chassi = placa-mãe** (FR4 de 1,6 mm, fixa): tem os rasgos-guia em Y e é também a placa de circuito principal, com microcontrolador, carregador, USB-C e contatos pogo. Fica sempre escondida embaixo das colunas.
-5. **Gavetas**: cada coluna móvel é um trenó impresso com **a sua própria placa de circuito** em cima (switches Choc montados direto na placa, com soquetes hot-swap). Um **cabo flat em laço rolante**, dentro da coluna, liga essa placa à placa-mãe logo abaixo. Dois pinos-parafuso por gaveta fazem o papel de guia, came e trava contra levantar. A **saia** da frente sai de baixo da barra do polegar e tampa o vão quando a coluna sobe.
+4. **Chassi imutável** (chapa de 1,6 mm): rasgos-guia em Y. Fica sempre escondido embaixo das colunas.
+5. **Gavetas**: cada coluna móvel é um trenó impresso com **a sua própria placa de circuito** em cima (switches Choc montados direto na placa). As placas se ligam **em cadeia**, de uma coluna para a vizinha, por um jumper flexível que atravessa as paredes na faixa entre a fileira F e a dos números. Dois pinos-parafuso por gaveta fazem o papel de guia, came e trava contra levantar. A **saia** da frente sai de baixo da barra do polegar e tampa o vão quando a coluna sobe.
 6. **Bloco fixo** e **barra do polegar**: não se movem.
 
 **Mola e trava:**
@@ -78,13 +78,13 @@ Cada metade, de baixo para cima:
 
 | | |
 |---|---|
-| **Placas por metade** | **7**: a placa-mãe (o chassi), **uma por coluna móvel** (4, sendo 3 iguais de 1u e 1 de 2u), a do bloco fixo e a da barra do polegar. |
-| **Microcontrolador** | um **nRF52840** por metade (módulo de ~10 × 15,5 mm, ex.: Raytac MDBT50Q), **no lado de baixo da placa-mãe, na faixa fixa da borda** (x < 12 mm), junto com o carregador e o USB-C na borda de trás. Em cima da placa-mãe não cabe: ali ficam os soquetes das teclas do bloco fixo. |
+| **Placas por metade** | **5, em cadeia**: placa L (bloco fixo + barra do polegar) → coluna 1u → coluna 1u → coluna 1u → coluna 2u. As 3 de 1u são **idênticas**, graças a um barramento rotativo. |
+| **Microcontrolador** | um **nRF52840** por metade, **na placa L** (parte fixa), embaixo dela, ao lado das teclas de 2u. Junto ficam o carregador e o **USB-C, na frente da barra, no canto externo**. Na rev0 das placas, o MCU é externo (nice!nano ligado por fios a um cabeçalho de 18 pads). |
 | **Por que nRF52840** | é o chip mais bem suportado pelo ZMK. Tem 21 GPIO, o suficiente para a matriz 6 × 7 mais os 3 LEDs. |
 | **Firmware** | [ZMK](https://zmk.dev) (Zephyr, MIT): Bluetooth, split sem fio, 5 perfis de computador, bateria. Funções do Yggi (tecla de troca, LEDs, conversa com o e-reader) entram como **módulos ZMK** próprios. |
 | **Bateria** | LiPo de 4 mm na cunha, ~1800 mAh por metade (76 × 46 mm). A cunha comporta células maiores se a inclinação aumentar. |
-| **Ligação das colunas** | cada placa de coluna leva só as 5 linhas e 1 ou 2 colunas da matriz: **cabo flat de 8 vias em laço rolante** até a placa-mãe. Como o stagger muda poucas vezes por dia, o cabo dobra pouco. No protótipo impresso, fios de silicone com folga. |
-| **Partes fixas** | bloco fixo e barra do polegar se ligam à placa-mãe por conectores placa-a-placa, sem nenhum movimento. |
+| **Ligação das colunas** | **jumper de 10 vias** (5 linhas + 5 colunas) entre placas vizinhas. Colunas vizinhas andam no máximo 9 mm uma em relação à outra no perfil padrão; o projeto aceita até 15 mm. Protótipo: fios de silicone. Produto: jumper flexível (FPC). |
+| **Switches** | Choc V1 com **furos passantes** (soldados ou em soquetes Mill-Max). O soquete hot-swap Kailh não cabe numa coluna de 17,4 mm. |
 
 O **e-reader** (fase 2) tem cérebro próprio. A base sugerida é o firmware open source [CrossPoint](https://github.com/crosspoint-reader/crosspoint-reader) (ESP32). Encaixado, ele mostra o estado do teclado. Solto, é um leitor.
 
@@ -96,6 +96,10 @@ O **e-reader** (fase 2) tem cérebro próprio. A base sugerida é o firmware ope
 docs/
   simulacao.html          simulação interativa: vista de cima, corte, raio-x e mola
   media/                  GIF e imagens do README
+hardware/pcb/
+  ergogen/generate.py     gera as placas (Ergogen)
+  kicad/                  placas para o KiCad (placa L, coluna 1u, coluna 2u)
+  outlines/               contornos de corte (.dxf)
 hardware/stagger-mechanism/
   yggi_v3.scad            CAD atual (mecanismo fino, inclinado, com mola)
   yggi_v2.scad            versão anterior (histórico)
@@ -105,6 +109,7 @@ layout/
   yggi-v9-B-*.json        layout atual para o Keyboard Layout Editor
 tools/
   make_gif.py             junta os PNGs do OpenSCAD num GIF (sem dependências)
+  pcb_preview.py          prévia SVG das placas a partir dos arquivos do KiCad
 ```
 
 ## Como abrir e gerar
@@ -147,6 +152,7 @@ python3 tools/make_gif.py docs/media/yggi-stagger.gif /tmp/f0.png /tmp/f25.png /
 
 **Pendências conhecidas:**
 - Switch das setas de 0,5u (o Choc não cabe em meia altura).
+- Traçar as trilhas das placas no KiCad e colocar os LEDs; rev1 com MCU, carregador e USB-C na placa L.
 - Estabilizadores das teclas de 2u.
 - Escolher a mola de força constante e a bateria reais.
 - Testar folgas e a força da trava na prática.

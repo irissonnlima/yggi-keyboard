@@ -1,0 +1,292 @@
+meta:
+  engine: 4.1.0
+  name: yggi_coluna_1u
+  author: Yggi Keyboard
+  version: rev0
+units:
+  kx: 18
+  ky: 17
+points:
+  zones:
+    matrix:
+      key:
+        spread: kx
+        padding: ky
+      columns:
+        c1:
+          key:
+            column_net: C1
+      rows:
+        r4:
+          row_net: R4
+        r3:
+          row_net: R3
+        r2:
+          row_net: R2
+        r1:
+          row_net: R1
+          padding: ky + 4.5
+        r0:
+          row_net: R0
+outlines:
+  board:
+    - what: rectangle
+      where: matrix_c1_r4
+      adjust:
+        shift: [0, 36.25]
+      size: [17.4, 89.5]
+  keys:
+    - what: rectangle
+      where: true
+      size: [kx-0.5, ky-0.5]
+pcbs:
+  coluna_1u:
+    outlines:
+      main:
+        outline: board
+    footprints:
+      choc:
+        what: choc
+        where: true
+        params:
+          keycaps: true
+          reverse: false
+          hotswap: false
+          from: "{{column_net}}"
+          to: "{{colrow}}"
+      diode:
+        what: diode
+        where: true
+        params:
+          from: "{{colrow}}"
+          to: "{{row_net}}"
+        adjust:
+          shift: [0, -5.3]
+      jin_0:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-7.0, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R0
+      jin_1:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-5.73, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R1
+      jin_2:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-4.46, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R2
+      jin_3:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-3.19, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R3
+      jin_4:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-1.92, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R4
+      jin_5:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-7.0, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C1
+      jin_6:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-5.73, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C2
+      jin_7:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-4.46, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C3
+      jin_8:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-3.19, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C4
+      jin_9:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [-1.92, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C5
+      jout_0:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [1.9, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R0
+      jout_1:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [3.17, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R1
+      jout_2:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [4.44, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R2
+      jout_3:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [5.71, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R3
+      jout_4:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [6.98, 62.385]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: R4
+      jout_5:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [1.9, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C2
+      jout_6:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [3.17, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C3
+      jout_7:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [4.44, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C4
+      jout_8:
+        what: pad
+        where: matrix_c1_r4
+        adjust:
+          shift: [5.71, 61.115]
+        params:
+          front: false
+          back: true
+          width: 1
+          height: 0.9
+          text: ''
+          net: C5

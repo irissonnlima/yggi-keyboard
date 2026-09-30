@@ -58,7 +58,7 @@ footer{margin-top:48px;color:var(--t3);font-size:13px}
 </div>
 
 <h2>2 · Corte lateral: v2 × v3</h2>
-<p class="note">A v3 fica fina porque a placa de circuito de cada coluna é o próprio plate, e o chassi é a placa-mãe (FR4). O circuito fica embaixo e as colunas deslizam por cima; cada coluna se liga à placa-mãe por um cabo flat em laço que rola quando ela anda. A bateria vai numa cunha atrás e dá a inclinação.</p>
+<p class="note">A v3 fica fina porque a placa de circuito de cada coluna é o próprio plate, e placa-came e chassi são chapas finas. As placas se ligam em cadeia, de coluna em coluna, na faixa entre a fileira F e a dos números. A bateria vai numa cunha atrás e dá a inclinação.</p>
 <div class="card">
 <svg viewBox="0 0 680 200" width="100%" id="sec"></svg>
 <div class="ctrl"><span>Versão</span><button data-v="2">v2</button><button data-v="3" class="on">v3</button><span style="margin-left:12px">Stagger</span><input type="range" id="sl2" min="0" max="150" value="0"></div>
@@ -66,17 +66,17 @@ footer{margin-top:48px;color:var(--t3);font-size:13px}
 </div>
 
 <h2>3 · Raio-x de cima: circuitos e conexões</h2>
-<p class="note">Embaixo de tudo está a placa-mãe (o próprio chassi, fixo). Em cima dela deslizam as colunas, cada uma com a sua placa. Nas partes fixas (bloco das 2 colunas externas e barra do polegar) ficam placas fixas. Microcontrolador, carregador e USB-C estão no lado de baixo da placa-mãe, na faixa fixa da borda, fora do caminho da placa-came. Toque numa peça para ver o que é.</p>
+<p class="note">Cinco placas por metade, ligadas em cadeia: a placa L (bloco fixo + barra do polegar, com o MCU) → três colunas de 1u idênticas → a coluna dupla do indicador. Cada ligação é um jumper de 10 vias que atravessa as paredes na faixa entre a fileira F e a dos números, e se curva quando as colunas vizinhas andam diferente. Toque numa peça para ver o que é.</p>
 <div class="card">
-<div class="ctrl" id="layers"><label><input type="checkbox" data-l="keys" checked> colunas (trenós)</label><label><input type="checkbox" data-l="pcb" checked> placas das colunas</label><label><input type="checkbox" data-l="main" checked> placa-mãe</label><label><input type="checkbox" data-l="ffc" checked> cabos flat</label><label><input type="checkbox" data-l="ele" checked> MCU, bateria, USB-C</label><label><input type="checkbox" data-l="con" checked> ímãs e pogo</label><label><input type="checkbox" data-l="mech"> placa-came</label><label><input type="checkbox" data-l="spr"> mola e trava</label></div>
+<div class="ctrl" id="layers"><label><input type="checkbox" data-l="keys" checked> colunas (trenós)</label><label><input type="checkbox" data-l="pcb" checked> placas</label><label><input type="checkbox" data-l="link" checked> jumpers da cadeia</label><label><input type="checkbox" data-l="ele" checked> MCU, bateria, USB-C</label><label><input type="checkbox" data-l="con" checked> ímãs e pogo</label><label><input type="checkbox" data-l="mech"> placa-came</label><label><input type="checkbox" data-l="spr"> mola e trava</label></div>
 <svg viewBox="0 0 680 270" width="100%" id="xray" style="touch-action:manipulation"></svg>
 <div class="note" id="xinfo" style="min-height:24px"><b>Toque numa peça</b> para ver o nome e a função.</div>
-<div class="ctrl"><span>Stagger</span><input type="range" id="sl3" min="0" max="150" value="0"><b id="pc3" style="min-width:48px;text-align:right">0%</b><span style="margin-left:12px">Módulos</span><button data-j="1" class="on">encaixados</button><button data-j="0">separados</button></div>
+<div class="ctrl"><span>Stagger</span><input type="range" id="sl3" min="0" max="150" value="100"><b id="pc3" style="min-width:48px;text-align:right">100%</b><span style="margin-left:12px">Módulos</span><button data-j="1" class="on">encaixados</button><button data-j="0">separados</button></div>
 <div class="stats" id="st3"></div>
 </div>
 
 <h2>4 · Como os circuitos se ligam</h2>
-<p class="note">Uma metade do teclado. Setas contínuas = ligação fixa; tracejadas = ligação que acompanha o movimento das colunas.</p>
+<p class="note">Uma metade do teclado. Setas tracejadas = jumpers que se curvam quando as colunas andam.</p>
 <div class="card"><svg viewBox="0 0 680 330" width="100%" id="blk"></svg></div>
 
 <h2>5 · Mola: soltar e travar</h2>
@@ -132,28 +132,25 @@ group('[data-d]','d',v=>{dock=+v;drawTop()});group('[data-pc]','pc',v=>{dev=+v;d
 /* ---------- 2. corte lateral ---------- */
 let ver=3,u2=0;
 function R(y0,y1,z0,z1,f,st,extra){return `<rect x="${y0}" y="${-z1}" width="${y1-y0}" height="${z1-z0}" fill="${f}" stroke="${st||'none'}" stroke-width="0.25" ${extra||''}/>`}
-function ffc(s){const yb=36,ya=51+s/2,zb=5.25,zt=7.65,rr=(zt-zb)/2;
-return `<path d="M${yb} ${-zb} L${ya} ${-zb} A${rr} ${rr} 0 0 0 ${ya} ${-zt} L${yb+s} ${-zt}" fill="none" stroke="var(--warn)" stroke-width="0.45"/>`+R(yb-2.5,yb,5,5.5,'var(--warn)','none')+R(yb+s-2.5,yb+s,7.3,7.8,'var(--warn)','none')}
 function drawSec(){const v3=ver==3,tilt=v3?5:0,s=u2*15,S=4.2;
 const L=v3?{tray:[0,1.2],cam:[2,3.2],ch:[3.4,5],sled:[5,7.8],pcb:[7.8,9],sw:[9,12],cap:[12.8,15.2]}:{tray:[0,5.6],cam:[2.8,5.3],ch:[5.6,8.1],sled:[8.1,16.3],pcb:[16.3,17.6],sw:[17.6,20.6],cap:[20.6,23.2]};
 let g=`<g transform="translate(100,150) rotate(${-tilt}) scale(${S})">`;
 if(v3){g+=`<polygon points="0,0 106.5,0 106.5,9.3" fill="var(--s1)" stroke="var(--b3)" stroke-width="0.25"/>`;g+=R(54,100,-4.6,-0.4,'var(--green-bg)','var(--green)','rx="0.6"');g+=R(66,100,-4.6,-0.4,'none','none')}
-g+=R(0,106.5,...L.tray,'var(--gray-bg)','var(--b3)');g+=R(29,100,...L.cam,'var(--amber-bg)','var(--amber)');g+=R(0,106.5,...L.ch,v3?'var(--green-bg)':'var(--gray-bg)',v3?'var(--green)':'var(--b3)');
+g+=R(0,106.5,...L.tray,'var(--gray-bg)','var(--b3)');g+=R(29,100,...L.cam,'var(--amber-bg)','var(--amber)');g+=R(0,106.5,...L.ch,'var(--gray-bg)','var(--b3)');
 g+=R(.5,16.7,L.sled[0]+(v3?1:1.2),L.pcb[1],'var(--teal-bg)','var(--teal)','rx="0.5"');g+=R(1,16,...L.cap,'var(--s2)','var(--b3)','rx="1"');
-g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)');g+=R(17+s,106.5+s,L.sled[0],L.pcb[0],'var(--blue-bg)','var(--blue)','rx="0.6" opacity="0.8"');g+=R(17+s,106.5+s,...L.pcb,v3?'var(--green-bg)':'var(--blue-bg)',v3?'var(--green)':'var(--blue)');if(v3)g+=ffc(s);
+g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)');g+=R(17+s,106.5+s,L.sled[0],L.pcb[0],'var(--blue-bg)','var(--blue)','rx="0.6" opacity="0.8"');g+=R(17+s,106.5+s,...L.pcb,v3?'var(--green-bg)':'var(--blue-bg)',v3?'var(--green)':'var(--blue)');
 [89.5,68,51,34,17].forEach(y=>{g+=R(y+2+s,y+15+s,L.pcb[1],L.sw[1],'var(--b2)','none','opacity="0.6"');g+=R(y+.5+s,y+16.5+s,...L.cap,'var(--s2)','var(--b3)','rx="1"')});
 [34,68].forEach(p=>{g+=R(p-1.5+s,p+1.5+s,L.cam[0]-.6,L.sled[0],'var(--t2)')});g+='</g>';
 g+=`<line x1="60" y1="150" x2="660" y2="150" stroke="var(--b3)" stroke-width="0.6"/>`;
 g+=`<text x="100" y="172" font-size="12" fill="var(--t2)">frente</text><text x="${100+106.5*S}" y="172" font-size="12" fill="var(--t2)" text-anchor="end">trás</text>`;
-if(v3)g+=`<text x="${100+78*S}" y="188" font-size="12" fill="var(--t2)" text-anchor="middle">bateria na cunha (~1800 mAh)</text><text x="20" y="20" font-size="11" fill="var(--t2)"><tspan fill="var(--green)">●</tspan> placa-mãe (chassi) e placa da coluna  <tspan fill="var(--warn)">●</tspan> cabo flat em laço rolante  <tspan fill="var(--amber)">●</tspan> placa-came  <tspan fill="var(--blue)">●</tspan> trenó da coluna</text>`;
+if(v3)g+=`<text x="${100+78*S}" y="188" font-size="12" fill="var(--t2)" text-anchor="middle">bateria na cunha (~1800 mAh)</text><text x="20" y="20" font-size="11" fill="var(--t2)"><tspan fill="var(--green)">●</tspan> placa da coluna  <tspan fill="var(--b3)">●</tspan> chassi (chapa)  <tspan fill="var(--amber)">●</tspan> placa-came  <tspan fill="var(--blue)">●</tspan> trenó da coluna</text>`;
 $('#sec').innerHTML=g;
 stats($('#st2'),v3?[['Frente','≈ 16 mm','até o topo da tecla'],['Trás','≈ 25 mm','cunha com bateria'],['Inclinação','5°',''],['Stagger',`${Math.round(u2*150)}%`,'']]:[['Frente','≈ 23 mm',''],['Trás','≈ 23 mm','reto'],['Inclinação','0°',''],['Stagger',`${Math.round(u2*150)}%`,'']])}
 group('[data-v]','v',v=>{ver=+v;drawSec()});$('#sl2').oninput=e=>{u2=e.target.value/150;drawSec()};
 
 /* ---------- 3. raio-x ---------- */
 const G3=[[36,1,0,40,[34,68]],[54,1,9,68,[34,87.25]],[72,1,15,86,[34,51]],[90,2,9,94,[68,87.25]]];
-const LANE={36:47,54:56,72:74,90:115};
-const LY={keys:1,pcb:1,main:1,ffc:1,ele:1,con:1,mech:0,spr:0};let u3=0,joined3=1;
+const LY={keys:1,pcb:1,link:1,ele:1,con:1,mech:0,spr:0};let u3=100/150,joined3=1;const BY=87.25;
 function drawXray(){const W=680,pad=12,gap=joined3?0:14,tot=72+126+126+2*gap,S=(W-2*pad)/tot,H=117*S+2*pad+18;
 const svg=$('#xray');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);let g='';
 const Y=y=>pad+(111.75-y)*S,t=u3*24;
@@ -161,49 +158,49 @@ function rr(ox,mir,x0,y0,x1,y1,f,st,name,extra){const a=mir?126-x1:x0,b=mir?126-
 return `<rect data-n="${name||''}" x="${ox+a*S}" y="${Y(y1)}" width="${(b-a)*S}" height="${(y1-y0)*S}" fill="${f}" stroke="${st||'none'}" stroke-width="0.8" ${extra||''}/>`}
 function cc(ox,mir,x,y,r,f,st,name){const xx=mir?126-x:x;return `<circle data-n="${name||''}" cx="${ox+xx*S}" cy="${Y(y)}" r="${r*S}" fill="${f}" stroke="${st||'none'}" stroke-width="0.8"/>`}
 function ln(ox,mir,x0,y0,x1,y1,st,w,name,extra){const a=mir?126-x0:x0,b=mir?126-x1:x1;return `<line data-n="${name||''}" x1="${ox+a*S}" y1="${Y(y0)}" x2="${ox+b*S}" y2="${Y(y1)}" stroke="${st}" stroke-width="${w}" stroke-linecap="round" ${extra||''}/>`}
+function sc(ox,mir,xa,ya,xb,yb,name){const X=x=>ox+(mir?126-x:x)*S,xm=(xa+xb)/2;return `<path data-n="${name}" d="M${X(xa)} ${Y(ya)} C${X(xm)} ${Y(ya)} ${X(xm)} ${Y(yb)} ${X(xb)} ${Y(yb)}" fill="none" stroke="var(--warn)" stroke-width="2.2" stroke-linecap="round"/>`}
 function outline(ox,w,y0,h,rl,rr_){const r=6*S,x=ox,yT=Y(y0+h),yB=Y(y0),W2=w*S;
 return `<path d="M${x+(rl?r:0)} ${yT} H${x+W2-(rr_?r:0)} ${rr_?`Q${x+W2} ${yT} ${x+W2} ${yT+r}`:''} V${yB-(rr_?r:0)} ${rr_?`Q${x+W2} ${yB} ${x+W2-r} ${yB}`:''} H${x+(rl?r:0)} ${rl?`Q${x} ${yB} ${x} ${yB-r}`:''} V${yT+(rl?r:0)} ${rl?`Q${x} ${yT} ${x+r} ${yT}`:''} Z" fill="var(--s2)" stroke="var(--t2)" stroke-width="1.2"/>`}
 const bx=pad,lx=pad+72*S+gap,rx=lx+126*S+gap;
 g+=outline(bx,72,-5.25,117,true,false);
 g+=`<rect data-n="Baia do e-reader: rebaixo de 3 mm para um aparelho de 69 × 114 mm (tipo XTeink X4)" x="${bx+1.5*S}" y="${Y(110.25)}" width="${69*S}" height="${114*S}" rx="${5*S}" fill="var(--s1)" stroke="var(--b3)" stroke-dasharray="4 3"/>`;
 if(LY.con){[[12,10.75],[60,10.75],[12,95.75],[60,95.75]].forEach(([x,y])=>{g+=`<circle data-n="Ímã que segura o e-reader na baia" cx="${bx+x*S}" cy="${Y(y)}" r="${2.6*S}" fill="var(--acc-bg)" stroke="var(--acc)"/>`});
-for(let i=-2;i<=2;i++)g+=`<circle data-n="Pogo do e-reader (5 vias): energia e dados entre e-reader e teclado" cx="${bx+64*S}" cy="${Y(53.25+i*2.54)}" r="${0.9*S}" fill="var(--amber)"/>`}
+for(let i=0;i<4;i++)g+=`<circle data-n="Pogo da baia: encosta nos contatos da face do bloco fixo" cx="${bx+71*S}" cy="${Y(26+i*2.5)}" r="${0.9*S}" fill="var(--amber)"/>`}
 [[lx,false],[rx,true]].forEach(([ox,mir])=>{
 g+=outline(ox,126,0,106.5,false,mir);
-if(LY.main){g+=rr(ox,mir,1,1,125,105.5,'var(--green-bg)','var(--green)','Placa-mãe = chassi (FR4 1,6 mm, fixa). Recebe as colunas por cabo flat e concentra MCU, carregador, USB-C e pogo.','opacity=".55"');
-G3.forEach(([x0,n,s,px,pys])=>pys.forEach(py=>{g+=ln(ox,mir,px,py,px,py+s+.01,'var(--s2)',3.4*S,'Rasgo-guia na placa-mãe (os pinos das colunas correm aqui)')}))}
-if(LY.mech){g+=rr(ox,mir,12.8+t,30.3,97.2+t,99.95,'var(--amber-bg)','var(--amber)','Placa-came (embaixo da placa-mãe): desliza em X e empurra as colunas','opacity=".6"');
+const D=G3.map(([x0,n,s])=>s*u3);
+if(LY.mech){g+=rr(ox,mir,12.8+t,30.3,97.2+t,99.95,'var(--amber-bg)','var(--amber)','Placa-came (embaixo do chassi): desliza em X e empurra as colunas','opacity=".6"');
 G3.forEach(([x0,n,s,px,pys])=>pys.forEach(py=>{g+=ln(ox,mir,px+t,py,px-24+t,py+s,'var(--amber)',3.4*S,'Rasgo inclinado da placa-came','opacity=".8"')}))}
-if(LY.ele){g+=rr(ox,mir,48,54,124,100,'none','var(--green)','Bateria LiPo ~1800 mAh, na cunha (abaixo da placa-mãe)','stroke-dasharray="4 3"');
-g+=rr(ox,mir,1,62,11,77.5,'var(--acc-bg)','var(--acc)','Microcontrolador nRF52840 (módulo 10 × 15,5 mm) no lado de baixo da placa-mãe, na faixa fixa da borda');
-g+=rr(ox,mir,2,81,10,87,'var(--acc-bg)','var(--acc)','Carregador da bateria + regulador (lado de baixo da placa-mãe)');
-g+=rr(ox,mir,2.5,99.5,11.5,107.5,'var(--t2)','none','USB-C na borda de trás da placa-mãe: carga e firmware');
-g+=rr(ox,mir,3,89,9,93,'var(--acc-bg)','var(--acc)','Conector da bateria (lado de baixo); os fios correm num canal da cunha');
-g+=ln(ox,mir,9,91,48,91,'var(--green)',1,'Fios da bateria no canal da cunha','stroke-dasharray="3 2"');
-if(!mir)[4,9,14].forEach((x,i)=>{g+=cc(ox,mir,x,87.25,1.1,i==0?'var(--ok)':'var(--b2)','none','LED de aparelho (1, 2, 3), na placa do bloco fixo')})}
-if(LY.keys){G3.forEach(([x0,n,s])=>{const d=s*u3;g+=rr(ox,mir,x0+.3,17+d,x0+n*18-.3,106.5+d,'var(--blue-bg)','var(--blue)','Coluna móvel (trenó impresso + placa da coluna)','opacity=".35"')});
+if(LY.ele){g+=rr(ox,mir,48,54,124,100,'none','var(--green)','Bateria LiPo ~1800 mAh, na cunha (abaixo do chassi)','stroke-dasharray="4 3"');
+g+=ln(ox,mir,4,70,48,70,'var(--green)',1,'Fios da bateria: descem pelo bloco fixo e correm num canal da cunha','stroke-dasharray="3 2"')}
+if(LY.keys){G3.forEach(([x0,n],i)=>{g+=rr(ox,mir,x0+.3,17+D[i],x0+n*18-.3,106.5+D[i],'var(--blue-bg)','var(--blue)','Coluna móvel (trenó impresso + placa da coluna)','opacity=".35"')});
 g+=rr(ox,mir,.3,17,35.7,106.5,'var(--gray-bg)','var(--b3)','Bloco fixo: 2 colunas externas que não se movem','opacity=".35"');
 g+=rr(ox,mir,0,0,126,16.7,'var(--gray-bg)','var(--b3)','Barra do polegar (fixa)','opacity=".35"')}
-if(LY.pcb){G3.forEach(([x0,n,s])=>{const d=s*u3;g+=rr(ox,mir,x0+1.3,18+d,x0+n*18-1.3,105.5+d,'none','var(--green)',n==2?'Placa da coluna do indicador (2 colunas, 10 switches, 10 diodos)':'Placa da coluna (5 switches Choc hot-swap + 5 diodos). As 3 colunas de 1u usam a mesma placa.','stroke-width="1.4"')});
-g+=rr(ox,mir,1.3,18,34.7,105.5,'none','var(--green)','Placa do bloco fixo: esc, Yggi, `, tab, caps, shift, LEDs e botão','stroke-width="1.4"');
-g+=rr(ox,mir,1.3,1.3,124.7,15.4,'none','var(--green)','Placa da barra do polegar (fixa)','stroke-width="1.4"');
-g+=rr(ox,mir,17,86,27,88.5,'var(--green)','none','Conector placa-a-placa: bloco fixo ↔ placa-mãe, na faixa entre as fileiras F e números');
-g+=rr(ox,mir,14,7,24,9,'var(--green)','none','Conector da barra do polegar ↔ placa-mãe (passa pelo apoio da barra)')}
-if(LY.ffc){G3.forEach(([x0,n,s])=>{const d=s*u3,xl=LANE[x0],ya=51+d/2;
-g+=rr(ox,mir,xl,36,xl+5,ya+1.2,'var(--warn-bg)','var(--warn)','Cabo flat de 8 vias em laço rolante: liga a placa da coluna à placa-mãe e rola quando a coluna anda','rx="2"');
-g+=rr(ox,mir,xl-.5,33.5,xl+5.5,36,'var(--warn)','none','Conector na placa-mãe (fixo)');
-g+=rr(ox,mir,xl-.5,33.5+d,xl+5.5,36+d,'none','var(--warn)','Conector embaixo da placa da coluna (anda com ela)','stroke-width="1.4"')})}
-if(LY.con){(mir?[126]:[0,126]).forEach(fx=>{const inner=fx==126;[20,88].forEach(y=>{g+=rr(ox,mir,inner?123.8:0,y-2,inner?126:2.2,y+2,'var(--acc)','none','Ímã 4 × 2 mm na face de encaixe (na bandeja)')});
-for(let i=0;i<4;i++)g+=cc(ox,mir,inner?125:1,45+i*2.5,.9,'var(--amber)','none','Contato pogo soldado na borda da placa-mãe (VBUS, GND, TX, RX)')})}
+if(LY.pcb){G3.forEach(([x0,n],i)=>{g+=rr(ox,mir,x0+.3,17+D[i],x0+n*18-.3,106.5+D[i],'none','var(--green)',n==2?'Placa da coluna dupla (indicador): 10 switches, 10 diodos, só entrada. Fim da cadeia.':`Placa da coluna 1u nº ${i+1}: 5 switches + 5 diodos. As 3 placas de 1u são idênticas (barramento rotativo).`,'stroke-width="1.6"')});
+const P=x=>ox+(mir?126-x:x)*S;
+g+=`<path data-n="Placa L: bloco fixo + barra do polegar numa peça só. Tem o MCU, o carregador e o USB-C." d="M${P(.3)} ${Y(106.5)} H${P(35.7)} V${Y(16.7)} H${P(125)} V${Y(1)} H${P(1)} V${Y(17)} H${P(.3)} Z" fill="none" stroke="var(--green)" stroke-width="1.6"/>`;
+g+=rr(ox,mir,28.5,86,33.6,88.5,'var(--warn)','none','Pads de saída da placa L (J_OUT, 10 vias)');
+G3.forEach(([x0,n],i)=>{g+=rr(ox,mir,x0+2,86+D[i],x0+7.1,88.5+D[i],'var(--warn)','none','Pads de entrada (J_IN): R0–R4 + C1–C5');
+if(n==1)g+=rr(ox,mir,x0+10.9,86+D[i],x0+16,88.5+D[i],'var(--warn)','none','Pads de saída (J_OUT): repassa C2–C5 como C1–C4 para a próxima placa')})}
+if(LY.link){g+=sc(ox,mir,31.05,BY,36+4.55,BY+D[0],'Jumper placa L → mindinho (10 vias). Movimento relativo: 0 mm no perfil padrão.');
+for(let i=0;i<3;i++){const a=G3[i],b=G3[i+1];g+=sc(ox,mir,a[0]+a[1]*18-4.55,BY+D[i],b[0]+4.55,BY+D[i+1],`Jumper ${['mindinho → anelar','anelar → médio','médio → indicador'][i]}: se curva quando as colunas andam diferente (${Math.abs(b[2]-a[2])} mm em 150%).`)}}
+if(LY.ele){g+=rr(ox,mir,1.5,42,11.5,57.5,'var(--acc-bg)','var(--acc)','Microcontrolador nRF52840 (rev1: módulo ~10 × 15,5 mm) embaixo da placa L, ao lado das teclas de 2u');
+g+=rr(ox,mir,1.5,60,9.5,66,'var(--acc-bg)','var(--acc)','Carregador + regulador (embaixo da placa L)');
+g+=rr(ox,mir,1.5,68,7.5,72,'var(--acc-bg)','var(--acc)','Conector da bateria (embaixo da placa L)');
+g+=rr(ox,mir,1.5,-0.6,10.5,7,'var(--t2)','none','USB-C na frente da barra, no canto externo: carga e firmware');
+g+=rr(ox,mir,1.7,19.5,2.7,41,'var(--warn)','none','rev0: cabeçalho de 18 pads para ligar um nice!nano externo na bancada');
+if(!mir)[4,9,14].forEach((x,i)=>{g+=cc(ox,mir,x,BY,1.1,i==0?'var(--ok)':'var(--b2)','none','LED de aparelho (1, 2, 3), em cima da placa L')})}
+if(LY.con){(mir?[126]:[0,126]).forEach(fx=>{const inner=fx==126;[20,88].forEach(y=>{g+=rr(ox,mir,inner?123.8:0,y-2,inner?126:2.2,y+2,'var(--acc)','none','Ímã 4 × 2 mm na face de encaixe (na bandeja)')})});
+for(let i=0;i<4;i++)g+=cc(ox,mir,125,6+i*2.5,.9,'var(--amber)','none','Pogo na ponta da barra (placa L): VBUS, GND, TX, RX para a outra metade');
+if(!mir)for(let i=0;i<4;i++)g+=cc(ox,mir,1,26+i*2.5,.9,'var(--amber)','none','Pogo na face do bloco fixo (placa L): liga a baia / e-reader')}
 if(LY.spr){g+=cc(ox,mir,118,102.95,4,'var(--s1)','var(--t2)','Tambor da mola de força constante');
 g+=ln(ox,mir,12.8+6.7+t,102.95,118,102.95,'var(--t2)',1.4,'Fita da mola: puxa a placa-came para o stagger');
-g+=cc(ox,mir,30,87.25,2.2,'none','var(--bad)','Botão de soltar + dente da trava')}
+g+=cc(ox,mir,22,BY,2.2,'none','var(--bad)','Botão de soltar + dente da trava (atravessa a placa L)')}
 });
-if(LY.con&&joined3){const yA=Y(48.75);g+=`<path data-n="Com os módulos encaixados, as placas-mãe se ligam pelo pogo: um USB-C carrega tudo" d="M${lx+12*S} ${Y(60)} V${yA} H${rx+(126-12)*S} V${Y(60)}" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="5 3"/>`;
-g+=`<path data-n="Pogo da baia: o teclado alimenta e conversa com o e-reader" d="M${lx+12*S} ${yA} H${bx+64*S}" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="5 3"/>`}
+if(LY.con&&joined3){g+=`<path data-n="Com as metades encaixadas, as placas L se ligam pelo pogo da ponta da barra: um USB-C carrega tudo" d="M${lx+118*S} ${Y(10)} H${rx+8*S}" fill="none" stroke="var(--amber)" stroke-width="1.4" stroke-dasharray="5 3"/>`}
 g+=`<text x="${bx+36*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">baia</text><text x="${lx+63*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">metade esquerda</text><text x="${rx+63*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">metade direita</text>`;
 svg.innerHTML=g;$('#pc3').textContent=Math.round(u3*150)+'%';
-stats($('#st3'),[['Placas por metade','7','mãe + 4 colunas + bloco + barra'],['Placas diferentes','5','3 colunas de 1u são iguais'],['Cabo flat','8 vias × 4','laço rolante, 15 mm de curso'],['MCU','nRF52840','lado de baixo da placa-mãe']])}
+stats($('#st3'),[['Placas por metade','5','L + 3 × 1u + 2u'],['Placas diferentes','3','as 3 de 1u são iguais'],['Jumpers','4 × 10 vias','faixa entre F e números'],['MCU','nRF52840','na placa L (parte fixa)']])}
 $('#xray').addEventListener('mouseover',e=>{const el=e.target.closest('[data-n]');if(el&&el.dataset.n)$('#xinfo').textContent=el.dataset.n});
 $('#xray').addEventListener('click',e=>{const el=e.target.closest('[data-n]');if(el&&el.dataset.n)$('#xinfo').textContent=el.dataset.n});
 $$('#layers input').forEach(c=>c.onchange=()=>{LY[c.dataset.l]=c.checked?1:0;drawXray()});
@@ -213,17 +210,15 @@ group('[data-j]','j',v=>{joined3=+v;drawXray()});
 /* ---------- 4. diagrama dos circuitos ---------- */
 function drawBlk(){let g=`<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="var(--t2)" stroke-width="1.5"/></marker></defs>`;
 const box=(x,y,w,h,title,sub,f,st)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${f}" stroke="${st}" stroke-width="1"/><text x="${x+w/2}" y="${y+22}" font-size="13" font-weight="600" fill="var(--t1)" text-anchor="middle">${title}</text>`+sub.map((s,i)=>`<text x="${x+w/2}" y="${y+40+i*16}" font-size="11" fill="var(--t2)" text-anchor="middle">${s}</text>`).join('');
-const ar=(x1,y1,x2,y2,dash,label,lx,ly)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--t2)" stroke-width="1.2" ${dash?'stroke-dasharray="5 4"':''} marker-end="url(#ar)"/>`+(label?`<text x="${lx}" y="${ly}" font-size="11" fill="var(--t2)" text-anchor="middle">${label}</text>`:'');
-g+=box(20,20,190,92,'Placas das colunas ×4',['móveis · 5 switches + 5 diodos','3 iguais (1u) + 1 de 2u'],'var(--blue-bg)','var(--blue)');
-g+=box(20,130,190,76,'Placa do bloco fixo',['esc, Yggi, `, tab, caps, shift','LEDs + botão'],'var(--gray-bg)','var(--b3)');
-g+=box(20,224,190,70,'Placa da barra do polegar',['fixa · ⌘, espaço, setas…'],'var(--gray-bg)','var(--b3)');
-g+=box(270,90,190,150,'Placa-mãe (chassi)',['FR4 1,6 mm · fixa','MCU nRF52840 (embaixo)','carregador + regulador','USB-C · ESD','matriz 6 × 7 → 13 GPIO'],'var(--green-bg)','var(--green)');
-g+=box(520,20,140,76,'Bateria',['LiPo ~1800 mAh','na cunha traseira'],'var(--green-bg)','var(--green)');
-g+=box(520,130,140,76,'Outra metade',['pogo: VBUS, GND,','TX, RX + ímãs'],'var(--acc-bg)','var(--acc)');
-g+=box(520,224,140,70,'Baia / e-reader',['pogo 5 vias + ímãs'],'var(--acc-bg)','var(--acc)');
-g+=ar(210,66,270,120,true)+ar(210,168,270,165,false)+ar(210,259,270,215,false);
-g+=ar(520,58,460,120,false)+ar(460,165,520,168,false)+ar(460,215,520,259,false);
-g+=`<text x="20" y="314" font-size="11" fill="var(--t2)">colunas → <tspan fill="var(--t1)">cabo flat 8 vias (tracejado, rola)</tspan> · bloco fixo → placa-a-placa · barra → conector · bateria → fios · metades separadas → Bluetooth (ZMK split)</text>`;
+const ar=(x1,y1,x2,y2,dash)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--t2)" stroke-width="1.2" ${dash?'stroke-dasharray="5 4"':''} marker-end="url(#ar)"/>`;
+g+=box(20,20,170,150,'Placa L',['fixa · bloco fixo + barra','MCU nRF52840','carregador · USB-C','COL0, COL1 + linha R5','LEDs + botão'],'var(--green-bg)','var(--green)');
+const cx=[215,330,445,560];['Coluna 1u','Coluna 1u','Coluna 1u','Coluna 2u'].forEach((t,i)=>{g+=box(cx[i],50,105,90,t,[['mindinho','anelar','médio','indicador'][i],['usa COL2','usa COL3','usa COL4','COL5 + COL6'][i]],'var(--blue-bg)','var(--blue)')});
+g+=ar(190,95,215,95,true);for(let i=0;i<3;i++)g+=ar(cx[i]+105,95,cx[i+1],95,true);
+g+=box(20,200,170,76,'Bateria',['LiPo ~1800 mAh','na cunha traseira'],'var(--green-bg)','var(--green)');
+g+=box(260,200,180,76,'Outra metade',['pogo na ponta da barra','VBUS, GND, TX, RX'],'var(--acc-bg)','var(--acc)');
+g+=box(480,200,180,76,'Baia / e-reader',['pogo na face do bloco fixo'],'var(--acc-bg)','var(--acc)');
+g+=ar(105,200,105,170,false)+ar(190,150,260,215,false)+ar(190,135,480,210,false);
+g+=`<text x="20" y="314" font-size="11" fill="var(--t2)">jumper de 10 vias (tracejado, se curva) · barramento rotativo: cada coluna usa C1 e repassa C2–C5 → as 3 placas de 1u são idênticas</text>`;
 $('#blk').innerHTML=g}
 
 /* ---------- 4. mola (corte lateral) ---------- */
@@ -241,16 +236,16 @@ g+=R(85.75,88.75,L.tray[0]-dz,L.tray[1]-dz,'var(--bad-bg)','var(--bad)');
 g+=R(43.5,46.5,-4,3,'var(--blue-bg)','var(--blue)');
 if(pos<0.001){g+=R(30.3,86.25,...L.cam,'var(--amber-bg)','var(--amber)')+R(88.25,99.95,...L.cam,'var(--amber-bg)','var(--amber)')}else g+=R(30.3,99.95,...L.cam,'var(--amber-bg)','var(--amber)');
 g+=R(85.95,88.55,1.2-dz,3.2-dz,'var(--bad)','none');
-g+=R(0,86.05,...L.ch,'var(--green-bg)','var(--green)','opacity="0.9"')+R(88.45,106.5,...L.ch,'var(--green-bg)','var(--green)','opacity="0.9"');
+g+=R(0,86.05,...L.ch,'var(--gray-bg)','var(--b3)','opacity="0.85"')+R(88.45,106.5,...L.ch,'var(--gray-bg)','var(--b3)','opacity="0.85"');
 g+=R(.5,16.7,6,L.pcb[1],'var(--teal-bg)','var(--teal)','rx="0.5"')+R(1,16,...L.cap,'var(--s2)','var(--b3)','rx="1"');
-g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)')+R(17+s,106.5+s,L.sled[0],L.pcb[0],'var(--blue-bg)','var(--blue)','rx="0.6" opacity="0.8"')+R(17+s,106.5+s,...L.pcb,'var(--green-bg)','var(--green)')+ffc(s);
+g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)')+R(17+s,106.5+s,L.sled[0],L.pcb[0],'var(--blue-bg)','var(--blue)','rx="0.6" opacity="0.8"')+R(17+s,106.5+s,...L.pcb,'var(--green-bg)','var(--green)');
 [89.5,68,51,34,17].forEach(y=>{g+=R(y+2+s,y+15+s,L.pcb[1],L.sw[1],'var(--b2)','none','opacity="0.6"')+R(y+.5+s,y+16.5+s,...L.cap,'var(--s2)','var(--b3)','rx="1"')});
 [34,68].forEach(p=>{g+=R(p-1.5+s,p+1.5+s,L.cam[0]-.6,L.sled[0],'var(--t2)')});
 g+=R(86.05,88.45,3.45-pd,9.6-pd,'var(--bad)','none')+R(85.25,89.25,9.6-pd,10.4-pd,'var(--bad)','none','rx="0.4"');
 g+='</g>';
 g+=`<line x1="60" y1="185" x2="650" y2="185" stroke="var(--b3)" stroke-width="0.6"/>`;
 const lab=(x,y,txt,c)=>`<text x="${x}" y="${y}" font-size="11" fill="${c||'var(--t2)'}">${txt}</text>`;
-g+=lab(20,44,'● botão + dente da trava','var(--bad)')+lab(170,44,'● gaveta (coluna do médio)','var(--blue)')+lab(330,44,'● placa-came','var(--amber)')+lab(420,44,'● batente','var(--blue)')+lab(490,44,'● placa-mãe / bateria','var(--green)')+lab(600,44,'● cabo flat','var(--warn)');
+g+=lab(20,44,'● botão + dente da trava','var(--bad)')+lab(170,44,'● gaveta (coluna do médio)','var(--blue)')+lab(330,44,'● placa-came','var(--amber)')+lab(420,44,'● batente','var(--blue)')+lab(490,44,'● placa / bateria','var(--green)');
 g+=lab(90,204,'frente')+lab(560,204,'trás · tambor da mola');
 /* inset de cima */
 const X0=70,SC=4.3,Y0=235;g+=`<text x="20" y="${Y0-6}" font-size="12" fill="var(--t2)">placa-came vista de cima</text>`;

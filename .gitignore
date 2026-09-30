@@ -1,0 +1,53 @@
+# --- Sistema e editores ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+
+# --- Ferramentas locais do Claude Code ---
+.claude/
+
+# --- OpenSCAD: exportações geradas (refaça a partir do .scad) ---
+*.stl
+*.3mf
+*.amf
+*.off
+*.csg
+*.gcode
+# exceção: arquivos de corte das placas ficam versionados
+!hardware/pcb/outlines/*.dxf
+
+# --- KiCad: backups, caches e arquivos locais ---
+*-backups/
+*.kicad_prl
+fp-info-cache
+*.bak
+*-bak
+*.lck
+_autosave-*
+\#auto_saved_files#
+*.kicad_pcb-bak
+*.sch-bak
+*.net
+*.xml
+
+# --- Fabricação: gerbers e pacotes são gerados na hora de encomendar ---
+**/gerbers/
+**/fabrication/
+*.zip
+
+# --- Ergogen / Node ---
+node_modules/
+hardware/pcb/ergogen/output/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+
+# --- Temporários ---
+tmp/
+*.tmp
+*.log
