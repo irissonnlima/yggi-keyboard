@@ -66,7 +66,7 @@ footer{margin-top:48px;color:var(--t3);font-size:13px}
 </div>
 
 <h2>3 · Raio-x de cima: circuitos e conexões</h2>
-<p class="note">Embaixo de tudo está a placa-mãe (o próprio chassi, fixo). Em cima dela deslizam as colunas, cada uma com a sua placa. Nas partes fixas (bloco das 2 colunas externas e barra do polegar) ficam placas fixas, e embaixo do bloco fixo estão o microcontrolador, o carregador e o USB-C. Toque numa peça para ver o que é.</p>
+<p class="note">Embaixo de tudo está a placa-mãe (o próprio chassi, fixo). Em cima dela deslizam as colunas, cada uma com a sua placa. Nas partes fixas (bloco das 2 colunas externas e barra do polegar) ficam placas fixas. Microcontrolador, carregador e USB-C estão no lado de baixo da placa-mãe, na faixa fixa da borda, fora do caminho da placa-came. Toque numa peça para ver o que é.</p>
 <div class="card">
 <div class="ctrl" id="layers"><label><input type="checkbox" data-l="keys" checked> colunas (trenós)</label><label><input type="checkbox" data-l="pcb" checked> placas das colunas</label><label><input type="checkbox" data-l="main" checked> placa-mãe</label><label><input type="checkbox" data-l="ffc" checked> cabos flat</label><label><input type="checkbox" data-l="ele" checked> MCU, bateria, USB-C</label><label><input type="checkbox" data-l="con" checked> ímãs e pogo</label><label><input type="checkbox" data-l="mech"> placa-came</label><label><input type="checkbox" data-l="spr"> mola e trava</label></div>
 <svg viewBox="0 0 680 270" width="100%" id="xray" style="touch-action:manipulation"></svg>
@@ -175,11 +175,11 @@ G3.forEach(([x0,n,s,px,pys])=>pys.forEach(py=>{g+=ln(ox,mir,px,py,px,py+s+.01,'v
 if(LY.mech){g+=rr(ox,mir,12.8+t,30.3,97.2+t,99.95,'var(--amber-bg)','var(--amber)','Placa-came (embaixo da placa-mãe): desliza em X e empurra as colunas','opacity=".6"');
 G3.forEach(([x0,n,s,px,pys])=>pys.forEach(py=>{g+=ln(ox,mir,px+t,py,px-24+t,py+s,'var(--amber)',3.4*S,'Rasgo inclinado da placa-came','opacity=".8"')}))}
 if(LY.ele){g+=rr(ox,mir,48,54,124,100,'none','var(--green)','Bateria LiPo ~1800 mAh, na cunha (abaixo da placa-mãe)','stroke-dasharray="4 3"');
-g+=rr(ox,mir,6,60,19,78,'var(--acc-bg)','var(--acc)','Microcontrolador nRF52840 (módulo 13 × 18 mm) na placa-mãe, embaixo do bloco fixo');
-g+=rr(ox,mir,22,86,28,92,'var(--acc-bg)','var(--acc)','Carregador da bateria + regulador');
-g+=rr(ox,mir,9,98,18,107.5,'var(--t2)','none','USB-C na borda de trás da placa-mãe: carga e firmware');
-g+=rr(ox,mir,30,96,36,100,'var(--acc-bg)','var(--acc)','Conector da bateria (fios descem para a cunha)');
-g+=ln(ox,mir,33,96,48,80,'var(--green)',1,'Fios da bateria','stroke-dasharray="3 2"');
+g+=rr(ox,mir,1,62,11,77.5,'var(--acc-bg)','var(--acc)','Microcontrolador nRF52840 (módulo 10 × 15,5 mm) no lado de baixo da placa-mãe, na faixa fixa da borda');
+g+=rr(ox,mir,2,81,10,87,'var(--acc-bg)','var(--acc)','Carregador da bateria + regulador (lado de baixo da placa-mãe)');
+g+=rr(ox,mir,2.5,99.5,11.5,107.5,'var(--t2)','none','USB-C na borda de trás da placa-mãe: carga e firmware');
+g+=rr(ox,mir,3,89,9,93,'var(--acc-bg)','var(--acc)','Conector da bateria (lado de baixo); os fios correm num canal da cunha');
+g+=ln(ox,mir,9,91,48,91,'var(--green)',1,'Fios da bateria no canal da cunha','stroke-dasharray="3 2"');
 if(!mir)[4,9,14].forEach((x,i)=>{g+=cc(ox,mir,x,87.25,1.1,i==0?'var(--ok)':'var(--b2)','none','LED de aparelho (1, 2, 3), na placa do bloco fixo')})}
 if(LY.keys){G3.forEach(([x0,n,s])=>{const d=s*u3;g+=rr(ox,mir,x0+.3,17+d,x0+n*18-.3,106.5+d,'var(--blue-bg)','var(--blue)','Coluna móvel (trenó impresso + placa da coluna)','opacity=".35"')});
 g+=rr(ox,mir,.3,17,35.7,106.5,'var(--gray-bg)','var(--b3)','Bloco fixo: 2 colunas externas que não se movem','opacity=".35"');
@@ -187,8 +187,8 @@ g+=rr(ox,mir,0,0,126,16.7,'var(--gray-bg)','var(--b3)','Barra do polegar (fixa)'
 if(LY.pcb){G3.forEach(([x0,n,s])=>{const d=s*u3;g+=rr(ox,mir,x0+1.3,18+d,x0+n*18-1.3,105.5+d,'none','var(--green)',n==2?'Placa da coluna do indicador (2 colunas, 10 switches, 10 diodos)':'Placa da coluna (5 switches Choc hot-swap + 5 diodos). As 3 colunas de 1u usam a mesma placa.','stroke-width="1.4"')});
 g+=rr(ox,mir,1.3,18,34.7,105.5,'none','var(--green)','Placa do bloco fixo: esc, Yggi, `, tab, caps, shift, LEDs e botão','stroke-width="1.4"');
 g+=rr(ox,mir,1.3,1.3,124.7,15.4,'none','var(--green)','Placa da barra do polegar (fixa)','stroke-width="1.4"');
-g+=rr(ox,mir,12,40,26,43,'var(--green)','none','Conector placa-a-placa: bloco fixo ↔ placa-mãe (não se move)');
-g+=rr(ox,mir,14,6,24,9,'var(--green)','none','Conector da barra do polegar ↔ placa-mãe (desce pelas pernas da barra)')}
+g+=rr(ox,mir,17,86,27,88.5,'var(--green)','none','Conector placa-a-placa: bloco fixo ↔ placa-mãe, na faixa entre as fileiras F e números');
+g+=rr(ox,mir,14,7,24,9,'var(--green)','none','Conector da barra do polegar ↔ placa-mãe (passa pelo apoio da barra)')}
 if(LY.ffc){G3.forEach(([x0,n,s])=>{const d=s*u3,xl=LANE[x0],ya=51+d/2;
 g+=rr(ox,mir,xl,36,xl+5,ya+1.2,'var(--warn-bg)','var(--warn)','Cabo flat de 8 vias em laço rolante: liga a placa da coluna à placa-mãe e rola quando a coluna anda','rx="2"');
 g+=rr(ox,mir,xl-.5,33.5,xl+5.5,36,'var(--warn)','none','Conector na placa-mãe (fixo)');
@@ -203,7 +203,7 @@ if(LY.con&&joined3){const yA=Y(48.75);g+=`<path data-n="Com os módulos encaixad
 g+=`<path data-n="Pogo da baia: o teclado alimenta e conversa com o e-reader" d="M${lx+12*S} ${yA} H${bx+64*S}" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="5 3"/>`}
 g+=`<text x="${bx+36*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">baia</text><text x="${lx+63*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">metade esquerda</text><text x="${rx+63*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">metade direita</text>`;
 svg.innerHTML=g;$('#pc3').textContent=Math.round(u3*150)+'%';
-stats($('#st3'),[['Placas por metade','7','mãe + 4 colunas + bloco + barra'],['Placas diferentes','5','3 colunas de 1u são iguais'],['Cabo flat','8 vias × 4','laço rolante, 15 mm de curso'],['MCU','nRF52840','na placa-mãe, parte fixa']])}
+stats($('#st3'),[['Placas por metade','7','mãe + 4 colunas + bloco + barra'],['Placas diferentes','5','3 colunas de 1u são iguais'],['Cabo flat','8 vias × 4','laço rolante, 15 mm de curso'],['MCU','nRF52840','lado de baixo da placa-mãe']])}
 $('#xray').addEventListener('mouseover',e=>{const el=e.target.closest('[data-n]');if(el&&el.dataset.n)$('#xinfo').textContent=el.dataset.n});
 $('#xray').addEventListener('click',e=>{const el=e.target.closest('[data-n]');if(el&&el.dataset.n)$('#xinfo').textContent=el.dataset.n});
 $$('#layers input').forEach(c=>c.onchange=()=>{LY[c.dataset.l]=c.checked?1:0;drawXray()});
@@ -217,7 +217,7 @@ const ar=(x1,y1,x2,y2,dash,label,lx,ly)=>`<line x1="${x1}" y1="${y1}" x2="${x2}"
 g+=box(20,20,190,92,'Placas das colunas ×4',['móveis · 5 switches + 5 diodos','3 iguais (1u) + 1 de 2u'],'var(--blue-bg)','var(--blue)');
 g+=box(20,130,190,76,'Placa do bloco fixo',['esc, Yggi, `, tab, caps, shift','LEDs + botão'],'var(--gray-bg)','var(--b3)');
 g+=box(20,224,190,70,'Placa da barra do polegar',['fixa · ⌘, espaço, setas…'],'var(--gray-bg)','var(--b3)');
-g+=box(270,90,190,150,'Placa-mãe (chassi)',['FR4 1,6 mm · fixa','MCU nRF52840','carregador + regulador','USB-C · ESD','matriz 6 × 7 → 13 GPIO'],'var(--green-bg)','var(--green)');
+g+=box(270,90,190,150,'Placa-mãe (chassi)',['FR4 1,6 mm · fixa','MCU nRF52840 (embaixo)','carregador + regulador','USB-C · ESD','matriz 6 × 7 → 13 GPIO'],'var(--green-bg)','var(--green)');
 g+=box(520,20,140,76,'Bateria',['LiPo ~1800 mAh','na cunha traseira'],'var(--green-bg)','var(--green)');
 g+=box(520,130,140,76,'Outra metade',['pogo: VBUS, GND,','TX, RX + ímãs'],'var(--acc-bg)','var(--acc)');
 g+=box(520,224,140,70,'Baia / e-reader',['pogo 5 vias + ímãs'],'var(--acc-bg)','var(--acc)');

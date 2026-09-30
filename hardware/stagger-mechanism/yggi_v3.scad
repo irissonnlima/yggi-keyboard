@@ -9,20 +9,23 @@
 //    batente (50/100/150%). Para voltar, empurra-se as colunas até ouvir o clique.
 //  - INCLINAÇÃO: bateria, microcontrolador e mola ficam numa cunha na parte de trás (5°).
 //  - MÓDULOS: faces de encaixe retas (ímãs + pogo), bordas externas arredondadas.
+//  - CIRCUITOS: o chassi é a PLACA-MÃE (FR4). Cada coluna móvel tem a sua placa e se liga à
+//    placa-mãe por um cabo flat de 8 vias em laço rolante, dentro da própria coluna. MCU, USB-C e
+//    carregador ficam no lado de baixo da placa-mãe, na faixa fixa da borda (x < 12 mm).
 //
 // Eixos (mm): X = entre colunas, Y = ao longo da coluna (+Y = longe do usuário), Z = para cima.
 // Tudo é modelado num "quadro plano"; a inclinação é aplicada só na montagem.
 
 /* [Visualização] */
-part = "assembly"; // [assembly, left, right, front, tray, cam_plate, chassis, gaveta, fixed_block, thumb_bar, wedge_left, bay, check]
+part = "assembly"; // [assembly, left, right, front, tray, cam_plate, chassis, mainboard, gaveta, fixed_block, thumb_bar, wedge_left, bay, check]
 stagger_pct = 100;  // [0:1:150]
 stop_pct = 100;     // [50, 100, 150] batente escolhido
 explode = 0;        // [0:1:25]
 joined = true;      // metades encostadas (true) ou separadas
 show_caps = true;
 show_ereader = true;
-show_internals = false; // mostra bateria, MCU e mola (use com explode ou transparência)
-check = "gav_chassis"; // [gav_chassis, gav_bar, gav_fixed, gav_gav, cam_tray, cam_chassis, heads_tray, pins_cam, pawl_cam, stop_cam, strip_tray, plunger_cam]
+show_internals = false; // mostra a bateria na cunha (use com explode)
+check = "gav_chassis"; // [gav_chassis, gav_bar, gav_fixed, gav_gav, cam_tray, cam_chassis, heads_tray, pins_cam, pawl_cam, stop_cam, strip_tray, plunger_cam, gav_board, bottom_parts, fixed_board, bar_board]
 
 /* [Grade] */
 U = 18;
@@ -55,7 +58,16 @@ corner_r = 6;
 
 /* [Bateria e eletrônica] */
 BATT = [76, 46, 4.0];                // ~1800 mAh (LiPo 4 mm); ajuste conforme o fornecedor
-MCU = [18, 34, 3.6];                 // placa nRF52840 tipo "Pro Micro"/nice!nano
+// Eletrônica na placa-mãe (quadro plano da metade esquerda)
+MCU = [1, 62, 10, 15.5, 2.2];        // módulo nRF52840 (ex.: Raytac MDBT50Q), lado de baixo
+CHG = [2, 81, 8, 6, 1.2];            // carregador + regulador, lado de baixo
+BCON = [3, 89, 6, 4, 2.0];           // conector da bateria, lado de baixo
+USBC = [2.5, 99.5, 9, 7.2, 3.2];     // USB-C mid-mount na borda de trás
+B2B = [17, 86, 10, 2.5];             // conector placa-a-placa do bloco fixo (na faixa entre F e números)
+BARH = [14, 7, 10, 2];               // conector da barra do polegar
+LANE = [47, 56, 74, 115];            // corredor do cabo flat de cada gaveta (x)
+FFC_Y = 33.5;                        // conectores do cabo flat (placa-mãe e coluna)
+ffc_con = [6, 2.5, 1.0];
 led_d = 1.8;
 latch = [30, 87.25];                 // trava + botão (no bloco fixo, entre F e números)
 
@@ -136,16 +148,19 @@ module gaveta(g) {
                     cube([U - 2 * skirt_inset, skirt_len + sled_wall, skirt_t]);
             for (py = g[4]) translate([g[3], py, -pin_len]) cylinder(d = pin_d, h = pin_len + 0.01);
         }
-        translate([x0 + n * U / 2 - 4, ch_y0 + 0.5, -1]) cube([8, 3, sled_floor + 2]);  // saída de fios
+        translate([lane_of(g) - 1, ROW_Y[4] + 1, -1]) cube([ffc_con[0] + 1, 61 - ROW_Y[4] - 1, sled_floor + 2]); // janela do cabo flat
     }
     pcb(x0, n);
+    color("orange") translate([lane_of(g) - 0.5, FFC_Y, sled_floor + sock_h - ffc_con[2]]) cube(ffc_con);         // conector da coluna
 }
+function lane_of(g) = LANE[search([g[0]], [for (h = GAV) h[0]])[0]];
 module gaveta_heads(g) { for (py = g[4]) translate([g[3], py, -pin_len - head_t]) cylinder(d = head_d, h = head_t); }
 
 module fixed_block(round_left, leds) {
     clip(round_left) difference() {
         union() { color("slategray") sled(0, 2); pcb(0, 2); }
         translate([latch[0], latch[1], -1]) cylinder(d = 2.8, h = 20);           // botão da trava
+        translate([B2B[0] - 0.5, B2B[1] - 0.5, -1]) cube([B2B[2] + 1, B2B[3] + 1, sled_floor + 1.5]);
     }
     if (leds) for (i = [-1:1]) color("lime") translate([U / 2 + i * 5 - 0.8, latch[1] - 0.5, gav_h]) cube([1.6, 1, 0.6]);
 }
@@ -160,7 +175,10 @@ module thumb_bar(round_left) {
         }
         color("darkgreen") translate([1, 1, TOP - pcb_t]) cube([KB_W - 2, depth - 2, pcb_t]);
         // pernas: bloco sob as colunas fixas + uma perna em cada divisa entre saias
-        translate([0, 0.5, Z_G]) cube([2 * U + skirt_inset - 0.6, depth - 1, bar_z - Z_G + 0.01]);
+        translate([0, 0.5, Z_G]) difference() {
+            cube([2 * U + skirt_inset - 0.6, depth - 1, bar_z - Z_G + 0.01]);
+            translate([BARH[0] - 0.5, BARH[1] - 1, -1]) cube([BARH[2] + 1, BARH[3] + 1, 5]);
+        }
         for (g = GAV, c = [1:g[1]]) {
             x = g[0] + c * U;
             translate([x >= KB_W ? KB_W - 1.2 : x - 1.2, 0.5, Z_G]) cube([x >= KB_W ? 1.2 : 2.4, depth - 1, bar_z - Z_G + 0.01]);
@@ -176,8 +194,34 @@ module chassis(round_left) {
             translate([g[3], py, -1]) cylinder(d = slot_w, h = chassis_t + 2);
             translate([g[3], py + g[2], -1]) cylinder(d = slot_w, h = chassis_t + 2);
         }
-        for (g = GAV) translate([g[0] + g[1] * U / 2 - 5, ch_y0, -1]) cube([10, KB_H, chassis_t + 2]);
         translate([latch[0], latch[1], -1]) cylinder(d = 2.8, h = chassis_t + 2);
+        translate([USBC[0], USBC[1], -1]) cube([USBC[2], KB_H, chassis_t + 2]);          // recorte do USB-C
+    }
+}
+
+// Componentes da placa-mãe (no quadro plano, z absoluto)
+module board_top_parts(bar = true) {
+    color("orange") for (x = LANE) translate([x - 0.5, FFC_Y, Z_G]) cube(ffc_con);             // conectores dos cabos flat
+    color("goldenrod") translate([B2B[0], B2B[1], Z_G]) cube([B2B[2], B2B[3], TOP - pcb_t - Z_G - 0.01]);
+    if (bar) color("goldenrod") translate([BARH[0], BARH[1], Z_G]) cube([BARH[2], BARH[3], TOP - pcb_t - Z_G - 0.01]);
+}
+module board_bottom_parts() {
+    color("royalblue") translate([MCU[0], MCU[1], Z_CH - MCU[4]]) cube([MCU[2], MCU[3], MCU[4]]);
+    color("royalblue") translate([CHG[0], CHG[1], Z_CH - CHG[4]]) cube([CHG[2], CHG[3], CHG[4]]);
+    color("black") translate([BCON[0], BCON[1], Z_CH - BCON[4]]) cube([BCON[2], BCON[3], BCON[4]]);
+    color("silver") translate([USBC[0], USBC[1], Z_CH - 2.4]) cube([USBC[2], USBC[3], USBC[4]]);
+}
+// Cabo flat em laço rolante (visual; muda de forma com o stagger)
+module ffc_loop(g, s) {
+    x = lane_of(g); zb = Z_G + 0.05; zt = Z_G + sled_floor + sock_h - 0.15; rr = (zt - zb) / 2;
+    ya = 51 + s / 2;
+    color("gold") {
+        translate([x, FFC_Y + ffc_con[1], zb]) cube([5, ya - FFC_Y - ffc_con[1], 0.1]);
+        translate([x, FFC_Y + ffc_con[1] + s, zt]) cube([5, ya - FFC_Y - ffc_con[1] - s, 0.1]);
+        translate([x, ya, zb + rr + 0.05]) rotate([0, 90, 0]) difference() {
+            cylinder(r = rr + 0.05, h = 5); translate([0, 0, -1]) cylinder(r = rr - 0.05, h = 7);
+            translate([-5, -10, -1]) cube([10, 10, 7]);
+        }
     }
 }
 
@@ -229,6 +273,8 @@ module tray(round_left, faces, released = false) {
         translate([latch[0] - 2.5, latch[1] - 2, -1]) cube([46 - latch[0] + 2.5, 4, tray_floor + 2]); // janela da trava
         for (p = [50, 100]) translate([stop_x(p), 45, -1]) cylinder(d = 3.2, h = tray_floor + 2);
         connectors(faces, tray_h);
+        for (c = [MCU, CHG, BCON]) translate([c[0] - 0.4, c[1] - 0.4, -1]) cube([c[2] + 0.8, c[3] + 0.8, tray_h + 2]);
+        translate([USBC[0] - 0.4, USBC[1] - 0.4, Z_CH - 2.6]) cube([USBC[2] + 0.8, KB_H, 5]);   // saída do USB-C
     }
     pawl(released);
 }
@@ -242,11 +288,11 @@ module connectors(faces, h) {
     }
 }
 
-// ---------- Cunha traseira (bateria, MCU, mola) — no quadro do mundo ----------
-module wedge_pockets() {                              // no quadro plano, abaixo da bandeja
+// ---------- Cunha traseira (bateria, mola, trava) — no quadro do mundo ----------
+module wedge_pockets() {                              // no quadro plano, abaixo da bandeja (bateria, mola, trava)
     translate([48, 54, -BATT[2] - 0.2]) cube([BATT[0], BATT[1], BATT[2] + 0.21]);
-    translate([4, 66, -MCU[2] - 0.2]) cube([MCU[0], MCU[1], MCU[2] + 0.21]);
-    translate([8.5, 96, -MCU[2]]) cube([9, 20, 3.2]);                               // USB-C para trás
+    translate([0.4, 60, -1.2]) cube([12, 48, 1.21]);                                 // folga dos componentes de baixo
+    translate([BCON[0] + 3, BCON[1] + 0.5, -1.6]) cube([48 - BCON[0] - 3, 3, 1.61]);  // fios da bateria
     translate([latch[0] - 2.5, latch[1] - 2, -2.2]) cube([46 - latch[0] + 2.5, 4, 2.21]);  // curso da lingueta
     translate([drum[0] - 5, ch_y0, -drum[2] - 0.5]) cube([10, ch_y1 - ch_y0, drum[2] + 0.51]);
     for (p = [50, 100]) translate([stop_x(p), 45, -20]) cylinder(d = 3.2, h = 20.1);
@@ -263,7 +309,6 @@ module wedge(round_left) {
 module internals() {
     tilt_frame() {
         color("mediumseagreen") translate([48, 54, -BATT[2] - 0.2]) cube(BATT);
-        color("royalblue") translate([4, 66, -MCU[2] - 0.2]) cube(MCU);
     }
 }
 
@@ -311,7 +356,12 @@ module mech_flat(round_left, faces, leds, e) {
     color("orange") translate([t, 0, Z_CAM + e]) cam_plate();
     translate([0, 0, e]) spring_ribbon();
     stop_pin(stop_pct);
-    color("silver", 0.95) translate([0, 0, Z_CH + 2 * e]) chassis(round_left);
+    translate([0, 0, 2 * e]) {
+        color("seagreen", 0.95) translate([0, 0, Z_CH]) chassis(round_left);
+        board_top_parts();
+        board_bottom_parts();
+    }
+    for (g = GAV) translate([0, 0, 2.5 * e]) ffc_loop(g, g[2] * u);
     for (g = GAV) translate([0, g[2] * u, Z_G + 3 * e]) {
         gaveta(g);
         color("dimgray") gaveta_heads(g);
@@ -385,6 +435,14 @@ module check_pair() {
     if (check == "pawl_cam") intersection() { pawl(released); translate([t, 0, Z_CAM]) cam_plate(); }
     if (check == "stop_cam") intersection() { stop_pin(stop_pct); translate([t, 0, Z_CAM]) cam_plate(); }
     if (check == "strip_tray") intersection() { spring_ribbon(); difference() { tray(false, LEFT_FACES); pawl(false); } }
+    if (check == "gav_board") intersection() {
+        for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g);
+        board_top_parts(); }
+    if (check == "bottom_parts") intersection() {
+        board_bottom_parts();
+        union() { difference() { tray(false, LEFT_FACES); pawl(false); } translate([t, 0, Z_CAM]) cam_plate(); spring_ribbon(); } }
+    if (check == "fixed_board") intersection() { translate([0, 0, Z_G]) fixed_block(false, true); board_top_parts(false); }
+    if (check == "bar_board") intersection() { thumb_bar(false); board_top_parts(); }
     if (check == "plunger_cam") intersection() { plunger(false); union() { translate([t, 0, Z_CAM]) cam_plate(); for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g); } }
 }
 
@@ -395,6 +453,7 @@ else if (part == "front") keyboard();
 else if (part == "tray") tray(false, LEFT_FACES);
 else if (part == "cam_plate") cam_plate();
 else if (part == "chassis") chassis(false);
+else if (part == "mainboard") { color("seagreen") translate([0, 0, Z_CH]) chassis(false); board_top_parts(); board_bottom_parts(); }
 else if (part == "gaveta") gaveta(GAV[2]);
 else if (part == "fixed_block") fixed_block(false, true);
 else if (part == "thumb_bar") thumb_bar(false);

@@ -30,9 +30,13 @@ O nome é uma homenagem a Yggdrasil, a árvore que liga os nove mundos da mitolo
 
 ![lateral](docs/media/v3-lateral.png)
 
-**Metade esquerda explodida** (cunha com bateria e MCU, bandeja, placa-came, chassi, gavetas, bloco fixo e barra do polegar):
+**Metade esquerda explodida** (cunha com bateria, bandeja, placa-came, placa-mãe com os cabos flat, colunas, bloco fixo e barra do polegar):
 
 ![explodida](docs/media/v3-explodida.png)
+
+**Placa-mãe** (o chassi): conectores dos cabos flat das colunas, conector do bloco fixo, conector da barra e os rasgos-guia. Por baixo, na borda, ficam o MCU, o carregador e o USB-C:
+
+![placa-mãe](docs/media/v3-placa-mae.png)
 
 ---
 
@@ -75,7 +79,7 @@ Cada metade, de baixo para cima:
 | | |
 |---|---|
 | **Placas por metade** | **7**: a placa-mãe (o chassi), **uma por coluna móvel** (4, sendo 3 iguais de 1u e 1 de 2u), a do bloco fixo e a da barra do polegar. |
-| **Microcontrolador** | um **nRF52840** por metade (módulo de 13 × 18 mm), **soldado na placa-mãe, embaixo do bloco fixo**, junto com o carregador e o USB-C na borda de trás. |
+| **Microcontrolador** | um **nRF52840** por metade (módulo de ~10 × 15,5 mm, ex.: Raytac MDBT50Q), **no lado de baixo da placa-mãe, na faixa fixa da borda** (x < 12 mm), junto com o carregador e o USB-C na borda de trás. Em cima da placa-mãe não cabe: ali ficam os soquetes das teclas do bloco fixo. |
 | **Por que nRF52840** | é o chip mais bem suportado pelo ZMK. Tem 21 GPIO, o suficiente para a matriz 6 × 7 mais os 3 LEDs. |
 | **Firmware** | [ZMK](https://zmk.dev) (Zephyr, MIT): Bluetooth, split sem fio, 5 perfis de computador, bateria. Funções do Yggi (tecla de troca, LEDs, conversa com o e-reader) entram como **módulos ZMK** próprios. |
 | **Bateria** | LiPo de 4 mm na cunha, ~1800 mAh por metade (76 × 46 mm). A cunha comporta células maiores se a inclinação aumentar. |
