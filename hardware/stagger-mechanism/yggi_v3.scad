@@ -8,8 +8,11 @@
 //    segura a placa. O botão ao lado dos LEDs empurra a trava e as colunas sobem sozinhas até o
 //    batente (50/100/150%). Para voltar, empurra-se as colunas até ouvir o clique.
 //  - INCLINAÇÃO: bateria, microcontrolador e mola ficam numa cunha na parte de trás (5°).
-//  - MÓDULOS: faces de encaixe retas (ímãs + pogo), bordas externas arredondadas.
-//  - CIRCUITOS EM CADEIA (5 placas por metade): placa L (bloco fixo + barra do polegar, com MCU,
+//  - MÓDULOS: faces de encaixe retas (ímãs + conector pogo magnético de 5 pinos), bordas externas arredondadas.
+//  - ELETRÔNICA (rev1): o microcontrolador fica numa placa própria (placa MCU) na cunha, sob o
+//    bloco fixo, com a antena na borda externa e o USB-C na face de trás. Ela se liga à placa L por um
+//    flex de 20 vias que atravessa o bloco fixo, o chassi e a bandeja. As teclas de 2u têm estabilizador.
+//  - CIRCUITOS EM CADEIA (5 placas por metade): placa L (bloco fixo + barra do polegar,
 //    carregador e USB-C) -> coluna 1u -> coluna 1u -> coluna 1u -> coluna dupla. Cada placa se liga
 //    à vizinha por um jumper flexível de 13 vias que atravessa as paredes na faixa livre entre a
 //    fileira F e a dos números. Barramento rotativo: as 3 placas de 1u são idênticas.
@@ -26,8 +29,8 @@ explode = 0;        // [0:1:25]
 joined = true;      // metades encostadas (true) ou separadas
 show_caps = true;
 show_ereader = true;
-show_internals = false; // mostra a bateria na cunha (use com explode)
-check = "gav_chassis"; // [gav_chassis, gav_bar, gav_fixed, gav_gav, cam_tray, cam_chassis, heads_tray, pins_cam, pawl_cam, stop_cam, strip_tray, plunger_cam, lboard_parts, lboard_gav]
+show_internals = false; // mostra a bateria e a placa MCU na cunha (use com explode)
+check = "gav_chassis"; // [gav_chassis, gav_bar, gav_fixed, gav_gav, cam_tray, cam_chassis, heads_tray, pins_cam, pawl_cam, stop_cam, strip_tray, plunger_cam, mcub_parts, lboard_gav, magc]
 
 /* [Grade] */
 U = 18;
@@ -61,12 +64,20 @@ corner_r = 6;
 /* [Bateria e eletrônica] */
 BATT = [76, 46, 4.0];                // ~1800 mAh (LiPo 4 mm); ajuste conforme o fornecedor
 // Eletrônica na placa L (quadro plano da metade esquerda), pendurada embaixo da placa
-MCU  = [1.5, 42, 10, 15.5, 2.2];       // módulo nRF52840 (ex.: Raytac MDBT50Q), ao lado das teclas de 2u
-CHG  = [1.5, 60, 8, 6, 1.2];           // carregador + regulador
-BCON = [1.5, 68, 6, 4, 1.8];           // conector da bateria (fios descem para a cunha)
-USBC = [1.5, -0.6, 9, 7.6, 3.2];     // USB-C mid-mount na frente da barra, canto externo
-BATT_HOLE = [4, 70];                 // passagem dos fios da bateria
-POGO_Y = 26;                         // 4 pogo na face da baia (bloco fixo), longe do MCU
+// Placa MCU na cunha (quadro plano, abaixo da bandeja): [x, y, largura, comprimento, espessura, z do topo]
+// Vai de y 46 até a face de trás (lá a cunha tem ~9 mm). As peças ficam na face de cima (virada
+// para a bandeja). x até 18,5: não invade o curso da lingueta (x > 19,5) nem a bateria (x > 48).
+MCUB = [1.5, 46, 17, (ROW_Y[0] + P) - 46, 1.0, -2.5];
+MOD  = [1.8, 49, 15.6, 10.6, 2.2];   // Raytac MDBT50Q deitado em x: a antena fica na ponta de x = 1,8 (borda externa)
+USBC = [4.5, (ROW_Y[0] + P) - 7.3, 9, 7.6, 3.2];   // USB-C mid-mount na face de trás, na borda da placa MCU
+// Flex de 20 vias (placa L <-> placa MCU): rasgo no piso do bloco fixo, no chassi e na bandeja. Em
+// x < 12,5 (depois disso a bandeja é o bolsão da placa-came); em y entre a tecla tab (termina em 68)
+// e o LED RGB da tecla de números da coluna de fora (começa em ~70,3).
+FLEX = [1.5, 68.6, 11.5, 1.4];
+// Conector pogo magnético de 5 pinos (VBUS, GND, 2 dados, detecção), na face da bandeja:
+// [comprimento em y, altura, profundidade] — a confirmar com a peça escolhida
+MAGC = [16.5, 4.0, 6.0];
+MAGC_Y = [9, 32.25];                 // centro na ponta da barra (outra mão) e na face do bloco fixo (baia)
 // Cadeia de placas: pads de 13 vias na faixa entre F e números (y = 87,25)
 BAND_Y = (ROW_Y[1] + P + ROW_Y[0]) / 2;
 JPAD = [8.62, 2.17];                 // bloco de pads 2 × 7 (passo 1,27): 13 vias (5 linhas, 5 colunas, VLED, GND, DAT)
@@ -185,10 +196,8 @@ module fixed_block(round_left, leds, pogo = false) {
     clip(round_left) difference() {
         color("slategray") sled(0, 2);
         translate([latch[0], latch[1], -1]) cylinder(d = 2.8, h = 20);           // botão da trava
-        for (c = [MCU, BCON]) translate([c[0] - 0.4, c[1] - 0.4, -1]) cube([c[2] + 0.8, c[3] + 0.8, sled_floor + 1.01]);
-        translate([BATT_HOLE[0], BATT_HOLE[1], -1]) cylinder(d = 3, h = 5);
+        translate([FLEX[0], FLEX[1], -1]) cube([FLEX[2], FLEX[3], sled_floor + 1.01]);   // flex para a placa MCU
         link_slots(0, 2, false, true);
-        if (pogo) for (i = [0:3]) translate([-0.01, POGO_Y + i * 2.5, sled_floor + sock_h / 2]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 2);
     }
     link_pads(26.28, J_OUT_DY);                               // saída da placa L (J_OUT)
     // LEDs 0805 em cima da placa (x = 4, 9, 14); os resistores 0805 ficam embaixo, no mesmo lugar
@@ -202,14 +211,10 @@ module thumb_bar(round_left, pogo = true) {
         translate([0, 0, bar_z]) difference() {
             cube([KB_W, depth, TOP - bar_z]);
             translate([1, 1, -1]) cube([KB_W - 2, depth - 2, TOP - bar_z + 2]);
-            translate([USBC[0] - 0.3, -1, -1]) cube([USBC[2] + 0.6, 3, TOP - bar_z + 2]);   // boca do USB-C
-            if (pogo) for (i = [0:3]) translate([KB_W - 2, 6 + i * 2.5, 1.5]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 3);
+
         }
         // pernas: bloco sob as colunas fixas + uma perna em cada divisa entre saias
-        translate([0, 0.5, Z_G]) difference() {
-            cube([2 * U + skirt_inset - 0.6, depth - 1, bar_z - Z_G + 0.01]);
-            translate([USBC[0] - 0.5, -1, -1]) cube([USBC[2] + 1, USBC[3] + 1.5, 5]);   // espaço do USB-C
-        }
+        translate([0, 0.5, Z_G]) cube([2 * U + skirt_inset - 0.6, depth - 1, bar_z - Z_G + 0.01]);
         for (g = GAV, c = [1:g[1]]) {
             x = g[0] + c * U;
             translate([x >= KB_W ? KB_W - 1.2 : x - 1.2, 0.5, Z_G]) cube([x >= KB_W ? 1.2 : 2.4, depth - 1, bar_z - Z_G + 0.01]);
@@ -218,7 +223,7 @@ module thumb_bar(round_left, pogo = true) {
 }
 
 // ---------- Chassi imutável (chapa) ----------
-module chassis(round_left) {
+module chassis(round_left, faces = []) {
     clip(round_left) difference() {
         cube([KB_W, KB_H, chassis_t]);
         for (g = GAV, py = g[4]) hull() {
@@ -226,7 +231,8 @@ module chassis(round_left) {
             translate([g[3], py + g[2], -1]) cylinder(d = slot_w, h = chassis_t + 2);
         }
         translate([latch[0], latch[1], -1]) cylinder(d = 2.8, h = chassis_t + 2);
-        translate([BATT_HOLE[0], BATT_HOLE[1], -1]) cylinder(d = 3, h = chassis_t + 2);     // fios da bateria
+        translate([FLEX[0], FLEX[1], -1]) cube([FLEX[2], FLEX[3], chassis_t + 2]);           // flex para a placa MCU
+        for (f = faces) translate([0, 0, -Z_CH]) magc(f, f == "L" ? MAGC_Y[1] : MAGC_Y[0]);   // conector magnético (entra 0,9 mm)
     }
 }
 
@@ -238,15 +244,20 @@ module lboard_pcb(round_left) {
             translate([1, 1]) square([KB_W - 2, ROW_Y[4] - side_gap - 2]);
             translate([1, 15.6]) square([2 * U - side_gap - 1, 1.5]);
         }
-        translate([USBC[0], -1]) square([USBC[2], USBC[3] + 1]);   // recorte do USB-C mid-mount
         translate([latch[0], latch[1]]) circle(d = 2.8);
     }
 }
-module lboard_parts() {
-    zb = TOP - pcb_t;
-    color("royalblue") for (c = [MCU, CHG]) translate([c[0], c[1], zb - c[4]]) cube([c[2], c[3], c[4]]);
-    color("black") translate([BCON[0], BCON[1], zb - BCON[4]]) cube([BCON[2], BCON[3], BCON[4]]);
-    color("silver") translate([USBC[0], USBC[1], zb - 2.6]) cube([USBC[2], USBC[3], USBC[4]]);
+// Placa MCU na cunha (quadro plano; a cunha já está inclinada junto): placa, módulo e USB-C
+module mcub_parts() {
+    zt = MCUB[5];
+    color("darkgreen") translate([MCUB[0], MCUB[1], zt - MCUB[4]]) cube([MCUB[2], MCUB[3], MCUB[4]]);
+    color("royalblue") translate([MOD[0], MOD[1], zt]) cube([MOD[2], MOD[3], MOD[4]]);
+    color("silver") translate([USBC[0], USBC[1], zt - MCUB[4] / 2 - USBC[4] / 2]) cube([USBC[2], USBC[3], USBC[4]]);
+}
+// conector magnético na face: f = "L" (x = 0) ou "R" (x = KB_W); cy = centro em y
+module magc(f, cy) {
+    x = f == "L" ? -0.01 : KB_W - MAGC[2] + 0.01;
+    translate([x, cy - MAGC[0] / 2, 0.3]) cube([MAGC[2], MAGC[0], MAGC[1]]);
 }
 
 // ---------- Placa-came (chapa) ----------
@@ -297,12 +308,13 @@ module tray(round_left, faces, released = false) {
         translate([latch[0] - 2.5, latch[1] - 2, -1]) cube([46 - latch[0] + 2.5, 4, tray_floor + 2]); // janela da trava
         for (p = [50, 100]) translate([stop_x(p), 45, -1]) cylinder(d = 3.2, h = tray_floor + 2);
         connectors(faces, tray_h);
-        translate([BATT_HOLE[0], BATT_HOLE[1], -1]) cylinder(d = 3, h = tray_h + 2);           // fios da bateria
+        translate([FLEX[0], FLEX[1], -1]) cube([FLEX[2], FLEX[3], tray_h + 2]);               // flex para a placa MCU
+        for (f = faces) magc(f, f == "L" ? MAGC_Y[1] : MAGC_Y[0]);                            // conector magnético
     }
     pawl(released);
 }
 
-// ímãs 4×2 mm nas faces de encaixe (os pogo ficam na placa L: bloco fixo e ponta da barra)
+// ímãs 4×2 mm nas faces de encaixe (o conector magnético de 5 pinos fica na face da bandeja, ver magc)
 module connectors(faces, h) {
     for (f = faces) {
         x = f == "L" ? -0.01 : KB_W - 2.2;
@@ -313,7 +325,9 @@ module connectors(faces, h) {
 // ---------- Cunha traseira (bateria, mola, trava) — no quadro do mundo ----------
 module wedge_pockets() {                              // no quadro plano, abaixo da bandeja (bateria, mola, trava)
     translate([48, 54, -BATT[2] - 0.2]) cube([BATT[0], BATT[1], BATT[2] + 0.21]);
-    translate([BATT_HOLE[0] - 1.5, BATT_HOLE[1] - 1.5, -1.6]) cube([48 - BATT_HOLE[0] + 1.5, 3, 1.61]);  // fios da bateria
+    translate([MCUB[0] + MCUB[2] - 1, 68.5, -1.6]) cube([48 - MCUB[0] - MCUB[2] + 1, 3, 1.61]);  // fios da bateria -> placa MCU
+    translate([MCUB[0] - 0.3, MCUB[1] - 0.3, MCUB[5] - MCUB[4] - 0.2]) cube([MCUB[2] + 0.6, MCUB[3] + 1, -MCUB[5] + MCUB[4] + 0.21]);  // placa MCU (aberta atrás)
+    translate([USBC[0] - 0.3, USBC[1] - 0.3, MCUB[5] - MCUB[4] / 2 - USBC[4] / 2 - 0.3]) cube([USBC[2] + 0.6, USBC[3] + 1.3, USBC[4] + 0.6]);  // USB-C
     translate([latch[0] - 2.5, latch[1] - 2, -2.2]) cube([46 - latch[0] + 2.5, 4, 2.21]);  // curso da lingueta
     translate([drum[0] - 5, ch_y0, -drum[2] - 0.5]) cube([10, ch_y1 - ch_y0, drum[2] + 0.51]);
     for (p = [50, 100]) translate([stop_x(p), 45, -20]) cylinder(d = 3.2, h = 20.1);
@@ -330,6 +344,7 @@ module wedge(round_left) {
 module internals() {
     tilt_frame() {
         color("mediumseagreen") translate([48, 54, -BATT[2] - 0.2]) cube(BATT);
+        mcub_parts();
     }
 }
 
@@ -345,7 +360,7 @@ module bay_body() {
         for (i = [-2:2]) translate([BAY_W - 8, BAY_H / 2 + i * 2.54, top - pd - 2]) cylinder(d = 1.5, h = 3);
         translate([BAY_W / 2, -1, top]) rotate([-90, 0, 0]) cylinder(r = 8, h = 8);
         translate([BAY_W - KB_W, -Y_PIV, 0]) connectors(["R"], tray_h);
-        for (i = [0:3]) translate([BAY_W - 2, POGO_Y - Y_PIV + i * 2.5, Z_G + sled_floor + sock_h / 2]) rotate([0, 90, 0]) cylinder(d = 1.3, h = 3);
+        translate([BAY_W - KB_W, -Y_PIV, 0]) magc("R", MAGC_Y[1]);                          // conector magnético da baia
     }
 }
 module bay_wedge() {
@@ -378,14 +393,14 @@ module mech_flat(round_left, faces, leds, e) {
     color("orange") translate([t, 0, Z_CAM + e]) cam_plate();
     translate([0, 0, e]) spring_ribbon();
     stop_pin(stop_pct);
-    color("silver", 0.95) translate([0, 0, Z_CH + 2 * e]) chassis(round_left);
+    color("silver", 0.95) translate([0, 0, Z_CH + 2 * e]) chassis(round_left, faces);
     for (g = GAV) translate([0, g[2] * u, Z_G + 3 * e]) {
         gaveta(g);
         color("dimgray") gaveta_heads(g);
         if (show_caps) caps(g[0], g[1]);
     }
     translate([0, 0, Z_G + 3 * e]) { fixed_block(round_left, leds, round_left == false); if (show_caps) caps(0, 2); }
-    translate([0, 0, 3.5 * e]) { lboard_pcb(round_left); lboard_parts(); }
+    translate([0, 0, 3.5 * e]) lboard_pcb(round_left);
     // jumpers da cadeia: placa L -> coluna -> coluna -> coluna -> coluna dupla
     translate([0, 0, 3 * e]) {
         link_jumper(30.59, 0, GAV[0][0] + 5.41, gstag(0));        // centros dos blocos J_OUT -> J_IN
@@ -458,11 +473,14 @@ module check_pair() {
     if (check == "pawl_cam") intersection() { pawl(released); translate([t, 0, Z_CAM]) cam_plate(); }
     if (check == "stop_cam") intersection() { stop_pin(stop_pct); translate([t, 0, Z_CAM]) cam_plate(); }
     if (check == "strip_tray") intersection() { spring_ribbon(); difference() { tray(false, LEFT_FACES); pawl(false); } }
-    if (check == "lboard_parts") intersection() {
-        lboard_parts();
-        union() { translate([0, 0, Z_G]) fixed_block(false, true, true); thumb_bar(false); translate([0, 0, Z_CH]) chassis(false); plunger(false); } }
+    if (check == "mcub_parts") intersection() {           // placa MCU x cunha, bandeja e bateria (quadro do mundo)
+        tilt_frame() mcub_parts();
+        union() { wedge(false); tilt_frame() { tray(false, LEFT_FACES); translate([48, 54, -BATT[2] - 0.2]) cube(BATT); } } }
+    if (check == "magc") intersection() {                  // conectores magnéticos x placa-came, trava e chassi
+        for (f = LEFT_FACES) magc(f, f == "L" ? MAGC_Y[1] : MAGC_Y[0]);
+        union() { translate([t, 0, Z_CAM]) cam_plate(); pawl(released); translate([0, 0, Z_CH]) chassis(false, LEFT_FACES); } }
     if (check == "lboard_gav") intersection() {
-        union() { lboard_pcb(false); lboard_parts(); }
+        lboard_pcb(false);
         for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g); }
     if (check == "plunger_cam") intersection() { plunger(false); union() { translate([t, 0, Z_CAM]) cam_plate(); for (g = GAV) translate([0, g[2] * u, Z_G]) gaveta(g); } }
 }
@@ -474,7 +492,8 @@ else if (part == "front") keyboard();
 else if (part == "tray") tray(false, LEFT_FACES);
 else if (part == "cam_plate") cam_plate();
 else if (part == "chassis") chassis(false);
-else if (part == "lboard") { lboard_pcb(false); lboard_parts(); }
+else if (part == "lboard") lboard_pcb(false);
+else if (part == "mcub") mcub_parts();
 else if (part == "gaveta") gaveta(GAV[2]);
 else if (part == "fixed_block") fixed_block(false, true);
 else if (part == "thumb_bar") thumb_bar(false);

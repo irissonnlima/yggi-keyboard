@@ -102,7 +102,7 @@ Na barra do polegar os switches ficam girados 180°, e tudo gira junto.
 
 - **Sem soquete hot-swap Kailh.** O soquete passa ~0,9 mm da borda de uma coluna de 17,4 mm e bateria na parede do trenó. As placas usam os **furos passantes do Choc**: dá para soldar o switch ou usar **soquetes Mill-Max** (tubinhos dentro do furo) e manter a troca de switches.
 - **MCU externo na rev0.** Cada placa L tem um **cabeçalho de pads**. Na esquerda são 20: GND, VLED, DIN, R0–R5, COL0–COL6, LED1–3 e GND. Na direita são 17, sem os LEDs da tecla Yggi. Na bancada, ele se liga por fios a uma placa nRF52840 (nice!nano). O VLED vem do VCC chaveado do nice!nano.
-- **Na rev1** entram na própria placa L: o módulo nRF52840 (~10 × 15,5 mm), o carregador, o conector da bateria, o USB-C, o conector magnético de 5 pinos e a chave (MOSFET) que corta a energia dos LEDs RGB. As posições do MCU e do USB-C já estão reservadas no CAD.
+- **Na rev1** a eletrônica vai para uma **placa MCU própria na cunha** (módulo nRF52840, carregador, USB-C atrás, chave dos LEDs RGB), ligada à placa L por um flex de 20 vias, mais o conector pogo magnético de 5 pinos, os estabilizadores de 2u e a fixação com M2. Plano completo e posições no CAD: [`rev1.md`](rev1.md).
 - **Espessura:** o CAD usa placa de **1,2 mm**. Encomendar com 1,2 mm, ou ajustar `pcb_t` no CAD para 1,6.
 - **Trilhas traçadas pelo Freerouting**, em 2 camadas, e conferidas pelo DRC do KiCad. O traçado é automático (funciona, mas não é o mais bonito). O barramento rotativo obriga as trilhas a trocar de face na faixa entre F e números: J_IN e J_OUT têm a mesma ordem, deslocada, e isso não cabe numa face só.
 - **LEDs RGB (SK6812MINI-E):** um por tecla Choc, 38 na mão esquerda e 35 na direita. Cuidados:
@@ -117,7 +117,7 @@ Na barra do polegar os switches ficam girados 180°, e tudo gira junto.
 - **Barra do polegar com os switches girados 180°.** Com o pino 2 virado para trás, o anel dele ficava a 0,28 mm da borda de trás da barra (abaixo do mínimo da JLCPCB). Virado, fica a 0,58 mm da borda da frente. O keycap do Choc é simétrico, então nada muda para quem digita.
 - **LEDs da tecla Yggi** (só na esquerda): 3 LEDs 0805 na face de cima, na faixa entre F e números (CAD x = 4, 9 e 14 mm), cada um com um resistor 0805 de 1 kΩ embaixo, no mesmo lugar. Ligação: pino LEDn do MCU → resistor → LED → GND (acende com o pino em nível alto).
 - **Furo do botão da trava** (CAD 22; 87,25, espelhado na direita): o `route.py` põe uma área proibida de 2,1 mm de raio em volta dele, e outra em volta de cada recorte de LED RGB, porque o Freerouting não aplica a folga de borda aos recortes internos.
-- **Ainda não tem:** furos de fixação das placas (M2 na faixa + presilhas no trenó), o conector magnético entre as mãos e o recorte do USB-C no contorno da placa L. Tudo isso entra na rev1.
+- **Ainda não tem:** furos de fixação (M2 na faixa + presilhas no trenó), os recortes dos estabilizadores de 2u e os pads do flex. Tudo isso entra na rev1 ([`rev1.md`](rev1.md)).
 
 ## Como regenerar
 
