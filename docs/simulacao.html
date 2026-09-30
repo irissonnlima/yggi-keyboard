@@ -65,19 +65,23 @@ footer{margin-top:48px;color:var(--t3);font-size:13px}
 <div class="stats" id="st2"></div>
 </div>
 
-<h2>3 · Vista de frente</h2>
-<p class="note">Três módulos: baia, metade esquerda e metade direita. Faces de encaixe retas (ímãs + pogo), bordas externas arredondadas. Linha contínua = frente; tracejada = silhueta de trás, mais alta por causa da inclinação.</p>
+<h2>3 · Raio-x de cima: conexões e eletrônica</h2>
+<p class="note">Tudo o que fica escondido embaixo das teclas. Passe o mouse (ou toque) sobre uma peça para ver o que ela é. Ligue e desligue as camadas.</p>
 <div class="card">
-<svg viewBox="0 0 680 170" width="100%" id="front"></svg>
-<div class="ctrl"><span>Módulos</span><button data-j="1" class="on">encaixados</button><button data-j="0">separados</button></div>
+<div class="ctrl" id="layers"><label><input type="checkbox" data-l="keys" checked> gavetas e teclas</label><label><input type="checkbox" data-l="mech" checked> placa-came e pinos</label><label><input type="checkbox" data-l="ele" checked> eletrônica</label><label><input type="checkbox" data-l="con" checked> conexões</label><label><input type="checkbox" data-l="spr" checked> mola e trava</label></div>
+<svg viewBox="0 0 680 270" width="100%" id="xray" style="touch-action:manipulation"></svg>
+<div class="note" id="xinfo" style="min-height:24px"><b>Toque numa peça</b> para ver o nome e a função.</div>
+<div class="ctrl"><span>Stagger</span><input type="range" id="sl3" min="0" max="150" value="0"><b id="pc3" style="min-width:48px;text-align:right">0%</b><span style="margin-left:12px">Módulos</span><button data-j="1" class="on">encaixados</button><button data-j="0">separados</button></div>
+<div class="stats" id="st3"></div>
 </div>
 
 <h2>4 · Mola: soltar e travar</h2>
-<p class="note">Em ortho a trava segura a placa-came. O botão (ao lado dos LEDs) solta a trava e a mola de força constante leva as colunas até o batente. Para voltar, empurre as colunas até o clique.</p>
+<p class="note">Corte lateral no mesmo estilo da seção 2, passando pela trava. Embaixo, a placa-came vista de cima com a mola. O botão empurra o dente da trava para baixo, a mola puxa a placa e as colunas sobem até o batente. Empurrando as colunas de volta, o dente estala no furo e trava.</p>
 <div class="card">
-<svg viewBox="0 0 680 210" width="100%" id="spr"></svg>
+<svg viewBox="0 0 680 350" width="100%" id="spr"></svg>
 <div class="ctrl"><button id="rel"><i class="ti ti-hand-finger"></i> apertar o botão</button><button id="push"><i class="ti ti-arrow-back-up"></i> empurrar as colunas de volta</button>
 <span style="margin-left:12px">Batente</span><button data-s="0.333">50%</button><button data-s="0.667" class="on">100%</button><button data-s="1">150%</button></div>
+<div class="stats" id="st4"></div>
 </div>
 
 <footer>Yggi Keyboard · open hardware (CERN-OHL-S sugerida) · CAD em <code>hardware/stagger-mechanism/yggi_v3.scad</code></footer>
@@ -140,46 +144,111 @@ $('#sec').innerHTML=g;
 stats($('#st2'),v3?[['Frente','≈ 16 mm','até o topo da tecla'],['Trás','≈ 25 mm','cunha com bateria'],['Inclinação','5°',''],['Stagger',`${Math.round(u2*150)}%`,'']]:[['Frente','≈ 23 mm',''],['Trás','≈ 23 mm','reto'],['Inclinação','0°',''],['Stagger',`${Math.round(u2*150)}%`,'']])}
 group('[data-v]','v',v=>{ver=+v;drawSec()});$('#sl2').oninput=e=>{u2=e.target.value/150;drawSec()};
 
-/* ---------- 3. vista de frente ---------- */
-let joined=1;
-function drawFront(){const S=1.85,Z=3,x0=16,base=130,gap=joined?0:14;let g='';
-const mods=[{n:'baia',w:72,top:9.9,roundL:true,roundR:false},{n:'metade esquerda',w:126,top:15.7,roundL:false,roundR:false},{n:'metade direita',w:126,top:15.7,roundL:false,roundR:true}];
-let x=x0;const back=9.3;
-mods.forEach((m,i)=>{const w=m.w*S,hf=m.top*S*Z,hb=(m.top+back)*S*Z,r=6*S;
-const path=(h)=>{const tl=m.roundL?r:0,tr=m.roundR?r:0;return `M${x+tl} ${base} L${x+w-tr} ${base} ${tr?`Q${x+w} ${base} ${x+w} ${base-tr}`:''} L${x+w} ${base-h} L${x} ${base-h} L${x} ${base-tl} ${tl?`Q${x} ${base} ${x+tl} ${base}`:''} Z`};
-g+=`<path d="${path(hb)}" fill="none" stroke="var(--b3)" stroke-width="1" stroke-dasharray="4 3"/>`;
-g+=`<path d="${path(hf)}" fill="var(--s1)" stroke="var(--t2)" stroke-width="1"/>`;
-if(i>0){const kc=Math.floor(m.w/18);for(let c=0;c<kc;c++)g+=`<rect x="${x+(c*18+1)*S}" y="${base-hf}" width="${16*S}" height="${2.4*S*Z}" rx="2" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`}
-else g+=`<rect x="${x+1.5*S}" y="${base-hf-0.5*S*Z}" width="${69*S}" height="${5.9*S*Z}" rx="3" fill="var(--s2)" stroke="var(--b3)" stroke-width="0.6"/>`;
-g+=`<text x="${x+w/2}" y="${base+18}" font-size="12" fill="var(--t2)" text-anchor="middle">${m.n}</text>`;
-if(i<2&&joined)g+=`<g><circle cx="${x+w}" cy="${base-8}" r="4" fill="var(--acc)"/><circle cx="${x+w}" cy="${base-20}" r="3" fill="var(--amber)"/></g>`;
-x+=w+gap});
-g+=`<line x1="10" y1="${base}" x2="670" y2="${base}" stroke="var(--b3)" stroke-width="0.6"/>`;
-g+=`<text x="16" y="24" font-size="12" fill="var(--t2)"><tspan fill="var(--acc)">●</tspan> ímã  <tspan fill="var(--amber)">●</tspan> contatos pogo (energia + dados)  ·  frente ≈ 16 mm, trás ≈ 25 mm · altura exagerada 3×</text>`;
-$('#front').innerHTML=g}
-group('[data-j]','j',v=>{joined=+v;drawFront()});
+/* ---------- 3. raio-x ---------- */
+const G3=[[36,1,0,40,[34,68]],[54,1,9,68,[34,87.25]],[72,1,15,86,[34,51]],[90,2,9,94,[68,87.25]]];
+const LY={keys:1,mech:1,ele:1,con:1,spr:1};let u3=0,joined3=1;
+function drawXray(){const W=680,pad=12,gap=joined3?0:14,tot=72+126+126+2*gap,S=(W-2*pad)/tot,H=117*S+2*pad+18;
+const svg=$('#xray');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);let g='';
+const Y=y=>pad+(111.75-y)*S;
+const t=u3*24;
+function rr(ox,mir,x0,y0,x1,y1,f,st,name,extra){const a=mir?126-x1:x0,b=mir?126-x0:x1;
+return `<rect data-n="${name||''}" x="${ox+a*S}" y="${Y(y1)}" width="${(b-a)*S}" height="${(y1-y0)*S}" fill="${f}" stroke="${st||'none'}" stroke-width="0.8" ${extra||''}/>`}
+function cc(ox,mir,x,y,r,f,st,name){const xx=mir?126-x:x;return `<circle data-n="${name||''}" cx="${ox+xx*S}" cy="${Y(y)}" r="${r*S}" fill="${f}" stroke="${st||'none'}" stroke-width="0.8"/>`}
+function ln(ox,mir,x0,y0,x1,y1,st,w,name,extra){const a=mir?126-x0:x0,b=mir?126-x1:x1;return `<line data-n="${name||''}" x1="${ox+a*S}" y1="${Y(y0)}" x2="${ox+b*S}" y2="${Y(y1)}" stroke="${st}" stroke-width="${w}" stroke-linecap="round" ${extra||''}/>`}
+function outline(ox,w,y0,h,rl,rr_){const r=6*S,x=ox,yT=Y(y0+h),yB=Y(y0),W2=w*S;
+return `<path d="M${x+(rl?r:0)} ${yT} H${x+W2-(rr_?r:0)} ${rr_?`Q${x+W2} ${yT} ${x+W2} ${yT+r}`:''} V${yB-(rr_?r:0)} ${rr_?`Q${x+W2} ${yB} ${x+W2-r} ${yB}`:''} H${x+(rl?r:0)} ${rl?`Q${x} ${yB} ${x} ${yB-r}`:''} V${yT+(rl?r:0)} ${rl?`Q${x} ${yT} ${x+r} ${yT}`:''} Z" fill="var(--s2)" stroke="var(--t2)" stroke-width="1.2"/>`}
+const bx=pad,lx=pad+72*S+gap,rx=lx+126*S+gap;
+/* baia */
+g+=outline(bx,72,-5.25,117,true,false);
+g+=`<rect data-n="Baia do e-reader: rebaixo de 3 mm para um aparelho de 69 × 114 mm (tipo XTeink X4)" x="${bx+1.5*S}" y="${Y(111.75-1.5)}" width="${69*S}" height="${114*S}" rx="${5*S}" fill="var(--s1)" stroke="var(--b3)" stroke-dasharray="4 3"/>`;
+if(LY.con){[[12,10.75],[60,10.75],[12,95.75],[60,95.75]].forEach(([x,y])=>{g+=`<circle data-n="Ímã 5 × 1,5 mm que segura o e-reader na baia" cx="${bx+x*S}" cy="${Y(y)}" r="${2.6*S}" fill="var(--acc-bg)" stroke="var(--acc)"/>`});
+for(let i=-2;i<=2;i++)g+=`<circle data-n="Pogo do e-reader (5 vias): energia e dados entre e-reader e teclado" cx="${bx+64*S}" cy="${Y(53.25+i*2.54)}" r="${0.9*S}" fill="var(--amber)"/>`;}
+/* metades */
+[[lx,false],[rx,true]].forEach(([ox,mir])=>{
+g+=outline(ox,126,0,106.5,false,mir);
+if(LY.keys){g+=rr(ox,mir,0.3,17,35.7,106.5,'var(--gray-bg)','var(--b3)','Bloco fixo: 2 colunas que nunca se movem');
+g+=rr(ox,mir,0,0,126,16.7,'var(--gray-bg)','var(--acc)','Barra do polegar (fixa): ⌘, espaço, setas…');
+G3.forEach(([x0,n,s,px,pys])=>{const d=s*u3;g+=rr(ox,mir,x0+.3,17+d,x0+n*18-.3,106.5+d,'var(--blue-bg)','var(--blue)','Gaveta: coluna que desliza inteira (placa de circuito + trenó)','opacity=".75"');
+if(d>.3)g+=rr(ox,mir,x0+1.8,17-15.5+d,x0+n*18-1.8,17,'var(--blue-bg)','var(--blue)','Saia da gaveta: tampa o vão acima da barra quando a coluna sobe','stroke-dasharray="3 2" opacity=".6"')})}
+if(LY.mech){g+=rr(ox,mir,12.8+t,30.3,97.2+t,99.95,'var(--amber-bg)','var(--amber)','Placa-came (chapa 1,2 mm): desliza em X e empurra as colunas','opacity=".55"');
+G3.forEach(([x0,n,s,px,pys])=>pys.forEach(py=>{g+=ln(ox,mir,px+t,py,px-24+t,py+s,'var(--amber)',3.4*S,'Rasgo inclinado da placa-came','opacity=".8"');
+g+=ln(ox,mir,px,py,px,py+s+.01,'var(--b3)',3.4*S,'Rasgo-guia do chassi (só em Y)','opacity=".5"');
+g+=cc(ox,mir,px,py+s*u3,1.5,'var(--t1)','none','Pino-parafuso da gaveta: guia + came + trava contra levantar')}))}
+if(LY.ele){g+=rr(ox,mir,48,54,124,100,'var(--green-bg)','var(--green)','Bateria LiPo ~1800 mAh, 4 mm, na cunha traseira');
+g+=rr(ox,mir,4,66,22,100,'var(--acc-bg)','var(--acc)','Microcontrolador nRF52840 (tipo nice!nano), na parte fixa');
+g+=rr(ox,mir,8.5,99,17.5,107.5,'var(--t2)','none','USB-C: carga e firmware, saindo pela borda de trás');
+g+=rr(ox,mir,2,100.6,124,105.3,'none','var(--b3)','Canal de trás: fios das gavetas (com folga) e fita da mola','stroke-dasharray="2 2"');
+G3.forEach(([x0,n,s])=>{const cx=x0+n*9,d=s*u3;g+=ln(ox,mir,cx,101.5+d,cx,103.8,'var(--green)',1.2,'Fios/cabo flat da gaveta, com folga para o curso');g+=ln(ox,mir,cx,103.8,20,103.8,'var(--green)',1.2,'Fios até o microcontrolador','stroke-dasharray="3 2"')});
+if(!mir)[4,9,14].forEach((x,i)=>{g+=cc(ox,mir,x,87.25,1.1,i==0?'var(--ok)':'var(--b2)','none','LED de aparelho (1, 2, 3): mostra o computador ativo')})}
+if(LY.con){(mir?[126]:[0,126]).forEach(fx=>{const inner=fx==126;[20,88].forEach(y=>{g+=rr(ox,mir,inner?123.8:0,y-2,inner?126:2.2,y+2,'var(--acc)','none','Ímã 4 × 2 mm na face de encaixe')});
+for(let i=0;i<4;i++)g+=cc(ox,mir,inner?125:1,45+i*2.5,.9,'var(--amber)','none','Contato pogo (VBUS, GND, TX, RX): energia e dados entre módulos')})}
+if(LY.spr){g+=cc(ox,mir,118,102.95,4,'var(--s1)','var(--t2)','Tambor da mola de força constante (fita de aço)');
+g+=ln(ox,mir,12.8+6.7+t,102.95,118,102.95,'var(--t2)',1.4,'Fita da mola: puxa a placa-came para o stagger');
+g+=rr(ox,mir,28,85.75,46.2,88.75,'var(--bad-bg)','var(--bad)','Lingueta da trava (flexível)');
+g+=cc(ox,mir,30,87.25,1.3,u3>0?'var(--b2)':'var(--bad)','none','Dente da trava: em ortho entra no furo da placa-came');
+g+=cc(ox,mir,30,87.25,2.2,'none','var(--bad)','Botão de soltar (no bloco fixo, ao lado dos LEDs)');
+[50,100].forEach(p=>{g+=cc(ox,mir,97.2+p/150*24+1.75,45,1.5,p==100?'var(--blue)':'none','var(--blue)','Batente trocável (50% / 100%; sem pino = 150%)')})}
+});
+if(LY.con&&joined3){const yA=Y(48.75);g+=`<path data-n="Caminho de energia e dados com os módulos encaixados: um USB-C carrega tudo" d="M${lx+13*S} ${Y(66)} V${yA} H${rx+(126-13)*S} V${Y(66)}" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+g+=`<path data-n="Pogo da baia: o teclado alimenta e conversa com o e-reader" d="M${lx+13*S} ${yA} H${bx+64*S}" fill="none" stroke="var(--amber)" stroke-width="1.2" stroke-dasharray="5 3"/>`}
+g+=`<text x="${bx+36*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">baia</text><text x="${lx+63*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">metade esquerda</text><text x="${rx+63*S}" y="${H-4}" font-size="11" fill="var(--t2)" text-anchor="middle">metade direita</text>`;
+svg.innerHTML=g;$('#pc3').textContent=Math.round(u3*150)+'%';
+stats($('#st3'),[['Microcontrolador','nRF52840 × 2','um por metade, parte fixa'],['Bateria','2 × ~1800 mAh','LiPo 4 mm na cunha'],['Por junta','2 ímãs + 4 pogo','VBUS, GND, TX, RX'],['USB-C','1 por metade','encaixado: 1 carrega tudo']])}
+$('#xray').addEventListener('mouseover',e=>{const el=e.target.closest('[data-n]');if(el&&el.dataset.n)$('#xinfo').textContent=el.dataset.n});
+$('#xray').addEventListener('click',e=>{const el=e.target.closest('[data-n]');if(el&&el.dataset.n)$('#xinfo').textContent=el.dataset.n});
+$$('#layers input').forEach(c=>c.onchange=()=>{LY[c.dataset.l]=c.checked?1:0;drawXray()});
+$('#sl3').oninput=e=>{u3=e.target.value/150;drawXray()};
+group('[data-j]','j',v=>{joined3=+v;drawXray()});
 
-/* ---------- 4. mola ---------- */
-let pos=0,stop=.667,sa=null;
-function drawSpr(){const TT=24,t=pos*stop*TT,X0=70,SC=4.3,Y=30;let g='';
-g+=`<rect x="${X0}" y="${Y}" width="${126*SC}" height="130" rx="6" fill="none" stroke="var(--b3)" stroke-dasharray="4 3"/>`;
+/* ---------- 4. mola (corte lateral) ---------- */
+let pos=0,stop=.667,press=0,tooth=0,phase='travado',flash=0,timer=null;
+function drawSpr(){const S=4.6,s=pos*stop*15,t=pos*stop*24,pd=press*1.6,dz=tooth*1.4;
+const L={tray:[0,1.2],cam:[2,3.2],ch:[3.4,5],sled:[5,7.8],pcb:[7.8,9],sw:[9,12],cap:[12.8,15.2]};
+let g=`<text x="20" y="22" font-size="13" fill="var(--t1)" font-weight="600">${phase}</text>`;
+if(flash>0)g+=`<text x="660" y="22" font-size="14" fill="var(--ok)" font-weight="600" text-anchor="end">clique!</text>`;
+g+=`<g transform="translate(90,175) rotate(-5) scale(${S})">`;
+g+=`<polygon points="0,0 106.5,0 106.5,9.3" fill="var(--s1)" stroke="var(--b3)" stroke-width="0.25"/>`;
+g+=R(54,100,-4.6,-0.4,'var(--green-bg)','var(--green)','rx="0.6"');
+const ang=t/24*720;g+=`<g transform="translate(102.95,1.4) rotate(${ang})"><circle r="4" fill="var(--s2)" stroke="var(--t2)" stroke-width="0.3"/><line x1="0" y1="0" x2="0" y2="-3.6" stroke="var(--t2)" stroke-width="0.4"/><circle r="1.2" fill="none" stroke="var(--t2)" stroke-width="0.25"/></g>`;
+g+=R(0,85.25,...L.tray,'var(--gray-bg)','var(--b3)')+R(89.25,106.5,...L.tray,'var(--gray-bg)','var(--b3)');
+g+=R(85.75,88.75,L.tray[0]-dz,L.tray[1]-dz,'var(--bad-bg)','var(--bad)');
+g+=R(43.5,46.5,-4,3,'var(--blue-bg)','var(--blue)');
+if(pos<0.001){g+=R(30.3,86.25,...L.cam,'var(--amber-bg)','var(--amber)')+R(88.25,99.95,...L.cam,'var(--amber-bg)','var(--amber)')}else g+=R(30.3,99.95,...L.cam,'var(--amber-bg)','var(--amber)');
+g+=R(85.95,88.55,1.2-dz,3.2-dz,'var(--bad)','none');
+g+=R(0,86.05,...L.ch,'var(--gray-bg)','var(--b3)','opacity="0.85"')+R(88.45,106.5,...L.ch,'var(--gray-bg)','var(--b3)','opacity="0.85"');
+g+=R(.5,16.7,6,L.pcb[1],'var(--teal-bg)','var(--teal)','rx="0.5"')+R(1,16,...L.cap,'var(--s2)','var(--b3)','rx="1"');
+g+=R(17+s-15.5,17+s,L.sled[0],L.sled[0]+.8,'var(--blue-bg)','var(--blue)')+R(17+s,106.5+s,L.sled[0],L.pcb[1],'var(--blue-bg)','var(--blue)','rx="0.6" opacity="0.85"');
+[89.5,68,51,34,17].forEach(y=>{g+=R(y+2+s,y+15+s,L.pcb[1],L.sw[1],'var(--b2)','none','opacity="0.6"')+R(y+.5+s,y+16.5+s,...L.cap,'var(--s2)','var(--b3)','rx="1"')});
+[34,68].forEach(p=>{g+=R(p-1.5+s,p+1.5+s,L.cam[0]-.6,L.sled[0],'var(--t2)')});
+g+=R(86.05,88.45,3.45-pd,9.6-pd,'var(--bad)','none')+R(85.25,89.25,9.6-pd,10.4-pd,'var(--bad)','none','rx="0.4"');
+g+='</g>';
+g+=`<line x1="60" y1="175" x2="650" y2="175" stroke="var(--b3)" stroke-width="0.6"/>`;
+const lab=(x,y,txt,c)=>`<text x="${x}" y="${y}" font-size="11" fill="${c||'var(--t2)'}">${txt}</text>`;
+g+=lab(470,58,'● botão + dente da trava','var(--bad)')+lab(470,74,'● gaveta (coluna do médio)','var(--blue)')+lab(470,90,'● placa-came','var(--amber)')+lab(470,106,'● batente','var(--blue)');
+g+=lab(90,196,'frente')+lab(560,196,'trás · tambor da mola');
+/* inset de cima */
+const X0=70,SC=4.3,Y0=225;g+=`<text x="20" y="${Y0-6}" font-size="12" fill="var(--t2)">placa-came vista de cima</text>`;
+g+=`<rect x="${X0}" y="${Y0}" width="${126*SC}" height="100" rx="6" fill="none" stroke="var(--b3)" stroke-dasharray="4 3"/>`;
 const px0=X0+(12.8+t)*SC,pw=(97.2-12.8)*SC;
-g+=`<rect x="${px0}" y="${Y+20}" width="${pw}" height="${(99.95-30.3)*1.25}" rx="3" fill="var(--amber-bg)" stroke="var(--amber)"/>`;
-[[40,34,0],[68,34,9],[86,34,15],[94,68,9]].forEach(([x,y,s])=>{g+=`<line x1="${px0+(x-12.8)*SC}" y1="${Y+20+(y-30.3)*1.25}" x2="${px0+(x-24-12.8)*SC}" y2="${Y+20+(y+s-30.3)*1.25}" stroke="var(--amber)" stroke-width="5" stroke-linecap="round" opacity=".7"/>`});
-const dx=X0+118*SC,dy=Y+122;g+=`<circle cx="${dx}" cy="${dy}" r="14" fill="var(--s2)" stroke="var(--t2)"/><circle cx="${dx}" cy="${dy}" r="6" fill="none" stroke="var(--t2)"/>`;
-g+=`<line x1="${px0+5*SC}" y1="${dy-14}" x2="${dx}" y2="${dy-14}" stroke="var(--t2)" stroke-width="2"/>`;
-g+=`<text x="${dx}" y="${dy+30}" font-size="12" fill="var(--t2)" text-anchor="middle">mola de força constante</text>`;
-const locked=pos==0,lx=X0+30*SC;
-g+=`<rect x="${lx-6}" y="${Y+88}" width="12" height="12" rx="2" fill="${locked?'var(--bad-bg)':'var(--gray-bg)'}" stroke="${locked?'var(--bad)':'var(--b3)'}"/>`;
-g+=`<text x="${lx}" y="${Y+114}" font-size="12" fill="${locked?'var(--bad)':'var(--t2)'}" text-anchor="middle">${locked?'trava fechada':'trava aberta'}</text>`;
-const sx=X0+(97.2+stop*TT+1.5)*SC;g+=`<rect x="${sx}" y="${Y+30}" width="8" height="30" rx="2" fill="var(--blue-bg)" stroke="var(--blue)"/><text x="${sx+12}" y="${Y+50}" font-size="12" fill="var(--t2)">batente ${Math.round(stop*150)}%</text>`;
-g+=`<text x="${X0}" y="${Y+156}" font-size="13" fill="var(--t1)">stagger atual: <tspan font-weight="600">${Math.round(pos*stop*150)}%</tspan></text>`;
-$('#spr').innerHTML=g}
-function go(target){if(sa)clearInterval(sa);sa=setInterval(()=>{const d=target-pos;if(Math.abs(d)<.03){pos=target;clearInterval(sa);sa=null}else pos+=Math.sign(d)*(target>pos?.09:.03);drawSpr()},30)}
-$('#rel').onclick=()=>{if(pos==0)go(1)};$('#push').onclick=()=>{if(pos>0)go(0)};
-group('[data-s]','s',v=>{stop=+v;drawSpr()});
+g+=`<rect x="${px0}" y="${Y0+10}" width="${pw}" height="62" rx="3" fill="var(--amber-bg)" stroke="var(--amber)"/>`;
+[[40,34,0],[68,34,9],[86,34,15],[94,68,9],[40,68,0],[68,87.25,9],[86,51,15],[94,87.25,9]].forEach(([x,y,sv])=>{const yy=v=>Y0+72-(v-30.3)*0.85;g+=`<line x1="${X0+(x+t)*SC}" y1="${yy(y)}" x2="${X0+(x-24+t)*SC}" y2="${yy(y+sv)}" stroke="var(--amber)" stroke-width="3.5" stroke-linecap="round" opacity=".75"/>`});
+const dxs=X0+118*SC,dys=Y0+84;g+=`<rect x="${px0+0.7*SC}" y="${Y0+72}" width="${6*SC}" height="12" fill="var(--amber-bg)" stroke="var(--amber)"/>`;
+g+=`<line x1="${px0+6.7*SC}" y1="${dys}" x2="${dxs}" y2="${dys}" stroke="var(--t2)" stroke-width="2"/><circle cx="${dxs}" cy="${dys}" r="${4*SC}" fill="var(--s2)" stroke="var(--t2)"/>`;
+g+=`<g transform="translate(${dxs},${dys}) rotate(${ang})"><line x1="0" y1="0" x2="0" y2="${-3.6*SC}" stroke="var(--t2)" stroke-width="1.2"/></g>`;
+const ty=Y0+72-(87.25-30.3)*0.85;g+=`<circle cx="${X0+30*SC}" cy="${ty}" r="5" fill="${tooth?'var(--b2)':'var(--bad)'}"/>`;
+g+=`<circle cx="${X0+(30+t)*SC}" cy="${ty}" r="6" fill="none" stroke="var(--amber)" stroke-width="1.5"/>`;
+const sx=X0+(97.2+stop*24+1.75)*SC;if(stop<.99)g+=`<circle cx="${sx}" cy="${Y0+40}" r="6" fill="var(--blue-bg)" stroke="var(--blue)"/>`;
+g+=`<text x="${X0+(97.2+t)*SC+8}" y="${Y0+26}" font-size="11" fill="var(--t2)">mola puxa →</text>`;
+$('#spr').innerHTML=g;
+stats($('#st4'),[['Estado',phase,''],['Stagger',`${Math.round(pos*stop*150)}%`,`batente ${Math.round(stop*150)}%`],['Trava',tooth?'solta':'fechada',tooth?'dente embaixo da placa':'dente no furo'],['Mola','força constante','fita de aço, tipo trena']])}
+function animate(steps){if(timer)clearInterval(timer);let i=0;timer=setInterval(()=>{const st=steps[0];if(!st){clearInterval(timer);timer=null;return}st.f(Math.min(1,++i/st.n));if(flash>0)flash--;drawSpr();if(i>=st.n){steps.shift();i=0;if(st.end)st.end()}},30)}
+$('#rel').onclick=()=>{if(pos>0||timer)return;phase='botão apertado';
+animate([{n:10,f:k=>press=k,end:()=>{tooth=1;phase='mola puxando…'}},{n:22,f:k=>{pos=1-Math.pow(1-k,3);press=1-k},end:()=>{phase='stagger (parado no batente)'}}])};
+$('#push').onclick=()=>{if(pos==0||timer)return;phase='empurrando as colunas…';const p0=pos;
+animate([{n:45,f:k=>pos=p0*(1-k),end:()=>{pos=0;tooth=0;flash=25;phase='travado em ortho'}},{n:25,f:()=>{}}])};
+group('[data-s]','s',v=>{if(pos==0){stop=+v;drawSpr()}});
 
-addEventListener('resize',drawTop);drawTop();drawSec();drawFront();drawSpr();
+addEventListener('resize',drawTop);drawTop();drawSec();drawXray();drawSpr();
 </script>
 </body>
 </html>
